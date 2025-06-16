@@ -1,0 +1,136 @@
+name: Production Deployment Approval
+description: Request security team approval for production deployment (SOC 2 Type II compliance)
+title: "[PROD] Production Deployment Approval: "
+labels: ["production-deployment", "compliance-required", "security-review"]
+assignees:
+  - security-team
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🚨 Production Deployment Approval Request
+        
+        This issue represents a **SOC 2 Type II control point** for change management.
+        Production deployments require security team approval before proceeding.
+        
+  - type: input
+    id: release-name
+    attributes:
+      label: Release Name
+      description: Name of the Cloud Deploy release to promote to production
+      placeholder: "webapp-20231216-143052-abc1234"
+    validations:
+      required: true
+      
+  - type: input
+    id: commit-sha
+    attributes:
+      label: Commit SHA
+      description: Git commit SHA being deployed
+      placeholder: "abc123def456"
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: deployment-type
+    attributes:
+      label: Deployment Type
+      description: What type of deployment is this?
+      options:
+        - Regular feature release
+        - Bug fix
+        - Security patch
+        - Emergency fix
+        - Hotfix
+    validations:
+      required: true
+      
+  - type: textarea
+    id: changes-summary
+    attributes:
+      label: Changes Summary
+      description: Describe the changes being deployed to production
+      placeholder: "Brief summary of what's changing..."
+    validations:
+      required: true
+      
+  - type: textarea
+    id: testing-performed
+    attributes:
+      label: Testing Performed
+      description: What testing has been done in non-production?
+      placeholder: "Describe testing completed in non-production environment..."
+    validations:
+      required: true
+      
+  - type: checkboxes
+    id: compliance-checklist
+    attributes:
+      label: SOC 2 Type II Compliance Checklist
+      description: Verify all compliance requirements are met
+      options:
+        - label: "**Security Review**: Changes have been reviewed for security implications"
+          required: true
+        - label: "**Change Approval**: This production change has been approved by appropriate stakeholders"
+          required: true
+        - label: "**Testing Verification**: Non-production testing is complete and successful"
+          required: true
+        - label: "**Rollback Plan**: Rollback procedure has been documented and is ready"
+          required: true
+        - label: "**Communication**: Stakeholders have been notified of the deployment"
+          required: true
+        - label: "**Audit Trail**: Complete audit trail is maintained for this change"
+          required: true
+          
+  - type: checkboxes
+    id: technical-checklist
+    attributes:
+      label: Technical Checklist
+      description: Verify technical requirements are met
+      options:
+        - label: "Container images are from approved registries"
+          required: true
+        - label: "Security contexts are properly configured"
+          required: true
+        - label: "Resource limits are defined"
+          required: true
+        - label: "Network policies are in place"
+          required: true
+        - label: "Compliance labels are present on all resources"
+          required: true
+          
+  - type: textarea
+    id: rollback-plan
+    attributes:
+      label: Rollback Plan
+      description: Describe the rollback procedure if deployment fails
+      placeholder: "Steps to rollback if issues occur..."
+    validations:
+      required: true
+      
+  - type: textarea
+    id: additional-notes
+    attributes:
+      label: Additional Notes
+      description: Any additional context or special considerations
+      placeholder: "Additional context..."
+      
+  - type: markdown
+    attributes:
+      value: |
+        ## ⚠️ Important Instructions
+        
+        ### For Security Team:
+        1. Review all compliance checklist items
+        2. Verify technical requirements are met
+        3. Add "security-approved" label when approved
+        4. Comment with "APPROVED" to indicate approval
+        
+        ### For Deployment:
+        After security approval, use the "Production Promotion" GitHub Actions workflow:
+        - **Workflow**: `.github/workflows/production-promotion.yml`
+        - **Required inputs**: Release name and this issue number
+        
+        ### Audit Trail:
+        This issue provides the audit trail required for SOC 2 Type II compliance.
+        **Do not close this issue until deployment is complete.**

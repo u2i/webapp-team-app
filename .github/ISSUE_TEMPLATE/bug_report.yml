@@ -1,0 +1,95 @@
+name: Bug Report
+description: Report a bug in the webapp-team application
+title: "[BUG] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🐛 Bug Report
+        
+        Thank you for reporting a bug. This helps us maintain the quality and compliance of our application.
+        
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: Where did this bug occur?
+      options:
+        - Non-production (nonprod)
+        - Production (prod)
+        - Local development
+    validations:
+      required: true
+      
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: "Describe the bug..."
+    validations:
+      required: true
+      
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+      
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: A clear description of what you expected to happen
+      placeholder: "What should have happened..."
+    validations:
+      required: true
+      
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happened
+      placeholder: "What actually happened..."
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug?
+      options:
+        - Low (minor inconvenience)
+        - Medium (affects functionality)
+        - High (breaks major functionality)
+        - Critical (security issue or complete failure)
+    validations:
+      required: true
+      
+  - type: checkboxes
+    id: compliance-impact
+    attributes:
+      label: Compliance Impact Assessment
+      description: Could this bug affect compliance requirements?
+      options:
+        - label: "This bug could affect data security"
+        - label: "This bug could affect audit logging"
+        - label: "This bug could affect GDPR compliance"
+        - label: "This bug could affect access controls"
+        - label: "No compliance impact identified"
+          
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or logs
+      placeholder: "Additional information..."
