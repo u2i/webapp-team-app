@@ -1,0 +1,104 @@
+name: Security Issue
+description: Report a security vulnerability or concern
+title: "[SECURITY] "
+labels: ["security", "critical", "compliance"]
+assignees:
+  - security-team
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🔒 Security Issue Report
+        
+        **⚠️ IMPORTANT**: If this is a critical security vulnerability, please contact security-team@u2i.com directly instead of creating a public issue.
+        
+        This report helps us maintain ISO 27001/SOC 2/GDPR compliance.
+        
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Security Severity
+      description: How severe is this security issue?
+      options:
+        - Low (information disclosure)
+        - Medium (unauthorized access to non-sensitive data)
+        - High (unauthorized access to sensitive data)
+        - Critical (system compromise or data breach)
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: category
+    attributes:
+      label: Security Category
+      description: What type of security issue is this?
+      options:
+        - Authentication/Authorization
+        - Data Encryption
+        - Network Security
+        - Container Security
+        - Access Control
+        - Audit Logging
+        - GDPR Compliance
+        - Other
+    validations:
+      required: true
+      
+  - type: textarea
+    id: description
+    attributes:
+      label: Security Issue Description
+      description: Describe the security concern or vulnerability
+      placeholder: "Describe the security issue..."
+    validations:
+      required: true
+      
+  - type: textarea
+    id: impact
+    attributes:
+      label: Potential Impact
+      description: What could happen if this issue is exploited?
+      placeholder: "Potential security impact..."
+    validations:
+      required: true
+      
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: If applicable, how can this issue be reproduced?
+      placeholder: "Steps to reproduce the security issue..."
+      
+  - type: checkboxes
+    id: compliance-frameworks
+    attributes:
+      label: Compliance Framework Impact
+      description: Which compliance frameworks could be affected?
+      options:
+        - label: "ISO 27001 (Information Security Management)"
+        - label: "SOC 2 Type II (Security Controls)"
+        - label: "GDPR (Data Protection)"
+        - label: "Other compliance frameworks"
+        - label: "No compliance impact"
+          
+  - type: textarea
+    id: recommended-action
+    attributes:
+      label: Recommended Action
+      description: What do you recommend to address this issue?
+      placeholder: "Recommended remediation steps..."
+      
+  - type: markdown
+    attributes:
+      value: |
+        ## 🚨 Security Team Response Required
+        
+        This issue has been automatically assigned to the security team for immediate review.
+        
+        **Response SLA**: 
+        - Critical: 4 hours
+        - High: 24 hours  
+        - Medium: 72 hours
+        - Low: 1 week
+        
+        **For Critical Issues**: Please also contact security-team@u2i.com immediately.
