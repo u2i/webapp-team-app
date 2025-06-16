@@ -1,0 +1,267 @@
+name: CI - Compliance & Security Checks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'k8s-manifests/**'
+      - 'k8s-infra/**'
+      - 'infrastructure/**'
+      - 'clouddeploy.yaml'
+      - 'skaffold.yaml'
+      - 'Dockerfile'
+
+env:
+  PROJECT_ID: u2i-tenant-webapp
+  REGION: europe-west1
+
+jobs:
+  compliance-validation:
+    name: ISO 27001 / SOC 2 Compliance Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Validate compliance labels
+      run: |
+        echo "🔍 Checking compliance labels on all Kubernetes resources..."
+        
+        # Check all YAML files have required compliance labels
+        for file in k8s-manifests/*.yaml k8s-infra/*.yaml; do
+          if [ -f "$file" ]; then
+            echo "Checking $file..."
+            
+            # Must have compliance label
+            if ! grep -q "compliance.*iso27001-soc2-gdpr" "$file"; then
+              echo "❌ Missing ISO 27001/SOC 2 compliance label in $file"
+              exit 1
+            fi
+            
+            # Must have tenant label
+            if ! grep -q "tenant.*webapp-team" "$file"; then
+              echo "❌ Missing tenant identification in $file"  
+              exit 1
+            fi
+            
+            # Must have data residency for GDPR
+            if ! grep -q "data-residency.*eu" "$file"; then
+              echo "❌ Missing GDPR data residency label in $file"
+              exit 1
+            fi
+            
+            echo "✅ $file has required compliance labels"
+          fi
+        done
+        
+        echo "✅ All Kubernetes resources have compliance labels"
+    
+    - name: Security policy validation
+      run: |
+        echo "🔒 Validating security policies..."
+        
+        # Check no privileged containers
+        if grep -r "privileged.*true" k8s-manifests/ k8s-infra/; then
+          echo "❌ Privileged containers are not allowed"
+          exit 1
+        fi
+        
+        # Check all containers have security context
+        if ! grep -A 20 "containers:" k8s-manifests/deployment.yaml | grep -q "securityContext:"; then
+          echo "❌ All containers must have securityContext defined"
+          exit 1
+        fi
+        
+        # Check resource limits exist
+        if ! grep -A 10 "resources:" k8s-manifests/deployment.yaml | grep -q "limits:"; then
+          echo "❌ All containers must have resource limits"
+          exit 1
+        fi
+        
+        # Check network policy exists
+        if [ ! -f "k8s-infra/network-policy.yaml" ]; then
+          echo "❌ Network policy is required for tenant isolation"
+          exit 1
+        fi
+        
+        echo "✅ Security policies validated"
+    
+    - name: GDPR compliance check
+      run: |
+        echo "🇪🇺 Validating GDPR compliance..."
+        
+        # Check region is EU
+        if ! grep -q "europe-west1" k8s-manifests/deployment.yaml; then
+          echo "❌ Application must be deployed in EU region for GDPR compliance"
+          exit 1
+        fi
+        
+        # Check for data classification
+        if ! grep -q "gdpr-compliant.*true" k8s-manifests/deployment.yaml; then
+          echo "❌ GDPR compliance flag required"
+          exit 1
+        fi
+        
+        echo "✅ GDPR compliance validated"
+    
+    - name: SOC 2 change control check
+      run: |
+        echo "📋 Validating SOC 2 change control..."
+        
+        # Check if this is a production change
+        if echo "${{ github.event.pull_request.title }}" | grep -iq "prod\|production"; then
+          echo "🚨 Production change detected - additional approvals required"
+          
+          # Check if security team is requested for review
+          if ! echo "${{ github.event.pull_request.requested_reviewers }}" | grep -q "security-team"; then
+            echo "❌ Production changes require security team review"
+            exit 1
+          fi
+        fi
+        
+        echo "✅ Change control validated"
+    
+    - name: Terraform validation
+      working-directory: infrastructure
+      run: |
+        echo "🏗️ Validating Terraform configuration..."
+        
+        # Install Terraform
+        wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+        echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+        sudo apt update && sudo apt install terraform
+        
+        # Validate configuration
+        terraform init -backend=false
+        terraform validate
+        
+        # Check for compliance tags
+        if ! grep -q "compliance.*iso27001-soc2-gdpr" *.tf; then
+          echo "❌ Terraform resources must have compliance tags"
+          exit 1
+        fi
+        
+        echo "✅ Terraform configuration validated"
+
+  container-security:
+    name: Container Security Scanning
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.changed_files, 'Dockerfile')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Build container image
+      run: |
+        docker build -t webapp-security-scan:${{ github.sha }} .
+    
+    - name: Scan for vulnerabilities
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: webapp-security-scan:${{ github.sha }}
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
+        exit-code: '1'
+    
+    - name: Upload scan results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  infrastructure-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.changed_files, 'infrastructure/')
+    
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        workload_identity_provider: 'projects/123456789/locations/global/workloadIdentityPools/github-actions/providers/github'
+        service_account: 'terraform-organization@u2i-bootstrap.iam.gserviceaccount.com'
+    
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+    
+    - name: Terraform Plan
+      working-directory: infrastructure
+      run: |
+        terraform init
+        terraform plan -no-color -out=tfplan
+        
+        # Save plan for review
+        terraform show -no-color tfplan > plan-output.txt
+    
+    - name: Comment PR with plan
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const plan = fs.readFileSync('infrastructure/plan-output.txt', 'utf8');
+          
+          const output = `#### 🏗️ Terraform Plan
+          
+          <details>
+          <summary>Show Plan</summary>
+          
+          \`\`\`terraform
+          ${plan}
+          \`\`\`
+          
+          </details>
+          
+          **Compliance Review Required**: All infrastructure changes are audited for ISO 27001/SOC 2 compliance.`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          });
+
+  compliance-summary:
+    name: Compliance Summary
+    runs-on: ubuntu-latest
+    needs: [compliance-validation, container-security, infrastructure-plan]
+    if: always()
+    
+    steps:
+    - name: Generate compliance report
+      run: |
+        echo "## 📋 Compliance Check Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ needs.compliance-validation.result }}" == "success" ]; then
+          echo "✅ **ISO 27001/SOC 2 Validation**: PASSED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **ISO 27001/SOC 2 Validation**: FAILED" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.container-security.result }}" == "success" ] || [ "${{ needs.container-security.result }}" == "skipped" ]; then
+          echo "✅ **Container Security Scan**: PASSED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Container Security Scan**: FAILED" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.infrastructure-plan.result }}" == "success" ] || [ "${{ needs.infrastructure-plan.result }}" == "skipped" ]; then
+          echo "✅ **Infrastructure Plan**: PASSED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Infrastructure Plan**: FAILED" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
+        echo "- Merge to `main` will deploy to non-production environment" >> $GITHUB_STEP_SUMMARY
+        echo "- Production deployment requires manual promotion with security approval" >> $GITHUB_STEP_SUMMARY

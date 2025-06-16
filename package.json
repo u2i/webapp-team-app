@@ -1,0 +1,20 @@
+{
+  "name": "webapp-team-example",
+  "version": "1.0.0",
+  "description": "Example webapp for compliance testing",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "author": "webapp-team@u2i.com",
+  "license": "UNLICENSED",
+  "compliance": {
+    "iso27001": true,
+    "soc2-type2": true,
+    "gdpr": true,
+    "data-residency": "eu"
+  }
+}

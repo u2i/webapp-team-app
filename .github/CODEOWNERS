@@ -1,0 +1,32 @@
+# Code Owners for webapp-team repository
+# ISO 27001/SOC 2 compliance requires proper code review
+
+# Default owners for everything
+* @webapp-team
+
+# Infrastructure changes require platform team review
+infrastructure/ @platform-team @webapp-team
+k8s-infra/ @platform-team @webapp-team
+clouddeploy.yaml @platform-team @webapp-team
+
+# Security-sensitive files require security team review
+.github/workflows/ @security-team @webapp-team
+configs/prod.yaml @security-team @webapp-team
+k8s-manifests/*security* @security-team @webapp-team
+k8s-infra/*security* @security-team @webapp-team
+
+# Compliance-related changes require compliance team review
+**/compliance/ @compliance-team @webapp-team
+configs/ @compliance-team @webapp-team
+
+# Production configurations require additional oversight
+configs/prod.yaml @platform-team @security-team @webapp-team
+**/prod/ @platform-team @security-team @webapp-team
+
+# CI/CD pipeline changes require DevOps review
+.github/workflows/ @devops-team @security-team @webapp-team
+skaffold.yaml @devops-team @webapp-team
+
+# Documentation changes
+README.md @webapp-team
+docs/ @webapp-team

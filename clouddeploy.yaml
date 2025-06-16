@@ -1,0 +1,106 @@
+# Cloud Deploy Configuration
+# ISO 27001/SOC 2/GDPR Compliant Delivery Pipeline
+
+apiVersion: deploy.cloud.google.com/v1
+kind: DeliveryPipeline
+metadata:
+  name: webapp-delivery-pipeline
+  labels:
+    compliance: iso27001-soc2-gdpr
+    team: webapp-team
+    environment: multi-env
+    data-residency: eu
+  annotations:
+    deploy.cloud.google.com/description: "Compliant delivery pipeline for webapp-team application"
+spec:
+  description: "ISO 27001/SOC 2/GDPR compliant delivery pipeline with approval gates"
+  
+  serialPipeline:
+    stages:
+    - targetId: nonprod-gke
+      profiles: [nonprod]
+      deployParameters:
+      - name: environment
+        values: [non-production]
+      - name: compliance-mode
+        values: [development]
+      
+    - targetId: prod-gke
+      profiles: [prod]
+      deployParameters:
+      - name: environment
+        values: [production]
+      - name: compliance-mode
+        values: [strict]
+      
+      strategy:
+        standard:
+          # SOC 2 Type II: Verification step for production
+          verify: true
+          
+          predeploy:
+            actions:
+            - name: security-validation
+              description: "Validate security compliance before production deployment"
+            - name: binary-authorization-check
+              description: "Verify image attestations"
+            - name: compliance-audit
+              description: "Create audit log entry"
+              
+          postdeploy:
+            actions:
+            - name: health-verification
+              description: "Verify application health post-deployment"
+            - name: compliance-validation
+              description: "Validate compliance controls are active"
+            - name: audit-completion
+              description: "Complete audit trail"
+
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: nonprod-gke
+  labels:
+    compliance: iso27001-soc2-gdpr
+    environment: non-production
+    data-residency: eu
+  annotations:
+    deploy.cloud.google.com/description: "Non-production GKE cluster target"
+spec:
+  description: "Non-production GKE Autopilot cluster in Belgium (europe-west1)"
+  
+  gke:
+    cluster: projects/u2i-gke-nonprod/locations/europe-west1/clusters/nonprod-autopilot
+    
+  executionConfigs:
+  - usages: [RENDER, DEPLOY, VERIFY]
+    serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
+    artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
+    executionTimeout: 1800s
+
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: prod-gke
+  labels:
+    compliance: iso27001-soc2-gdpr
+    environment: production
+    data-residency: eu
+    critical: "true"
+  annotations:
+    deploy.cloud.google.com/description: "Production GKE cluster target with strict compliance"
+spec:
+  description: "Production GKE Autopilot cluster in Belgium (europe-west1) - ISO 27001/SOC 2 compliant"
+  
+  gke:
+    cluster: projects/u2i-gke-prod/locations/europe-west1/clusters/prod-autopilot
+    
+  executionConfigs:
+  - usages: [RENDER, DEPLOY, VERIFY]
+    serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
+    artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
+    executionTimeout: 3600s
+    
+  requireApproval: true

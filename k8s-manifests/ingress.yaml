@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webapp-ingress
+  namespace: webapp-team
+  labels:
+    app: webapp
+    tenant: webapp-team
+    compliance: iso27001-soc2-gdpr
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "webapp-ip"  # Will be different per environment
+    networking.gke.io/managed-certificates: "webapp-ssl-cert"
+    kubernetes.io/ingress.allow-http: "false"
+spec:
+  rules:
+  - host: webapp.example.com  # Will be different per environment
+    http:
+      paths:
+      - path: /*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: webapp-service
+            port:
+              number: 80
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: webapp-ssl-cert
+  namespace: webapp-team
+  labels:
+    app: webapp
+    tenant: webapp-team
+    compliance: iso27001-soc2-gdpr
+spec:
+  domains:
+  - webapp.example.com  # Will be different per environment

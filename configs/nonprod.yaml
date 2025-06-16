@@ -1,0 +1,97 @@
+# Non-Production Environment Configuration
+# ISO 27001/SOC 2/GDPR Compliant Settings
+
+metadata:
+  environment: non-production
+  region: europe-west1
+  compliance:
+    iso27001: enabled
+    soc2_type2: enabled
+    gdpr: enabled
+  data_residency: eu
+
+application:
+  name: webapp-team
+  namespace: webapp-team
+  replicas: 2
+  
+  image:
+    repository: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
+    tag: latest  # Will be overridden by CI/CD
+    
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+  environment_variables:
+    PORT: "8080"
+    ENVIRONMENT: "non-production"
+    REGION: "europe-west1"
+    COMPLIANCE_MODE: "gdpr"
+    LOG_LEVEL: "debug"  # More verbose logging in nonprod
+    
+  probes:
+    liveness:
+      path: /health
+      port: 8080
+      initial_delay: 30
+      period: 10
+    readiness:
+      path: /ready
+      port: 8080
+      initial_delay: 5
+      period: 5
+
+security:
+  # Relaxed security for development testing
+  pod_security_standard: restricted
+  run_as_non_root: true
+  run_as_user: 1000
+  read_only_root_filesystem: false  # Allow writes for debugging
+  allow_privilege_escalation: false
+  
+  network_policy:
+    enabled: true
+    egress:
+      - external_apis: true  # Allow external API calls for testing
+      - internet: true       # Allow internet access for development
+    
+infrastructure:
+  resource_quota:
+    requests:
+      cpu: "2"
+      memory: "4Gi"
+    limits:
+      cpu: "4"
+      memory: "8Gi"
+    pods: "10"
+    services: "5"
+    
+  storage:
+    persistent_volumes: "2"
+    storage_class: "standard"
+    
+monitoring:
+  metrics_enabled: true
+  logging_level: "debug"
+  traces_enabled: true
+  alerts:
+    cpu_threshold: 80
+    memory_threshold: 80
+    error_rate_threshold: 10  # Higher threshold for nonprod
+
+compliance:
+  audit_logging: enabled
+  data_encryption: enabled
+  backup_retention_days: 30
+  
+  labels:
+    environment: "non-production"
+    data-classification: "internal"
+    compliance-framework: "iso27001-soc2-gdpr"
+    gdpr-compliant: "true"
+    cost-center: "webapp-team"

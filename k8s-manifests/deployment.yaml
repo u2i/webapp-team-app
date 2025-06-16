@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp
+  namespace: webapp-team
+  labels:
+    app: webapp
+    tenant: webapp-team
+    compliance: iso27001-soc2-gdpr
+    data-residency: eu
+    gdpr-compliant: "true"
+spec:
+  replicas: 2  # Will be overridden by profile
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+        tenant: webapp-team
+        compliance: iso27001-soc2-gdpr
+        data-residency: eu
+        gdpr-compliant: "true"
+      annotations:
+        # GKE Autopilot security annotations
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 3000
+        fsGroup: 2000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: webapp
+        image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp:v1.0.0
+        ports:
+        - containerPort: 8080
+          name: http
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        env:
+        - name: PORT
+          value: "8080"
+        - name: ENVIRONMENT
+          value: "dev"  # Will be overridden by profile
+        - name: REGION
+          value: "europe-west1"
+        - name: COMPLIANCE_MODE
+          value: "gdpr"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      automountServiceAccountToken: false
