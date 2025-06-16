@@ -96,4 +96,4 @@ Before each deployment, ensure:
 - **Team Lead**: webapp-team@u2i.com
 - **Security Issues**: security-team@u2i.com  
 - **Platform Support**: platform-team@u2i.com
-- **Compliance Questions**: compliance@u2i.com
+- **Compliance Questions**: compliance@u2i.com# Test GitOps Pipeline
