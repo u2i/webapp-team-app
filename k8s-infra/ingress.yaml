@@ -3,6 +3,11 @@ kind: ManagedCertificate
 metadata:
   name: webapp-cert
   namespace: webapp-team
+  labels:
+    app: webapp
+    tenant: webapp-team
+    compliance: iso27001-soc2-gdpr
+    data-residency: eu
 spec:
   domains:
     - webapp.u2i.dev
@@ -20,7 +25,9 @@ metadata:
   namespace: webapp-team
   labels:
     app: webapp
+    tenant: webapp-team
     compliance: iso27001-soc2-gdpr
+    data-residency: eu
 spec:
   type: NodePort
   selector:
@@ -38,7 +45,9 @@ metadata:
   namespace: webapp-team
   labels:
     app: webapp
+    tenant: webapp-team
     compliance: iso27001-soc2-gdpr
+    data-residency: eu
   annotations:
     # Use GCE ingress controller
     # kubernetes.io/ingress.class is deprecated, using spec.ingressClassName instead
