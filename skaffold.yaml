@@ -30,47 +30,54 @@ profiles:
   - op: replace
     path: /spec/hard/requests.cpu
     value: "2"
-    target:
-      kind: ResourceQuota
-      name: webapp-team-quota
+    resourceFilter:
+      kinds:
+      - ResourceQuota
+      name: "webapp-team-quota"
   - op: replace
     path: /spec/hard/requests.memory
     value: "4Gi"
-    target:
-      kind: ResourceQuota
-      name: webapp-team-quota
+    resourceFilter:
+      kinds:
+      - ResourceQuota
+      name: "webapp-team-quota"
   - op: replace
     path: /spec/hard/limits.cpu
     value: "4"
-    target:
-      kind: ResourceQuota
-      name: webapp-team-quota
+    resourceFilter:
+      kinds:
+      - ResourceQuota
+      name: "webapp-team-quota"
   - op: replace
     path: /spec/hard/limits.memory
     value: "8Gi"
-    target:
-      kind: ResourceQuota
-      name: webapp-team-quota
+    resourceFilter:
+      kinds:
+      - ResourceQuota
+      name: "webapp-team-quota"
   - op: replace
     path: /spec/hard/pods
     value: "10"
-    target:
-      kind: ResourceQuota
-      name: webapp-team-quota
+    resourceFilter:
+      kinds:
+      - ResourceQuota
+      name: "webapp-team-quota"
   
   # Application patches for nonprod
   - op: replace
     path: /spec/replicas
     value: 2
-    target:
-      kind: Deployment
-      name: webapp
+    resourceFilter:
+      kinds:
+      - Deployment
+      name: "webapp"
   - op: replace
     path: /spec/template/spec/containers/0/env/1/value
     value: "nonprod"
-    target:
-      kind: Deployment
-      name: webapp
+    resourceFilter:
+      kinds:
+      - Deployment
+      name: "webapp"
 # Ingress patches removed for simplified deployment
 
 - name: prod
@@ -86,69 +93,80 @@ profiles:
   - op: replace
     path: /spec/hard/requests.cpu
     value: "4"
-    target:
-      kind: ResourceQuota
-      name: webapp-team-quota
+    resourceFilter:
+      kinds:
+      - ResourceQuota
+      name: "webapp-team-quota"
   - op: replace
     path: /spec/hard/requests.memory
     value: "8Gi"
-    target:
-      kind: ResourceQuota
-      name: webapp-team-quota
+    resourceFilter:
+      kinds:
+      - ResourceQuota
+      name: "webapp-team-quota"
   - op: replace
     path: /spec/hard/limits.cpu
     value: "8"
-    target:
-      kind: ResourceQuota
-      name: webapp-team-quota
+    resourceFilter:
+      kinds:
+      - ResourceQuota
+      name: "webapp-team-quota"
   - op: replace
     path: /spec/hard/limits.memory
     value: "16Gi"
-    target:
-      kind: ResourceQuota
-      name: webapp-team-quota
+    resourceFilter:
+      kinds:
+      - ResourceQuota
+      name: "webapp-team-quota"
   - op: replace
     path: /spec/hard/pods
     value: "20"
-    target:
-      kind: ResourceQuota
-      name: webapp-team-quota
+    resourceFilter:
+      kinds:
+      - ResourceQuota
+      name: "webapp-team-quota"
   
   # Application patches for prod
   - op: replace
     path: /spec/replicas
     value: 3
-    target:
-      kind: Deployment
-      name: webapp
+    resourceFilter:
+      kinds:
+      - Deployment
+      name: "webapp"
   - op: replace
     path: /spec/template/spec/containers/0/env/1/value
     value: "production"
-    target:
-      kind: Deployment
-      name: webapp
+    resourceFilter:
+      kinds:
+      - Deployment
+      name: "webapp"
   - op: replace
     path: /spec/template/spec/containers/0/resources/requests/cpu
     value: "200m"
-    target:
-      kind: Deployment
-      name: webapp
+    resourceFilter:
+      kinds:
+      - Deployment
+      name: "webapp"
   - op: replace
     path: /spec/template/spec/containers/0/resources/requests/memory
     value: "256Mi"
-    target:
-      kind: Deployment
-      name: webapp
+    resourceFilter:
+      kinds:
+      - Deployment
+      name: "webapp"
   - op: replace
     path: /spec/template/spec/containers/0/resources/limits/cpu
     value: "500m"
-    target:
-      kind: Deployment
-      name: webapp
+    resourceFilter:
+      kinds:
+      - Deployment
+      name: "webapp"
   - op: replace
     path: /spec/template/spec/containers/0/resources/limits/memory
     value: "512Mi"
-    target:
-      kind: Deployment
-      name: webapp
+    resourceFilter:
+      kinds:
+      - Deployment
+      name: "webapp"
 # Ingress patches removed for simplified deployment
