@@ -6,7 +6,6 @@ on:
     paths:
       - 'k8s-manifests/**'
       - 'k8s-infra/**'
-      - 'infrastructure/**'
       - 'clouddeploy.yaml'
       - 'skaffold.yaml'
       - 'Dockerfile'
@@ -172,69 +171,10 @@ jobs:
       with:
         sarif_file: 'trivy-results.sarif'
 
-  infrastructure-plan:
-    name: Terraform Plan
-    runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.changed_files, 'infrastructure/')
-    
-    permissions:
-      contents: read
-      id-token: write
-      pull-requests: write
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v1
-      with:
-        workload_identity_provider: 'projects/123456789/locations/global/workloadIdentityPools/github-actions/providers/github'
-        service_account: 'terraform-organization@u2i-bootstrap.iam.gserviceaccount.com'
-    
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-    
-    - name: Terraform Plan
-      working-directory: infrastructure
-      run: |
-        terraform init
-        terraform plan -no-color -out=tfplan
-        
-        # Save plan for review
-        terraform show -no-color tfplan > plan-output.txt
-    
-    - name: Comment PR with plan
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const fs = require('fs');
-          const plan = fs.readFileSync('infrastructure/plan-output.txt', 'utf8');
-          
-          const output = `#### 🏗️ Terraform Plan
-          
-          <details>
-          <summary>Show Plan</summary>
-          
-          \`\`\`terraform
-          ${plan}
-          \`\`\`
-          
-          </details>
-          
-          **Compliance Review Required**: All infrastructure changes are audited for ISO 27001/SOC 2 compliance.`;
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output
-          });
-
   compliance-summary:
     name: Compliance Summary
     runs-on: ubuntu-latest
-    needs: [compliance-validation, container-security, infrastructure-plan]
+    needs: [compliance-validation, container-security]
     if: always()
     
     steps:
@@ -253,12 +193,6 @@ jobs:
           echo "✅ **Container Security Scan**: PASSED" >> $GITHUB_STEP_SUMMARY
         else
           echo "❌ **Container Security Scan**: FAILED" >> $GITHUB_STEP_SUMMARY
-        fi
-        
-        if [ "${{ needs.infrastructure-plan.result }}" == "success" ] || [ "${{ needs.infrastructure-plan.result }}" == "skipped" ]; then
-          echo "✅ **Infrastructure Plan**: PASSED" >> $GITHUB_STEP_SUMMARY
-        else
-          echo "❌ **Infrastructure Plan**: FAILED" >> $GITHUB_STEP_SUMMARY
         fi
         
         echo "" >> $GITHUB_STEP_SUMMARY
