@@ -8,6 +8,7 @@ metadata:
     managed-by: webapp-team
     compliance: iso27001-soc2-gdpr
     security-policy: tenant-isolation
+    data-residency: eu
 spec:
   podSelector: {}  # Apply to all pods in namespace
   policyTypes:
@@ -84,6 +85,7 @@ metadata:
     managed-by: webapp-team
     compliance: iso27001-soc2-gdpr
     security-policy: cross-tenant-prevention
+    data-residency: eu
 spec:
   podSelector: {}
   policyTypes:
