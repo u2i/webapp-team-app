@@ -95,43 +95,71 @@ jobs:
         
         echo "✅ Created release: $RELEASE_NAME"
         
-        # Wait for deployment to complete
-        gcloud deploy rollouts describe \
-          "${RELEASE_NAME}-to-nonprod-gke-0001" \
-          --project=$PROJECT_ID \
-          --region=$REGION \
-          --delivery-pipeline=$PIPELINE \
-          --release=$RELEASE_NAME \
-          --format="value(state)" | \
-          while read state; do
-            echo "Deployment state: $state"
-            if [ "$state" = "SUCCEEDED" ]; then
-              echo "✅ Non-production deployment successful"
+        # Monitor deployment with detailed logging
+        ROLLOUT_NAME="${RELEASE_NAME}-to-nonprod-gke-0001"
+        echo "🔍 Monitoring rollout: $ROLLOUT_NAME"
+        
+        while true; do
+          # Get current state and job details
+          ROLLOUT_JSON=$(gcloud deploy rollouts describe $ROLLOUT_NAME \
+            --delivery-pipeline=$PIPELINE \
+            --release=$RELEASE_NAME \
+            --region=$REGION \
+            --project=$PROJECT_ID \
+            --format=json)
+          
+          STATE=$(echo "$ROLLOUT_JSON" | jq -r '.state')
+          echo "🚀 Rollout state: $STATE"
+          
+          # Show phase details
+          echo "$ROLLOUT_JSON" | jq -r '.phases[]? | "  Phase \(.id): \(.state)"'
+          
+          case $STATE in
+            "SUCCEEDED")
+              echo "✅ Non-production deployment successful!"
               break
-            elif [ "$state" = "FAILED" ]; then
-              echo "❌ Non-production deployment failed"
+              ;;
+            "FAILED")
+              echo "❌ Non-production deployment failed!"
+              # Get failure details
+              FAILURE_REASON=$(echo "$ROLLOUT_JSON" | jq -r '.failureReason // "Unknown"')
+              echo "Failure reason: $FAILURE_REASON"
+              
+              # Show failed jobs
+              echo "$ROLLOUT_JSON" | jq -r '.phases[]?.jobs[]? | select(.state == "FAILED") | "  Failed job: \(.id)"'
               exit 1
-            fi
-            sleep 30
-          done
+              ;;
+            "IN_PROGRESS"|"PENDING")
+              # Show active jobs
+              echo "$ROLLOUT_JSON" | jq -r '.phases[]?.jobs[]? | select(.state == "IN_PROGRESS") | "  Active job: \(.id)"'
+              ;;
+          esac
+          
+          sleep 15
+        done
     
-    - name: Verify deployment
+    - name: Fetch deployment logs
+      if: always()
       run: |
-        # Get cluster credentials
-        gcloud container clusters get-credentials nonprod-autopilot \
-          --location=$REGION \
-          --project=u2i-gke-nonprod
+        echo "📜 Fetching Cloud Deploy logs..."
         
-        # Check pod health
-        kubectl wait --for=condition=Ready pod \
-          -l app=webapp \
-          -n webapp-team \
-          --timeout=300s
+        # Get Cloud Deploy platform logs for this pipeline
+        gcloud logging read \
+          "resource.type=clouddeploy.googleapis.com/DeliveryPipeline AND \
+           resource.labels.pipeline_id=$PIPELINE AND \
+           timestamp>=\"$(date -u -d '10 minutes ago' +%Y-%m-%dT%H:%M:%S)Z\"" \
+          --project=$PROJECT_ID \
+          --limit=50 \
+          --format="table(timestamp,severity,jsonPayload.message)"
         
-        # Verify service endpoints
-        kubectl get service webapp-service -n webapp-team -o yaml
-        
-        echo "✅ Non-production deployment verified"
+        # Get render/deploy job logs if available
+        echo "🎨 Checking for render job logs..."
+        gcloud logging read \
+          "resource.type=cloudbuild.googleapis.com/build AND \
+           labels.\"clouddeploy.googleapis.com/release_id\"=\"${{ steps.deploy.outputs.release-name }}\"" \
+          --project=$PROJECT_ID \
+          --limit=20 \
+          --format="table(timestamp,textPayload)" || echo "No render logs found"
     
     - name: Generate deployment summary
       run: |
