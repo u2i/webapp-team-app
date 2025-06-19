@@ -57,6 +57,8 @@ jobs:
     
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ env.PROJECT_ID }}
     
     - name: Create audit log entry
       run: |
@@ -73,7 +75,7 @@ jobs:
             \"change_type\": \"application_deployment\"
           }" \
           --severity=INFO \
-          --project=$PROJECT_ID
+          --project=${{ env.PROJECT_ID }}
     
     - name: Deploy to non-production
       id: deploy
