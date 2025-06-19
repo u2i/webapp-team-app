@@ -17,7 +17,7 @@ patches:
   target:
     kind: Ingress
     name: webapp-ingress
-- path: ingress-patch.yaml
+- path: managed-cert-patch.yaml
   target:
     kind: ManagedCertificate
     name: webapp-ssl-cert
