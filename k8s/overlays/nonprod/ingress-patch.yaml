@@ -17,12 +17,3 @@ spec:
             name: webapp-service
             port:
               number: 80
----
-apiVersion: networking.gke.io/v1
-kind: ManagedCertificate
-metadata:
-  name: webapp-ssl-cert
-  namespace: webapp-team
-spec:
-  domains:
-  - webapp.u2i.dev
