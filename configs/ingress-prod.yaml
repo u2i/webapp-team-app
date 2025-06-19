@@ -1,0 +1,41 @@
+# Production ingress configuration patches
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../k8s-manifests/ingress.yaml
+
+patches:
+  - target:
+      kind: Ingress
+      name: webapp-ingress
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: webapp.u2i.dev
+      - op: add
+        path: /spec/rules/-
+        value:
+          host: www.webapp.u2i.dev
+          http:
+            paths:
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: webapp-service
+                  port:
+                    number: 80
+      - op: replace
+        path: /metadata/annotations/external-dns.alpha.kubernetes.io~1hostname
+        value: "webapp.u2i.dev,www.webapp.u2i.dev"
+  - target:
+      kind: ManagedCertificate
+      name: webapp-ssl-cert
+    patch: |-
+      - op: replace
+        path: /spec/domains/0
+        value: webapp.u2i.dev
+      - op: add
+        path: /spec/domains/-
+        value: www.webapp.u2i.dev

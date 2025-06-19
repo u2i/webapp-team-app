@@ -7,18 +7,21 @@ metadata:
     app: webapp
     tenant: webapp-team
     compliance: iso27001-soc2-gdpr
+    data-residency: eu
   annotations:
-    kubernetes.io/ingress.class: "gce"
-    kubernetes.io/ingress.global-static-ip-name: "webapp-ip"  # Will be different per environment
+    # Dynamic IP allocation - no static IP specified
     networking.gke.io/managed-certificates: "webapp-ssl-cert"
-    kubernetes.io/ingress.allow-http: "false"
+    kubernetes.io/ingress.allow-http: "true"  # Allow HTTP during cert provisioning
+    # For external-dns if installed
+    external-dns.alpha.kubernetes.io/hostname: "${INGRESS_HOSTS}"
 spec:
+  ingressClassName: "gce"
   rules:
-  - host: webapp.example.com  # Will be different per environment
+  - host: ${INGRESS_HOST}  # Will be replaced by kustomize per environment
     http:
       paths:
-      - path: /*
-        pathType: ImplementationSpecific
+      - path: /
+        pathType: Prefix
         backend:
           service:
             name: webapp-service
@@ -34,6 +37,7 @@ metadata:
     app: webapp
     tenant: webapp-team
     compliance: iso27001-soc2-gdpr
+    data-residency: eu
 spec:
   domains:
-  - webapp.example.com  # Will be different per environment
+  - ${INGRESS_HOST}  # Will be replaced by kustomize per environment
