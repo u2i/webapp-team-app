@@ -4,7 +4,7 @@ metadata:
   name: webapp-deployment
 build:
   artifacts:
-  - image: webapp
+  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
     docker:
       dockerfile: Dockerfile
 manifests:
