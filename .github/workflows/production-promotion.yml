@@ -20,7 +20,7 @@ on:
 env:
   PROJECT_ID: u2i-tenant-webapp
   REGION: europe-west1
-  PIPELINE: webapp-delivery-pipeline
+  PIPELINE: webapp-pipeline
 
 jobs:
   validate-approval:
