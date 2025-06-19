@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webapp-ingress
+  namespace: webapp-team
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: "webapp.u2i.dev"
+spec:
+  rules:
+  - host: webapp.u2i.dev
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: webapp-service
+            port:
+              number: 80
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: webapp-ssl-cert
+  namespace: webapp-team
+spec:
+  domains:
+  - webapp.u2i.dev
