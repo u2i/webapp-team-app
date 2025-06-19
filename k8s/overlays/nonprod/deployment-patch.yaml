@@ -9,6 +9,7 @@ spec:
     spec:
       containers:
       - name: webapp
+        image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp:v1.0.0
         env:
         - name: ENVIRONMENT
           value: "nonprod"
