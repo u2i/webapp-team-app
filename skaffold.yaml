@@ -25,6 +25,7 @@ profiles:
     - k8s-infra/network-policy.yaml
     - k8s-manifests/deployment.yaml
     - k8s-manifests/service.yaml
+    - k8s-manifests/ingress.yaml
   patches:
   # Infrastructure patches for nonprod
   - op: replace
@@ -88,6 +89,7 @@ profiles:
     - k8s-infra/network-policy.yaml
     - k8s-manifests/deployment.yaml
     - k8s-manifests/service.yaml
+    - k8s-manifests/ingress.yaml
   patches:
   # Infrastructure patches for prod
   - op: replace

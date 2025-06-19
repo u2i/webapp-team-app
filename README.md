@@ -6,15 +6,27 @@ This repository contains the WebApp Team's application deployment infrastructure
 
 ```
 webapp-team-app/
-├── .github/workflows/           # GitOps CI/CD workflows
-├── infrastructure/              # Terraform for tenant project
+├── .github/workflows/           # GitOps CI/CD workflows for application
 ├── k8s-manifests/              # Kubernetes application manifests
 ├── k8s-infra/                  # Team-managed infrastructure (RBAC, quotas)
 ├── configs/                    # Environment-specific configurations
 ├── clouddeploy.yaml           # Cloud Deploy pipeline configuration
 ├── skaffold.yaml              # Application build and deploy
+├── app.js                     # Sample application code
+├── Dockerfile                 # Container image definition
 └── README.md                  # This file
 ```
+
+## 🏗️ Infrastructure Repository
+
+**Infrastructure as Code** is managed separately at:
+**[webapp-team-infrastructure](https://github.com/u2i/webapp-team-infrastructure)**
+
+This includes:
+- Terraform configuration for the tenant project
+- GitOps workflows with Slack approval
+- Kubernetes namespace and RBAC setup
+- Infrastructure compliance automation
 
 ## 🔒 Compliance Features
 
