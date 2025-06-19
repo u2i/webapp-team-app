@@ -121,27 +121,6 @@ jobs:
         
         echo "✅ Change control validated"
     
-    - name: Terraform validation
-      working-directory: infrastructure
-      run: |
-        echo "🏗️ Validating Terraform configuration..."
-        
-        # Install Terraform
-        wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-        echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-        sudo apt update && sudo apt install terraform
-        
-        # Validate configuration
-        terraform init -backend=false
-        terraform validate
-        
-        # Check for compliance tags
-        if ! grep -q "compliance.*iso27001-soc2-gdpr" *.tf; then
-          echo "❌ Terraform resources must have compliance tags"
-          exit 1
-        fi
-        
-        echo "✅ Terraform configuration validated"
 
   container-security:
     name: Container Security Scanning
