@@ -10,15 +10,21 @@ build:
 manifests:
   kustomize:
     paths:
-    - k8s-overlays/nonprod
+    - k8s/overlays/nonprod
+    buildArgs:
+    - "--load-restrictor=LoadRestrictionsNone"
 profiles:
 - name: nonprod
   manifests:
     kustomize:
       paths:
-      - k8s-overlays/nonprod
+      - k8s/overlays/nonprod
+      buildArgs:
+      - "--load-restrictor=LoadRestrictionsNone"
 - name: prod
   manifests:
     kustomize:
       paths:
-      - k8s-overlays/prod
+      - k8s/overlays/prod
+      buildArgs:
+      - "--load-restrictor=LoadRestrictionsNone"

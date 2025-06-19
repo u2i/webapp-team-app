@@ -2,13 +2,11 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+# Infrastructure resources
 - ../../k8s-infra/rbac.yaml
 - ../../k8s-infra/resource-quota.yaml
 - ../../k8s-infra/network-policy.yaml
+# Application resources
 - ../../k8s-manifests/deployment.yaml
 - ../../k8s-manifests/service.yaml
 - ../../k8s-manifests/ingress.yaml
-
-patchesStrategicMerge:
-- resource-quota-patch.yaml
-- deployment-patch.yaml
