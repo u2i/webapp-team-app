@@ -7,6 +7,7 @@ metadata:
     app: webapp
     tenant: webapp-team
     compliance: iso27001-soc2-gdpr
+    data-residency: eu
   annotations:
     kubernetes.io/ingress.class: "gce"
     kubernetes.io/ingress.global-static-ip-name: "webapp-ip"  # Will be different per environment
@@ -34,6 +35,7 @@ metadata:
     app: webapp
     tenant: webapp-team
     compliance: iso27001-soc2-gdpr
+    data-residency: eu
 spec:
   domains:
   - webapp.example.com  # Will be different per environment
