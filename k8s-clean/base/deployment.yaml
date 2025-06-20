@@ -2,15 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: webapp
-  namespace: webapp-team
-  labels:
-    app: webapp
-    tenant: webapp-team
-    compliance: iso27001-soc2-gdpr
-    data-residency: eu
-    gdpr-compliant: "true"
 spec:
-  replicas: 2  # Will be overridden by profile
+  replicas: 2
   selector:
     matchLabels:
       app: webapp
@@ -18,12 +11,7 @@ spec:
     metadata:
       labels:
         app: webapp
-        tenant: webapp-team
-        compliance: iso27001-soc2-gdpr
-        data-residency: eu
-        gdpr-compliant: "true"
       annotations:
-        # GKE Autopilot security annotations
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
     spec:
       securityContext:
@@ -58,7 +46,7 @@ spec:
         - name: PORT
           value: "8080"
         - name: ENVIRONMENT
-          value: "dev"  # Will be overridden by profile
+          value: "dev"
         - name: REGION
           value: "europe-west1"
         - name: COMPLIANCE_MODE
