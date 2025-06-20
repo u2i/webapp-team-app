@@ -96,7 +96,14 @@ jobs:
         echo "✅ Created release: $RELEASE_NAME"
         
         # Monitor deployment with detailed logging
-        ROLLOUT_NAME="${RELEASE_NAME}-to-nonprod-gke-0001"
+        # First, find the actual rollout name
+        ROLLOUT_NAME=$(gcloud deploy rollouts list \
+          --delivery-pipeline=$PIPELINE \
+          --release=$RELEASE_NAME \
+          --region=$REGION \
+          --project=$PROJECT_ID \
+          --format="value(name)" \
+          --limit=1)
         echo "🔍 Monitoring rollout: $ROLLOUT_NAME"
         
         while true; do
