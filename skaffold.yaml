@@ -14,7 +14,7 @@ manifests:
     buildArgs:
     - "--load-restrictor=LoadRestrictionsNone"
 profiles:
-- name: nonprod
+- name: non-prod
   manifests:
     kustomize:
       paths:
