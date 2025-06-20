@@ -6,7 +6,7 @@ on:
     paths:
       - 'k8s-clean/**'
       - 'clouddeploy-clean.yaml'
-      - 'skaffold-clean.yaml'
+      - 'skaffold.yaml'
       - 'Dockerfile'
       - 'app.js'
       - 'package.json'
