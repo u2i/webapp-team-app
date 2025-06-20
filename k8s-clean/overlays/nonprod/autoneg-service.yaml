@@ -1,0 +1,26 @@
+# Service with Autoneg annotations
+# The Autoneg controller will automatically attach NEGs to the backend service
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-service
+  namespace: webapp-team
+  annotations:
+    # Enable NEG creation
+    cloud.google.com/neg: '{"exposed_ports": {"80": {}}}'
+    # Autoneg annotation - tells controller which backend to attach to
+    anthos.cft.dev/autoneg: |
+      {
+        "name": "webapp-dev-backend",
+        "max_rate_per_endpoint": 100
+      }
+spec:
+  type: ClusterIP
+  selector:
+    app: webapp
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+      name: http

@@ -1,0 +1,136 @@
+# Autoneg Controller Installation
+# This controller automatically manages NEG attachments to backend services
+
+# Namespace for Autoneg controller
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: autoneg-system
+---
+# ServiceAccount for Autoneg controller
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: autoneg-controller-manager
+  namespace: autoneg-system
+---
+# ClusterRole for Autoneg controller
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: autoneg-manager-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - endpoints
+  - events
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - services/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - compute.cnrm.cloud.google.com
+  resources:
+  - computebackendservices
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - patch
+---
+# ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: autoneg-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: autoneg-manager-role
+subjects:
+- kind: ServiceAccount
+  name: autoneg-controller-manager
+  namespace: autoneg-system
+---
+# Deployment for Autoneg controller
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autoneg-controller-manager
+  namespace: autoneg-system
+  labels:
+    app: autoneg-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: autoneg-controller
+  template:
+    metadata:
+      labels:
+        app: autoneg-controller
+    spec:
+      serviceAccountName: autoneg-controller-manager
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+      containers:
+      - name: controller
+        image: gcr.io/google-containers/autoneg-controller:v0.9.9
+        args:
+        - --v=2
+        - --project-id=u2i-tenant-webapp
+        - --backend-project-id=u2i-gke-nonprod
+        - --enable-non-gcp-mode=false
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/run/secrets/cloud.google.com/key.json
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - name: google-cloud-key
+          mountPath: /var/run/secrets/cloud.google.com
+          readOnly: true
+      volumes:
+      - name: google-cloud-key
+        secret:
+          secretName: autoneg-gcp-key
+---
+# ConfigMap for Autoneg configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: autoneg-config
+  namespace: autoneg-system
+data:
+  config.yaml: |
+    # Autoneg controller configuration
+    project_id: u2i-tenant-webapp
+    backend_project_id: u2i-gke-nonprod
+    sync_period: 30s
+    max_rate_per_endpoint: 100

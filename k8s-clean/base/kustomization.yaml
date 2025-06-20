@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: webapp-team
+
+resources:
+- namespace.yaml
+- deployment.yaml
+- service-autoneg.yaml
+- network-policy.yaml
+
+commonLabels:
+  app: webapp
+  tenant: webapp-team
+  compliance: iso27001-soc2-gdpr
+  data-residency: eu
