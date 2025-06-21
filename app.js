@@ -13,7 +13,7 @@ app.get('/ready', (req, res) => {
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'Hello from webapp-team! v2',
+    message: 'Hello from webapp-team! v3 - Cloud Deploy fixed',
     environment: environment,
     region: 'europe-west1',
     compliance: 'iso27001-soc2-gdpr',
