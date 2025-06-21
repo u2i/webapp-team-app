@@ -161,3 +161,19 @@ spec:
   ipAddress:
     addressRef:
       name: webapp-dev-ip
+---
+# Gateway for L4 TCP proxy with External DNS support
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: webapp-gateway
+  annotations:
+    networking.gke.io/static-ipv4: webapp-dev-ip
+    external-dns.alpha.kubernetes.io/hostname: dev.webapp.u2i.dev
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  gatewayClassName: gke-l4-global-external-managed
+  listeners:
+  - name: https
+    port: 443
+    protocol: TCP
