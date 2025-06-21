@@ -126,7 +126,7 @@ spec:
   backendServiceRef:
     name: webapp-dev-backend
   certificateMapRef:
-    name: webapp-cert-map
+    external: projects/u2i-tenant-webapp/locations/global/certificateMaps/webapp-cert-map
   sslPolicyRef:
     name: webapp-ssl-policy
   proxyHeader: NONE
