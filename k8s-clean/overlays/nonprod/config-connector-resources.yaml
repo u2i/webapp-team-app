@@ -72,23 +72,73 @@ spec:
     groupRef:
       external: projects/u2i-tenant-webapp/zones/europe-west1-d/networkEndpointGroups/webapp-neg-80
 ---
-# Target TCP Proxy
-apiVersion: compute.cnrm.cloud.google.com/v1beta1
-kind: ComputeTargetTCPProxy
+# Certificate Manager - Managed certificate with DNS challenge
+apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
+kind: CertificateManagerCertificate
 metadata:
-  name: webapp-tcp-proxy
+  name: webapp-cert
+  annotations:
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
+spec:
+  location: global
+  managed:
+    domains:
+    - dev.webapp.u2i.dev
+    dnsAuthorizationsRefs:
+    - name: webapp-auth
+---
+# DNS Authorization for certificate
+apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
+kind: CertificateManagerDNSAuthorization
+metadata:
+  name: webapp-auth
+  annotations:
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
+spec:
+  domain: dev.webapp.u2i.dev
+---
+# Certificate Map
+apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
+kind: CertificateManagerCertificateMap
+metadata:
+  name: webapp-cert-map
+  annotations:
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
+spec: {}
+---
+# Certificate Map Entry
+apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
+kind: CertificateManagerCertificateMapEntry
+metadata:
+  name: webapp-entry
+  annotations:
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
+spec:
+  mapRef:
+    name: webapp-cert-map
+  hostname: dev.webapp.u2i.dev
+  certificatesRefs:
+  - name: webapp-cert
+---
+# Target SSL Proxy (instead of TCP)
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeTargetSSLProxy
+metadata:
+  name: webapp-ssl-proxy
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
   backendServiceRef:
     name: webapp-tcp-bs
+  certificateMapRef:
+    external: //certificatemanager.googleapis.com/projects/u2i-tenant-webapp/locations/global/certificateMaps/webapp-cert-map
   proxyHeader: PROXY_V1
 ---
 # Forwarding Rule - binds to static IP
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
 kind: ComputeForwardingRule
 metadata:
-  name: webapp-tcp-fr
+  name: webapp-ssl-fr
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
@@ -97,8 +147,8 @@ spec:
   ipProtocol: TCP
   portRange: "443"
   target:
-    targetTCPProxyRef:
-      name: webapp-tcp-proxy
+    targetSSLProxyRef:
+      name: webapp-ssl-proxy
   ipAddress:
     addressRef:
       name: webapp-dev-ip
