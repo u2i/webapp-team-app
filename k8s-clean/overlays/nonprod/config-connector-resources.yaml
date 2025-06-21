@@ -177,3 +177,16 @@ spec:
   - name: https
     port: 443
     protocol: TCP
+---
+# TCPRoute to connect Gateway to backend service
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TCPRoute
+metadata:
+  name: webapp-tcproute
+spec:
+  parentRefs:
+  - name: webapp-gateway
+  rules:
+  - backendRefs:
+    - name: webapp
+      port: 8080
