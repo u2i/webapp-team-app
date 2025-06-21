@@ -6,7 +6,7 @@ namespace: webapp-team
 resources:
 - namespace.yaml
 - deployment.yaml
-- service-autoneg.yaml
+- service.yaml
 - network-policy.yaml
 
 commonLabels:
