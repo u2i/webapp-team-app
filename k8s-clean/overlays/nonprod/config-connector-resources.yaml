@@ -9,8 +9,6 @@ metadata:
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
-  projectRef:
-    external: u2i-tenant-webapp
   location: global
   addressType: EXTERNAL
   description: "Static IP for webapp dev environment"
@@ -23,8 +21,6 @@ metadata:
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
-  projectRef:
-    external: u2i-tenant-webapp
   managed:
     domains:
     - dev.webapp.u2i.dev
@@ -37,8 +33,6 @@ metadata:
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
-  projectRef:
-    external: u2i-tenant-webapp
   location: global
   checkIntervalSec: 10
   timeoutSec: 5
@@ -55,8 +49,6 @@ metadata:
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
-  projectRef:
-    external: u2i-tenant-webapp
   location: global
   protocol: TCP
   loadBalancingScheme: EXTERNAL
@@ -75,8 +67,6 @@ metadata:
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
-  projectRef:
-    external: u2i-tenant-webapp
   profile: MODERN
   minTlsVersion: TLS_1_2
 ---
@@ -88,8 +78,6 @@ metadata:
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
-  projectRef:
-    external: u2i-tenant-webapp
   backendServiceRef:
     name: webapp-dev-backend
   sslCertificates:
@@ -106,8 +94,6 @@ metadata:
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
-  projectRef:
-    external: u2i-tenant-webapp
   location: global
   portRange: "443"
   ipProtocol: TCP
