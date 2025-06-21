@@ -6,6 +6,7 @@ namespace: webapp-team
 resources:
 - ../../base
 - config-connector-resources.yaml
+- certificate-patches.yaml
 
 patches:
 - target:
