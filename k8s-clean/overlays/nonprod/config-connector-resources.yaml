@@ -13,20 +13,21 @@ spec:
   addressType: EXTERNAL
   description: "Static IP for webapp dev environment"
 ---
-# Stand-alone NEG service (headless) - only for NEG creation, not for traffic
+# Service with NEG annotation for automatic endpoint management
 apiVersion: v1
-kind: Service
+kind: Service  
 metadata:
-  name: webapp-neg-headless
+  name: webapp-service-neg
   annotations:
-    cloud.google.com/neg: '{"exposed_ports":{"80":{}}}'
+    cloud.google.com/neg: '{"exposed_ports":{"80":{"name":"webapp-neg-80"}}}'
 spec:
-  clusterIP: None
+  type: ClusterIP
   selector:
     app: webapp
   ports:
   - port: 80
     targetPort: 8080
+    protocol: TCP
 ---
 # Health Check for TCP
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
@@ -60,10 +61,16 @@ spec:
       name: tcp-80-hc
   connectionDrainingTimeoutSec: 30
   backends:
-  - groupRef:
-      # TODO: Update with actual NEG name after service creates it
-      # Will be something like: projects/u2i-tenant-webapp/zones/europe-west1-b/networkEndpointGroups/k8s1-...
-      external: projects/u2i-tenant-webapp/zones/europe-west1-b/networkEndpointGroups/PLACEHOLDER_NEG
+  - balancingMode: CONNECTION
+    groupRef:
+      # NEG created by the service annotation with explicit name
+      external: projects/u2i-tenant-webapp/zones/europe-west1-b/networkEndpointGroups/webapp-neg-80
+  - balancingMode: CONNECTION
+    groupRef:
+      external: projects/u2i-tenant-webapp/zones/europe-west1-c/networkEndpointGroups/webapp-neg-80
+  - balancingMode: CONNECTION
+    groupRef:
+      external: projects/u2i-tenant-webapp/zones/europe-west1-d/networkEndpointGroups/webapp-neg-80
 ---
 # Target TCP Proxy
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
