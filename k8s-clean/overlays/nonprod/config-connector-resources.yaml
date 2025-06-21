@@ -27,7 +27,7 @@ spec:
   managed:
     domains:
     - dev.webapp.u2i.dev
-    dnsAuthorizations:
+    dnsAuthorizationsRefs:
     - name: webapp-dev-auth
 ---
 # 2. DNS-01 authorization for the domain
@@ -63,12 +63,10 @@ metadata:
 spec:
   projectRef:
     external: u2i-tenant-webapp
-  certificateMapRef:
+  mapRef:
     name: webapp-cert-map
-  certificates:
-  - certificateRef:
-      name: webapp-dev-cert
-  matcher: PRIMARY
+  certificatesRefs:
+  - name: webapp-dev-cert
   hostname: dev.webapp.u2i.dev
 ---
 # Health Check
