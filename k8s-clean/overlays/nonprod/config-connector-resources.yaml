@@ -172,7 +172,7 @@ metadata:
     external-dns.alpha.kubernetes.io/hostname: dev.webapp.u2i.dev
     external-dns.alpha.kubernetes.io/ttl: "300"
 spec:
-  gatewayClassName: gke-l4-global-external-managed
+  gatewayClassName: gke-passthrough-lb-external-managed
   listeners:
   - name: https
     port: 443
