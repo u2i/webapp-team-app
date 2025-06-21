@@ -38,7 +38,6 @@ metadata:
 spec:
   resourceID: webapp-dev-cert
   location: global
-  type: MANAGED
 ---
 # Health Check
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
