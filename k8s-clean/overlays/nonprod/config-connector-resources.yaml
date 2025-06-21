@@ -27,20 +27,6 @@ spec:
     domains:
     - dev.webapp.u2i.dev
 ---
-# ComputeSSLCertificate stub for ComputeTargetSSLProxy reference
-# This references the managed certificate created above
-apiVersion: compute.cnrm.cloud.google.com/v1beta1
-kind: ComputeSSLCertificate
-metadata:
-  name: webapp-dev-cert-v2-stub
-  annotations:
-    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
-    # Import the certificate created by ComputeManagedSSLCertificate
-    cnrm.cloud.google.com/state-into-spec: merge
-spec:
-  resourceID: webapp-dev-cert-v2
-  location: global
----
 # Health Check
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
 kind: ComputeHealthCheck
@@ -97,7 +83,8 @@ spec:
   backendServiceRef:
     name: webapp-dev-backend
   sslCertificates:
-  - name: webapp-dev-cert-v2-stub
+  - name: webapp-dev-cert-v2
+    kind: ComputeManagedSSLCertificate
   sslPolicyRef:
     name: webapp-ssl-policy
   proxyHeader: NONE
