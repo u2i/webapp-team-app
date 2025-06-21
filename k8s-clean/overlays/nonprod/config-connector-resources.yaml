@@ -33,6 +33,7 @@ metadata:
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
+  location: global
   checkIntervalSec: 10
   timeoutSec: 5
   healthyThreshold: 2
@@ -48,6 +49,7 @@ metadata:
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
+  location: global
   protocol: TCP
   loadBalancingScheme: EXTERNAL
   healthChecks:
@@ -78,8 +80,7 @@ spec:
   backendServiceRef:
     name: webapp-dev-backend
   sslCertificates:
-  - sslCertificateRef:
-      name: webapp-dev-cert
+  - name: webapp-dev-cert
   sslPolicyRef:
     name: webapp-ssl-policy
   proxyHeader: NONE
@@ -94,7 +95,7 @@ metadata:
 spec:
   location: global
   portRange: "443"
-  IPProtocol: TCP
+  ipProtocol: TCP
   loadBalancingScheme: EXTERNAL
   target:
     targetSSLProxyRef:
