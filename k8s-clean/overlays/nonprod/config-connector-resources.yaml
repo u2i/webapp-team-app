@@ -21,6 +21,9 @@ metadata:
   name: webapp-dev-cert
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
+  labels:
+    environment: non-prod
+    managed-by: config-connector
 spec:
   projectRef:
     external: u2i-tenant-webapp
@@ -38,6 +41,9 @@ metadata:
   name: webapp-dev-auth
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
+  labels:
+    environment: non-prod
+    managed-by: config-connector
 spec:
   projectRef:
     external: u2i-tenant-webapp
@@ -50,6 +56,9 @@ metadata:
   name: webapp-cert-map
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
+  labels:
+    environment: non-prod
+    managed-by: config-connector
 spec:
   projectRef:
     external: u2i-tenant-webapp
@@ -61,6 +70,9 @@ metadata:
   name: webapp-dev-entry
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
+  labels:
+    environment: non-prod
+    managed-by: config-connector
 spec:
   projectRef:
     external: u2i-tenant-webapp
