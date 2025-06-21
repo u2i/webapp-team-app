@@ -17,7 +17,7 @@ spec:
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
 kind: ComputeManagedSSLCertificate
 metadata:
-  name: webapp-dev-cert
+  name: webapp-dev-managed-cert
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
@@ -26,6 +26,19 @@ spec:
   managed:
     domains:
     - dev.webapp.u2i.dev
+---
+# Stub ComputeSSLCertificate that imports the existing managed certificate
+# This is needed because ComputeTargetSSLProxy expects ComputeSSLCertificate, not ComputeManagedSSLCertificate
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeSSLCertificate
+metadata:
+  name: webapp-dev-cert
+  annotations:
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
+spec:
+  resourceID: webapp-dev-cert
+  location: global
+  type: MANAGED
 ---
 # Health Check
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
