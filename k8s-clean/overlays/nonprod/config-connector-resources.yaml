@@ -24,6 +24,7 @@ metadata:
 spec:
   projectRef:
     external: u2i-tenant-webapp
+  location: global
   managed:
     domains:
     - dev.webapp.u2i.dev
