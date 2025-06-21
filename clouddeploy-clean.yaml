@@ -51,7 +51,7 @@ spec:
   description: "Non-production GKE cluster (includes dev)"
   
   gke:
-    cluster: projects/u2i-gke-nonprod/locations/europe-west1/clusters/nonprod-autopilot
+    cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
     
   executionConfigs:
   - usages: [RENDER, DEPLOY, VERIFY]
