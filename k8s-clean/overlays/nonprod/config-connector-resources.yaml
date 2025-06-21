@@ -21,6 +21,8 @@ metadata:
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
+  projectRef:
+    external: u2i-tenant-webapp
   managed:
     domains:
     - dev.webapp.u2i.dev
