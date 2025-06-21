@@ -13,80 +13,26 @@ spec:
   addressType: EXTERNAL
   description: "Static IP for webapp dev environment"
 ---
-# Certificate Manager - Modern approach for SSL certificates with full GitOps control
-# 1. Google-managed certificate
-apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
-kind: CertificateManagerCertificate
+# Stand-alone NEG service (headless) - only for NEG creation, not for traffic
+apiVersion: v1
+kind: Service
 metadata:
-  name: webapp-dev-cert
+  name: webapp-neg-headless
   annotations:
-    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
-  labels:
-    environment: non-prod
-    managed-by: config-connector
+    cloud.google.com/neg: '{"exposed_ports":{"80":{}}}'
 spec:
-  projectRef:
-    external: u2i-tenant-webapp
-  location: global
-  managed:
-    domains:
-    - dev.webapp.u2i.dev
-    dnsAuthorizationsRefs:
-    - name: webapp-dev-auth
+  clusterIP: None
+  selector:
+    app: webapp
+  ports:
+  - port: 80
+    targetPort: 8080
 ---
-# 2. DNS-01 authorization for the domain
-apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
-kind: CertificateManagerDNSAuthorization
-metadata:
-  name: webapp-dev-auth
-  annotations:
-    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
-  labels:
-    environment: non-prod
-    managed-by: config-connector
-spec:
-  projectRef:
-    external: u2i-tenant-webapp
-  domain: dev.webapp.u2i.dev
----
-# 3. Certificate map to group certificates
-apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
-kind: CertificateManagerCertificateMap
-metadata:
-  name: webapp-cert-map
-  annotations:
-    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
-  labels:
-    environment: non-prod
-    managed-by: config-connector
-spec:
-  projectRef:
-    external: u2i-tenant-webapp
----
-# 4. Map entry to bind hostname to certificate
-apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
-kind: CertificateManagerCertificateMapEntry
-metadata:
-  name: webapp-dev-entry
-  annotations:
-    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
-  labels:
-    environment: non-prod
-    managed-by: config-connector
-spec:
-  projectRef:
-    external: u2i-tenant-webapp
-  mapRef:
-    name: webapp-cert-map
-  certificatesRefs:
-  - name: webapp-dev-cert
-  hostname: dev.webapp.u2i.dev
----
-# Health Check
+# Health Check for TCP
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
 kind: ComputeHealthCheck
 metadata:
-  name: webapp-dev-health
+  name: tcp-80-hc
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
@@ -96,100 +42,73 @@ spec:
   healthyThreshold: 2
   unhealthyThreshold: 3
   tcpHealthCheck:
-    port: 8080
+    port: 80
 ---
-# Backend Service
+# Backend Service for TCP load balancing
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
 kind: ComputeBackendService
 metadata:
-  name: webapp-dev-backend
+  name: webapp-tcp-bs
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
   location: global
   protocol: TCP
-  loadBalancingScheme: EXTERNAL
+  loadBalancingScheme: EXTERNAL_MANAGED
   healthChecks:
   - healthCheckRef:
-      name: webapp-dev-health
-  connectionDrainingTimeoutSec: 60
-  # NEG attachment requires autoneg controller or manual attachment
-  # The service annotation anthos.cft.dev/autoneg would handle this automatically
+      name: tcp-80-hc
+  connectionDrainingTimeoutSec: 30
+  backends:
+  - groupRef:
+      # TODO: Update with actual NEG name after service creates it
+      # Will be something like: projects/u2i-tenant-webapp/zones/europe-west1-b/networkEndpointGroups/k8s1-...
+      external: projects/u2i-tenant-webapp/zones/europe-west1-b/networkEndpointGroups/PLACEHOLDER_NEG
 ---
-# SSL Policy
+# Target TCP Proxy
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
-kind: ComputeSSLPolicy
+kind: ComputeTargetTCPProxy
 metadata:
-  name: webapp-ssl-policy
-  annotations:
-    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
-spec:
-  profile: MODERN
-  minTlsVersion: TLS_1_2
----
-# Target SSL Proxy
-apiVersion: compute.cnrm.cloud.google.com/v1beta1
-kind: ComputeTargetSSLProxy
-metadata:
-  name: webapp-dev-ssl-proxy
+  name: webapp-tcp-proxy
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
   backendServiceRef:
-    name: webapp-dev-backend
-  certificateMapRef:
-    external: //certificatemanager.googleapis.com/projects/u2i-tenant-webapp/locations/global/certificateMaps/webapp-cert-map
-  sslPolicyRef:
-    name: webapp-ssl-policy
-  proxyHeader: NONE
+    name: webapp-tcp-bs
+  proxyHeader: PROXY_V1
 ---
-# Forwarding Rule
+# Forwarding Rule - binds to static IP
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
 kind: ComputeForwardingRule
 metadata:
-  name: webapp-dev-forwarding
+  name: webapp-tcp-fr
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
   location: global
-  portRange: "443"
+  loadBalancingScheme: EXTERNAL_MANAGED
   ipProtocol: TCP
-  loadBalancingScheme: EXTERNAL
+  portRange: "443"
   target:
-    targetSSLProxyRef:
-      name: webapp-dev-ssl-proxy
+    targetTCPProxyRef:
+      name: webapp-tcp-proxy
   ipAddress:
     addressRef:
       name: webapp-dev-ip
 ---
-# Gateway for L4 TCP proxy with External DNS support
-apiVersion: gateway.networking.k8s.io/v1
-kind: Gateway
+# DNS Record - GitOps managed
+apiVersion: dns.cnrm.cloud.google.com/v1beta1
+kind: DNSRecordSet
 metadata:
-  name: webapp-gateway
+  name: dev-webapp-a
   annotations:
-    networking.gke.io/static-ipv4: webapp-dev-ip
-    external-dns.alpha.kubernetes.io/hostname: dev.webapp.u2i.dev
-    external-dns.alpha.kubernetes.io/ttl: "300"
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
-  gatewayClassName: gke-passthrough-lb-external-managed
-  listeners:
-  - name: tcp
-    protocol: TCP
-    port: 443
-    allowedRoutes:
-      namespaces:
-        from: Same
----
-# TCPRoute to connect Gateway to backend service
-apiVersion: gateway.networking.k8s.io/v1alpha2
-kind: TCPRoute
-metadata:
-  name: webapp-tcp
-spec:
-  parentRefs:
-  - name: webapp-gateway
-  rules:
-  - backendRefs:
-    - name: webapp-service
-      port: 80
+  name: "dev.webapp.u2i.dev."
+  type: "A"
+  ttl: 300
+  managedZoneRef:
+    external: webapp-zone
+  rrdatasRefs:
+  - name: webapp-dev-ip
+    kind: ComputeAddress
