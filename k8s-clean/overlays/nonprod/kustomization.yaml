@@ -18,6 +18,16 @@ patches:
     - op: replace
       path: /spec/template/spec/containers/0/env/1/value
       value: non-prod
+- target:
+    kind: Service
+    name: webapp-service
+  patch: |-
+    - op: add
+      path: /metadata/annotations/external-dns.alpha.kubernetes.io~1hostname
+      value: dev.webapp.u2i.dev
+    - op: add
+      path: /metadata/annotations/external-dns.alpha.kubernetes.io~1ttl
+      value: "300"
 
 configMapGenerator:
 - name: webapp-config
