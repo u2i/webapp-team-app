@@ -62,15 +62,18 @@ spec:
   connectionDrainingTimeoutSec: 30
   backend:
   - balancingMode: CONNECTION
+    maxConnectionsPerEndpoint: 100
     group:
       # NEG created by the service annotation with explicit name
       networkEndpointGroupRef:
         external: projects/u2i-tenant-webapp/zones/europe-west1-b/networkEndpointGroups/webapp-neg-80
   - balancingMode: CONNECTION
+    maxConnectionsPerEndpoint: 100
     group:
       networkEndpointGroupRef:
         external: projects/u2i-tenant-webapp/zones/europe-west1-c/networkEndpointGroups/webapp-neg-80
   - balancingMode: CONNECTION
+    maxConnectionsPerEndpoint: 100
     group:
       networkEndpointGroupRef:
         external: projects/u2i-tenant-webapp/zones/europe-west1-d/networkEndpointGroups/webapp-neg-80
