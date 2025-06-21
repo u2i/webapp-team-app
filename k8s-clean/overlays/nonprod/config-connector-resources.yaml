@@ -39,7 +39,7 @@ spec:
   healthyThreshold: 2
   unhealthyThreshold: 3
   tcpHealthCheck:
-    port: 80
+    port: 8080
 ---
 # Backend Service
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
@@ -56,7 +56,8 @@ spec:
   - healthCheckRef:
       name: webapp-dev-health
   connectionDrainingTimeoutSec: 60
-  # NEG will be automatically attached by GKE
+  # NEG attachment requires autoneg controller or manual attachment
+  # The service annotation anthos.cft.dev/autoneg would handle this automatically
 ---
 # SSL Policy
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
