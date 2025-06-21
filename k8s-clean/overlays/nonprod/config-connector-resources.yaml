@@ -83,8 +83,7 @@ spec:
   backendServiceRef:
     name: webapp-dev-backend
   sslCertificates:
-  - name: webapp-dev-cert-v2
-    kind: ComputeManagedSSLCertificate
+  - external: https://www.googleapis.com/compute/v1/projects/u2i-tenant-webapp/global/sslCertificates/webapp-dev-cert-v2
   sslPolicyRef:
     name: webapp-ssl-policy
   proxyHeader: NONE
