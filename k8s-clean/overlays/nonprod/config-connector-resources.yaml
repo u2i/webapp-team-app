@@ -77,7 +77,6 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: gce
     kubernetes.io/ingress.global-static-ip-name: webapp-dev-ip
-    ingress.gcp.kubernetes.io/pre-shared-cert: webapp-cert-map
     external-dns.alpha.kubernetes.io/hostname: dev.webapp.u2i.dev
     external-dns.alpha.kubernetes.io/ttl: "300"
 spec:
