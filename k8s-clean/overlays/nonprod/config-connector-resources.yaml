@@ -13,11 +13,12 @@ spec:
   addressType: EXTERNAL
   description: "Static IP for webapp dev environment"
 ---
-# Managed SSL Certificate for dev.webapp.u2i.dev (GitOps controlled)
-apiVersion: compute.cnrm.cloud.google.com/v1beta1
-kind: ComputeManagedSSLCertificate
+# Certificate Manager - Modern approach for SSL certificates with full GitOps control
+# 1. Google-managed certificate
+apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
+kind: CertificateManagerCertificate
 metadata:
-  name: webapp-dev-cert-v2
+  name: webapp-dev-cert
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
@@ -26,6 +27,49 @@ spec:
   managed:
     domains:
     - dev.webapp.u2i.dev
+    dnsAuthorizations:
+    - name: webapp-dev-auth
+---
+# 2. DNS-01 authorization for the domain
+apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
+kind: CertificateManagerDNSAuthorization
+metadata:
+  name: webapp-dev-auth
+  annotations:
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
+spec:
+  projectRef:
+    external: u2i-tenant-webapp
+  domain: dev.webapp.u2i.dev
+---
+# 3. Certificate map to group certificates
+apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
+kind: CertificateManagerCertificateMap
+metadata:
+  name: webapp-cert-map
+  annotations:
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
+spec:
+  projectRef:
+    external: u2i-tenant-webapp
+---
+# 4. Map entry to bind hostname to certificate
+apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
+kind: CertificateManagerCertificateMapEntry
+metadata:
+  name: webapp-dev-entry
+  annotations:
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
+spec:
+  projectRef:
+    external: u2i-tenant-webapp
+  certificateMapRef:
+    name: webapp-cert-map
+  certificates:
+  - certificateRef:
+      name: webapp-dev-cert
+  matcher: PRIMARY
+  hostname: dev.webapp.u2i.dev
 ---
 # Health Check
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
@@ -82,9 +126,8 @@ metadata:
 spec:
   backendServiceRef:
     name: webapp-dev-backend
-  sslCertificates:
-  - name: webapp-dev-cert-v2
-    kind: ComputeManagedSSLCertificate
+  certificateMapRef:
+    name: webapp-cert-map
   sslPolicyRef:
     name: webapp-ssl-policy
   proxyHeader: NONE
