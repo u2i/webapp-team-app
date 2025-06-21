@@ -9,12 +9,9 @@ metadata:
   annotations:
     # Enable NEG creation
     cloud.google.com/neg: '{"exposed_ports": {"80": {}}}'
-    # Autoneg annotation - tells controller which backend to attach to
-    anthos.cft.dev/autoneg: |
-      {
-        "name": "webapp-dev-backend",
-        "max_rate_per_endpoint": 100
-      }
+    # Autoneg controller will attach NEGs to backend service
+    controller.autoneg.dev/neg: |
+      {"backend_services":{"80":[{"name":"webapp-dev-backend","max_connections_per_endpoint":100}]}}
 spec:
   type: ClusterIP
   selector:
