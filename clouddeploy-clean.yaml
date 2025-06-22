@@ -72,7 +72,7 @@ spec:
   description: "Production GKE cluster with strict compliance"
   
   gke:
-    cluster: projects/u2i-gke-prod/locations/europe-west1/clusters/prod-autopilot
+    cluster: projects/u2i-tenant-webapp-prod/locations/europe-west1/clusters/webapp-cluster-prod
     
   executionConfigs:
   - usages: [RENDER, DEPLOY, VERIFY]

@@ -270,9 +270,9 @@ jobs:
         # (In real implementation, you'd check GitHub issues API)
         
         # Verify non-prod is healthy
-        gcloud container clusters get-credentials nonprod-autopilot \
+        gcloud container clusters get-credentials webapp-cluster \
           --location=$REGION \
-          --project=u2i-gke-nonprod
+          --project=u2i-tenant-webapp
         
         if ! kubectl get pods -l app=webapp -n webapp-team --field-selector=status.phase=Running | grep -q webapp; then
           echo "❌ Non-production environment is not healthy"
@@ -320,9 +320,9 @@ jobs:
     - name: Post-deployment verification
       run: |
         # Get production cluster credentials
-        gcloud container clusters get-credentials prod-autopilot \
+        gcloud container clusters get-credentials webapp-cluster-prod \
           --location=$REGION \
-          --project=u2i-gke-prod
+          --project=u2i-tenant-webapp-prod
         
         # Verify deployment
         kubectl wait --for=condition=Ready pod \

@@ -1,12 +1,11 @@
 # Webapp Team App Deployment Guide
 
-This guide covers deploying the webapp to the non-prod/dev environment with L4 TCP proxy load balancer and TLS termination.
+This guide covers deploying the webapp to the non-prod/dev environment using GKE Ingress (L7 HTTP(S) Load Balancer).
 
 ## Prerequisites
 
 1. Access to the GCP projects:
-   - `u2i-tenant-webapp` (webapp project)
-   - `u2i-gke-nonprod` (GKE cluster project)
+   - `u2i-tenant-webapp` (webapp project with GKE cluster)
 
 2. Tools installed:
    - `gcloud` CLI
@@ -15,45 +14,33 @@ This guide covers deploying the webapp to the non-prod/dev environment with L4 T
 
 ## Step 1: Apply Terraform Changes
 
-First, apply the Terraform changes to create the Autoneg controller service account:
+First, apply the Terraform changes to ensure all infrastructure is in place:
 
 ```bash
 cd webapp-team-infrastructure/projects/non-prod
 terragrunt apply
 ```
 
-This creates:
-- Autoneg controller service account
+This ensures:
+- GKE cluster is configured
 - Required IAM permissions
 - Workload Identity bindings
+- External DNS setup
 
-## Step 2: Deploy Autoneg Controller
+## Step 2: Deploy Config Connector Resources
 
-Deploy the Autoneg controller to automatically manage NEG attachments:
-
-```bash
-kubectl apply -f webapp-team-app/k8s-clean/autoneg/autoneg-controller.yaml
-```
-
-Verify the controller is running:
-```bash
-kubectl get pods -n autoneg-system
-```
-
-## Step 3: Deploy Config Connector Resources
-
-Deploy the L4 load balancer resources using Config Connector:
+Deploy the L7 Ingress resources using Config Connector:
 
 ```bash
-kubectl apply -f webapp-team-app/k8s-clean/overlays/nonprod/config-connector-resources.yaml
+kubectl apply -f webapp-team-app/k8s-clean/overlays/nonprod/config-connector-resources.yaml -n webapp-team
 ```
 
 This creates:
 - Static IP address
-- SSL certificate for dev.webapp.u2i.dev
-- L4 TCP proxy load balancer components
+- Managed SSL certificate for dev.webapp.u2i.dev
+- GKE Ingress for L7 load balancing
 
-## Step 4: Deploy Cloud Deploy Pipeline
+## Step 3: Deploy Cloud Deploy Pipeline
 
 Deploy the Cloud Deploy pipeline and targets:
 
@@ -63,7 +50,7 @@ gcloud deploy apply --file webapp-team-app/clouddeploy-clean.yaml \
   --project u2i-tenant-webapp
 ```
 
-## Step 5: Deploy the Application
+## Step 4: Deploy the Application
 
 Build and deploy the application using Cloud Deploy:
 
@@ -77,75 +64,60 @@ gcloud deploy releases create release-$(date +%Y%m%d-%H%M%S) \
   --images europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp=europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp:latest
 ```
 
-## Step 6: Verify NEG Attachment
+## Step 5: Verify DNS and Certificate
 
-The Autoneg controller will automatically attach the NEGs to the backend service. Monitor the logs:
+External DNS will automatically create the DNS record. Check the certificate status:
 
 ```bash
-kubectl logs -n autoneg-system deployment/autoneg-controller-manager -f
+kubectl get managedcertificate -n webapp-team
 ```
 
-## Step 7: Update DNS
+The certificate will show as "Provisioning" initially and change to "Active" within 15-60 minutes.
 
-Get the static IP address:
+## Step 6: Verify Deployment
+
+Test the application:
+
 ```bash
-gcloud compute addresses describe webapp-dev-ip \
-  --global \
-  --project u2i-tenant-webapp \
-  --format="value(address)"
+# Test HTTP
+curl http://dev.webapp.u2i.dev
+
+# Once certificate is active, test HTTPS
+curl https://dev.webapp.u2i.dev
 ```
 
-Update the DNS record for `dev.webapp.u2i.dev` to point to this IP address.
+## Monitoring
 
-## Step 8: Verify Deployment
+- Check application logs:
+  ```bash
+  kubectl logs -l app=webapp -n webapp-team
+  ```
 
-1. Check the service is running:
-   ```bash
-   kubectl get pods -n webapp-team
-   kubectl get svc -n webapp-team
-   ```
+- Check ingress status:
+  ```bash
+  kubectl describe ingress webapp-ingress -n webapp-team
+  ```
 
-2. Check NEGs are created:
-   ```bash
-   gcloud compute network-endpoint-groups list \
-     --project u2i-gke-nonprod \
-     --filter "name:k8s*webapp*"
-   ```
-
-3. Check backend service health:
-   ```bash
-   gcloud compute backend-services get-health webapp-dev-backend \
-     --global \
-     --project u2i-tenant-webapp
-   ```
-
-4. Once DNS propagates, test the application:
-   ```bash
-   curl https://dev.webapp.u2i.dev/health
-   ```
+- Check External DNS logs:
+  ```bash
+  kubectl logs -n external-dns deployment/external-dns
+  ```
 
 ## Troubleshooting
 
-### NEGs not attaching
-- Check Autoneg controller logs
-- Verify service has correct annotations
-- Ensure backend service exists in Config Connector
+### Certificate stuck in provisioning
+- Verify DNS is resolving: `nslookup dev.webapp.u2i.dev 8.8.8.8`
+- Check External DNS is working: `kubectl logs -n external-dns deployment/external-dns`
+- Ensure DNS delegation is correct for webapp.u2i.dev zone
 
-### Certificate not provisioning
-- Check ManagedCertificate status: `kubectl describe managedcertificate webapp-dev-cert -n webapp-team`
-- Ensure DNS is pointing to the correct IP
-- Certificate provisioning can take up to 20 minutes
+### 502 errors
+- Check if pods are running: `kubectl get pods -n webapp-team`
+- Verify service endpoints: `kubectl get endpoints webapp-service -n webapp-team`
+- Check backend service health in GCP Console
 
-### Load balancer not working
-- Check firewall rules allow traffic from Google LB ranges
-- Verify health check is passing
-- Check backend service configuration
+## Repository Structure
 
-## Clean Structure
-
-The cleaned up structure separates concerns:
-- `/k8s-clean/base/` - Base Kubernetes resources
-- `/k8s-clean/overlays/nonprod/` - Non-prod specific configs and Config Connector resources
-- `/k8s-clean/autoneg/` - Autoneg controller deployment
-- `clouddeploy-clean.yaml` - Simplified Cloud Deploy configuration
-- `skaffold-clean.yaml` - Points to the clean structure
+- `/k8s-base/` - Base Kubernetes manifests
+- `/k8s-clean/overlays/` - Environment-specific configurations
+- `/clouddeploy-clean.yaml` - Cloud Deploy pipeline configuration
+- `/skaffold-clean.yaml` - Skaffold build configuration

@@ -134,9 +134,9 @@ jobs:
         echo "🔍 Checking non-production environment health..."
         
         # Get non-prod cluster credentials
-        gcloud container clusters get-credentials nonprod-autopilot \
+        gcloud container clusters get-credentials webapp-cluster \
           --location=$REGION \
-          --project=u2i-gke-nonprod
+          --project=u2i-tenant-webapp
         
         # Check if pods are healthy
         if ! kubectl get pods -l app=webapp -n webapp-team --field-selector=status.phase=Running | grep -q webapp; then
@@ -272,9 +272,9 @@ jobs:
         echo "🔍 Verifying production deployment..."
         
         # Get production cluster credentials
-        gcloud container clusters get-credentials prod-autopilot \
+        gcloud container clusters get-credentials webapp-cluster-prod \
           --location=$REGION \
-          --project=u2i-gke-prod
+          --project=u2i-tenant-webapp-prod
         
         # Wait for pods to be ready
         kubectl wait --for=condition=Ready pod \
