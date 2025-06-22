@@ -1,0 +1,67 @@
+# Config Connector resources for production environment
+
+# Reserve static IP address
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeAddress
+metadata:
+  name: webapp-prod-ip
+  annotations:
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp-prod
+spec:
+  location: global
+  addressType: EXTERNAL
+  description: "Static IP for webapp production environment"
+---
+# GKE ManagedCertificate
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: webapp-cert-prod
+spec:
+  domains:
+  - webapp.u2i.com
+  - www.webapp.u2i.com
+---
+# Ingress for L7 HTTPS Load Balancer with CDN
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webapp-ingress
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "webapp-prod-ip"
+    networking.gke.io/managed-certificates: "webapp-cert-prod"
+    kubernetes.io/ingress.allow-http: "false"  # HTTPS only in prod
+    external-dns.alpha.kubernetes.io/hostname: "webapp.u2i.com"
+    external-dns.alpha.kubernetes.io/ttl: "300"
+    # Enable Cloud CDN for production
+    cloud.google.com/cdn: "true"
+    cloud.google.com/backend-config: '{"default": "webapp-backend-config"}'
+spec:
+  defaultBackend:
+    service:
+      name: webapp-service
+      port:
+        number: 80
+---
+# Backend configuration for production
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: webapp-backend-config
+spec:
+  cdn:
+    enabled: true
+    cachePolicy:
+      includeHost: true
+      includeProtocol: true
+      includeQueryString: false
+    negativeCaching: true
+    negativeCachingPolicy:
+    - code: 404
+      ttl: 10
+    - code: 500
+      ttl: 1
+  timeoutSec: 30
+  connectionDraining:
+    drainingTimeoutSec: 60

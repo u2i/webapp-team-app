@@ -1,0 +1,41 @@
+# Config Connector resources for staging environment
+
+# Reserve static IP address
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeAddress
+metadata:
+  name: webapp-staging-ip
+  annotations:
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
+spec:
+  location: global
+  addressType: EXTERNAL
+  description: "Static IP for webapp staging environment"
+---
+# GKE ManagedCertificate
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: webapp-cert-staging
+spec:
+  domains:
+  - staging.webapp.u2i.dev
+---
+# Ingress with production-like settings
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webapp-ingress
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "webapp-staging-ip"
+    networking.gke.io/managed-certificates: "webapp-cert-staging"
+    kubernetes.io/ingress.allow-http: "false"  # HTTPS only like prod
+    external-dns.alpha.kubernetes.io/hostname: "staging.webapp.u2i.dev"
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  defaultBackend:
+    service:
+      name: webapp-service
+      port:
+        number: 80

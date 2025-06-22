@@ -13,15 +13,47 @@ build:
 manifests:
   kustomize:
     paths:
-    - k8s-clean/overlays/nonprod
+    - k8s-clean/overlays/dev  # Default to dev
 profiles:
-- name: non-prod
+# Resource-based profiles that can be reused across environments
+- name: dev-resources
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/nonprod
-- name: prod
+      - k8s-clean/overlays/dev
+- name: prod-resources
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/prod
+      - k8s-clean/overlays/production
+# Specific environment deployments
+- name: dev
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/dev
+- name: qa
+  # QA uses dev resources but with qa-specific config
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/qa
+- name: staging
+  # Staging uses prod resources but in non-prod project
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/staging
+- name: production
+  build:
+    artifacts:
+    - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-prod/webapp-images/webapp
+      docker:
+        dockerfile: Dockerfile
+    googleCloudBuild:
+      projectId: u2i-tenant-webapp-prod
+      region: europe-west1
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/production
