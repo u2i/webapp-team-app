@@ -189,11 +189,17 @@ RELEASE_NAME="${STAGE}-$(date +%Y%m%d%H%M%S)"
 echo -e "${BLUE}🚢 Creating Cloud Deploy release:${NC} $RELEASE_NAME"
 echo "  Using profile: $SKAFFOLD_PROFILE"
 
+# For preview environments, use dedicated skaffold file without ingress resources
+if [[ "$STAGE" =~ ^preview- ]]; then
+    SKAFFOLD_FILE="skaffold-preview.yaml"
+else
+    SKAFFOLD_FILE="skaffold-dynamic.yaml"
+fi
+
 gcloud deploy releases create $RELEASE_NAME \
     --delivery-pipeline=$DEFAULT_PIPELINE \
     --region=$DEFAULT_REGION \
-    --skaffold-file=skaffold-dynamic.yaml \
-    --skaffold-profiles=$SKAFFOLD_PROFILE \
+    --skaffold-file=$SKAFFOLD_FILE \
     --to-target=$TARGET \
     --labels="boundary=$BOUNDARY,stage=$STAGE,tier=$TIER,mode=$MODE,namespace=$NAMESPACE" \
     --deploy-parameters="IP_NAME=$IP_NAME,CERT_NAME=$CERT_NAME,INGRESS_NAME=$INGRESS_NAME,FULL_DOMAIN=$FULL_DOMAIN,PROJECT_ID=$PROJECT_ID,ALLOW_HTTP=$ALLOW_HTTP,IP_DESCRIPTION=$IP_DESCRIPTION,ENVIRONMENT=$STAGE,NAMESPACE=$NAMESPACE,BOUNDARY=$BOUNDARY,STAGE=$STAGE,TIER=$TIER,MODE=$MODE" \
