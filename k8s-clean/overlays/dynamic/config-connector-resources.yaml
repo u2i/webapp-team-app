@@ -1,0 +1,41 @@
+# Dynamic Config Connector resources - uses environment variables
+
+# Reserve static IP address
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeAddress
+metadata:
+  name: webapp-${ENVIRONMENT}-ip
+  annotations:
+    cnrm.cloud.google.com/project-id: ${PROJECT_ID}
+spec:
+  location: global
+  addressType: EXTERNAL
+  description: "Static IP for webapp ${ENVIRONMENT} environment"
+---
+# GKE ManagedCertificate
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: webapp-cert-${ENVIRONMENT}
+spec:
+  domains:
+  - ${ENVIRONMENT}.webapp.${DOMAIN}
+---
+# Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webapp-ingress
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "webapp-${ENVIRONMENT}-ip"
+    networking.gke.io/managed-certificates: "webapp-cert-${ENVIRONMENT}"
+    kubernetes.io/ingress.allow-http: "${ALLOW_HTTP}"
+    external-dns.alpha.kubernetes.io/hostname: "${ENVIRONMENT}.webapp.${DOMAIN}"
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  defaultBackend:
+    service:
+      name: webapp-service
+      port:
+        number: 80

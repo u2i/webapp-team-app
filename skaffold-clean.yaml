@@ -22,3 +22,8 @@ profiles:
     kustomize:
       paths:
       - k8s-clean/overlays/prod
+- name: foo
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/foo
