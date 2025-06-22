@@ -76,6 +76,22 @@ jobs:
           --severity=INFO \
           --project=${{ env.PROJECT_ID }}
     
+    - name: Build and push Docker image
+      run: |
+        # Configure Docker to use gcloud for authentication
+        gcloud auth configure-docker europe-west1-docker.pkg.dev
+        
+        # Build the Docker image
+        docker build -t europe-west1-docker.pkg.dev/${{ env.PROJECT_ID }}/webapp-images/webapp:${{ github.sha }} .
+        docker tag europe-west1-docker.pkg.dev/${{ env.PROJECT_ID }}/webapp-images/webapp:${{ github.sha }} \
+                   europe-west1-docker.pkg.dev/${{ env.PROJECT_ID }}/webapp-images/webapp:latest
+        
+        # Push the image
+        docker push europe-west1-docker.pkg.dev/${{ env.PROJECT_ID }}/webapp-images/webapp:${{ github.sha }}
+        docker push europe-west1-docker.pkg.dev/${{ env.PROJECT_ID }}/webapp-images/webapp:latest
+        
+        echo "✅ Docker image pushed successfully"
+    
     - name: Deploy to non-production
       id: deploy
       run: |
