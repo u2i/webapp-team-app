@@ -39,7 +39,7 @@ profiles:
       paths:
       - k8s-clean/overlays/qa
 - name: staging
-  # Staging uses prod resources but in non-prod project
+  # Staging uses prod resources but in nonprod project
   manifests:
     kustomize:
       paths:

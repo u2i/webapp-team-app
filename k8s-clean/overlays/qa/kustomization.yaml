@@ -11,6 +11,6 @@ resources:
 configMapGenerator:
 - name: webapp-env-config
   literals:
-    - ENVIRONMENT=qa
+    - BOUNDARY=qa
     - API_URL=https://api-qa.webapp.u2i.dev
     - ENABLE_TEST_ENDPOINTS=true

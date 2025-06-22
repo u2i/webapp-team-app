@@ -14,7 +14,7 @@ manifests:
 profiles:
 # Default profile expected by the delivery pipeline
 # We customize within this profile using deploy parameters
-- name: non-prod
+- name: nonprod
   manifests:
     kustomize:
       paths:

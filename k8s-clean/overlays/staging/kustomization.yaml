@@ -11,6 +11,6 @@ resources:
 configMapGenerator:
 - name: webapp-env-config
   literals:
-    - ENVIRONMENT=staging
+    - BOUNDARY=staging
     - API_URL=https://api-staging.webapp.u2i.dev
     - ENABLE_DEBUG_LOGS=true  # Still want debug logs in staging

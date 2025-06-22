@@ -13,7 +13,7 @@ manifests:
     - k8s-clean/overlays/dynamic-deploy-preview
 profiles:
 # Default profile for preview environments
-- name: non-prod
+- name: nonprod
   manifests:
     kustomize:
       paths:

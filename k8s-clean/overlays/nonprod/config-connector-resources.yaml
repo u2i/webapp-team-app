@@ -1,4 +1,4 @@
-# Config Connector resources for non-prod
+# Config Connector resources for nonprod
 
 # Reserve static IP address
 apiVersion: compute.cnrm.cloud.google.com/v1beta1

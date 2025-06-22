@@ -12,7 +12,7 @@ manifests:
     paths:
     - k8s-clean/overlays/nonprod
 profiles:
-- name: non-prod
+- name: nonprod
   manifests:
     kustomize:
       paths:

@@ -90,7 +90,7 @@ jobs:
           --delivery-pipeline=$PIPELINE \
           --source=. \
           --gcs-source-staging-dir=gs://u2i-tenant-webapp-deploy-artifacts/source \
-          --labels="environment=non-production,compliance=iso27001-soc2-gdpr,deployed-by=github-actions"
+          --labels="environment=nonproduction,compliance=iso27001-soc2-gdpr,deployed-by=github-actions"
         
         echo "✅ Created release: $RELEASE_NAME"
         

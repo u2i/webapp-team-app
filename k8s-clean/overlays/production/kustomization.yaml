@@ -11,5 +11,5 @@ resources:
 configMapGenerator:
 - name: webapp-env-config
   literals:
-    - ENVIRONMENT=production
+    - BOUNDARY=production
     - API_URL=https://api.webapp.u2i.com

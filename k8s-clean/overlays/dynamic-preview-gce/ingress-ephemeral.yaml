@@ -11,7 +11,7 @@ metadata:
     stage: stage # from-param: ${STAGE}
     tier: tier # from-param: ${TIER}
     mode: mode # from-param: ${MODE}
-    environment: env # from-param: ${ENVIRONMENT}
+    environment: env # from-param: ${BOUNDARY}
   annotations:
     kubernetes.io/ingress.class: "gce"
     # Allow HTTP for preview environments

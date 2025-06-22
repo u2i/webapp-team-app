@@ -14,7 +14,7 @@ metadata:
     tier: tier # from-param: ${TIER}
     mode: mode # from-param: ${MODE}
     # Legacy label for compatibility
-    environment: env # from-param: ${ENVIRONMENT}
+    environment: env # from-param: ${BOUNDARY}
   annotations:
     cnrm.cloud.google.com/project-id: project-id # from-param: ${PROJECT_ID}
 spec:
@@ -35,7 +35,7 @@ metadata:
     tier: tier # from-param: ${TIER}
     mode: mode # from-param: ${MODE}
     # Legacy label for compatibility
-    environment: env # from-param: ${ENVIRONMENT}
+    environment: env # from-param: ${BOUNDARY}
 spec:
   domains:
   - example.webapp.example.com # from-param: ${FULL_DOMAIN}
@@ -53,7 +53,7 @@ metadata:
     tier: tier # from-param: ${TIER}
     mode: mode # from-param: ${MODE}
     # Legacy label for compatibility
-    environment: env # from-param: ${ENVIRONMENT}
+    environment: env # from-param: ${BOUNDARY}
   annotations:
     kubernetes.io/ingress.class: "gce"
     kubernetes.io/ingress.global-static-ip-name: "webapp-ip" # from-param: ${IP_NAME}

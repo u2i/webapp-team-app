@@ -11,15 +11,15 @@ resources:
 configMapGenerator:
 - name: webapp-env-config
   literals:
-    - ENVIRONMENT=${ENVIRONMENT}
-    - API_URL=https://api-${ENVIRONMENT}.webapp.u2i.dev
+    - BOUNDARY=${BOUNDARY}
+    - API_URL=https://api-${BOUNDARY}.webapp.u2i.dev
 
 # Replace environment variables in resources
 replacements:
 - source:
     kind: ConfigMap
     name: webapp-env-config
-    fieldPath: data.ENVIRONMENT
+    fieldPath: data.BOUNDARY
   targets:
   - select:
       kind: ManagedCertificate
