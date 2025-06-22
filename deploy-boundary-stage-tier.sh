@@ -157,7 +157,8 @@ echo "  mode: $MODE"
 echo ""
 
 # Create the Cloud Deploy release with parameters
-RELEASE_NAME="${NAMESPACE}-$(date +%Y%m%d-%H%M%S)"
+# Use shorter name to avoid 63 character limit
+RELEASE_NAME="${STAGE}-$(date +%Y%m%d%H%M%S)"
 
 echo -e "${BLUE}🚢 Creating Cloud Deploy release:${NC} $RELEASE_NAME"
 gcloud deploy releases create $RELEASE_NAME \

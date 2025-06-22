@@ -12,7 +12,8 @@ resources:
 # Note: Profile selection happens at the Cloud Deploy level
 # by including the appropriate profile overlay in the skaffold.yaml
 
-# Common labels applied to all resources
-commonLabels:
-  app: webapp
-  team: webapp-team
+# Common labels applied to resources (but not selectors)
+labels:
+- pairs:
+    team: webapp-team
+  includeSelectors: false
