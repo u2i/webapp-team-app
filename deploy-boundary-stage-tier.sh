@@ -143,8 +143,14 @@ case $TIER in
         ;;
 esac
 
-# Always use non-prod profile (required by delivery pipeline)
-SKAFFOLD_PROFILE="non-prod"
+# Override for Cloud Deploy - use profiles that work with the pipeline
+if [[ "$STAGE" =~ ^preview- ]]; then
+    # Preview environments use special profile without ingress resources
+    SKAFFOLD_PROFILE="preview-nodeport"
+else
+    # Standard environments use non-prod profile
+    SKAFFOLD_PROFILE="non-prod"
+fi
 
 echo -e "${BLUE}🚀 Deploying with boundary-stage-tier naming${NC}"
 echo "=============================================="
@@ -181,10 +187,13 @@ echo ""
 RELEASE_NAME="${STAGE}-$(date +%Y%m%d%H%M%S)"
 
 echo -e "${BLUE}🚢 Creating Cloud Deploy release:${NC} $RELEASE_NAME"
+echo "  Using profile: $SKAFFOLD_PROFILE"
+
 gcloud deploy releases create $RELEASE_NAME \
     --delivery-pipeline=$DEFAULT_PIPELINE \
     --region=$DEFAULT_REGION \
     --skaffold-file=skaffold-dynamic.yaml \
+    --skaffold-profiles=$SKAFFOLD_PROFILE \
     --to-target=$TARGET \
     --labels="boundary=$BOUNDARY,stage=$STAGE,tier=$TIER,mode=$MODE,namespace=$NAMESPACE" \
     --deploy-parameters="IP_NAME=$IP_NAME,CERT_NAME=$CERT_NAME,INGRESS_NAME=$INGRESS_NAME,FULL_DOMAIN=$FULL_DOMAIN,PROJECT_ID=$PROJECT_ID,ALLOW_HTTP=$ALLOW_HTTP,IP_DESCRIPTION=$IP_DESCRIPTION,ENVIRONMENT=$STAGE,NAMESPACE=$NAMESPACE,BOUNDARY=$BOUNDARY,STAGE=$STAGE,TIER=$TIER,MODE=$MODE" \

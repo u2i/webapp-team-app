@@ -44,7 +44,7 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/dynamic-deploy
+      - k8s-clean/overlays/dynamic-deploy-preview
       - k8s-clean/profiles/tier-preview
 
 # NodePort preview profile (zero infrastructure)
@@ -52,7 +52,7 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/preview-nodeport
+      - k8s-clean/overlays/dynamic-deploy-preview
       - k8s-clean/profiles/tier-preview
 
 # Legacy profiles for backward compatibility
