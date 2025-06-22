@@ -7,6 +7,13 @@ kind: ComputeAddress
 metadata:
   name: webapp-ip # from-param: ${IP_NAME}
   labels:
+    app: webapp
+    team: webapp-team
+    boundary: boundary # from-param: ${BOUNDARY}
+    stage: stage # from-param: ${STAGE}
+    tier: tier # from-param: ${TIER}
+    mode: mode # from-param: ${MODE}
+    # Legacy label for compatibility
     environment: env # from-param: ${ENVIRONMENT}
   annotations:
     cnrm.cloud.google.com/project-id: project-id # from-param: ${PROJECT_ID}
@@ -21,6 +28,13 @@ kind: ManagedCertificate
 metadata:
   name: webapp-cert # from-param: ${CERT_NAME}
   labels:
+    app: webapp
+    team: webapp-team
+    boundary: boundary # from-param: ${BOUNDARY}
+    stage: stage # from-param: ${STAGE}
+    tier: tier # from-param: ${TIER}
+    mode: mode # from-param: ${MODE}
+    # Legacy label for compatibility
     environment: env # from-param: ${ENVIRONMENT}
 spec:
   domains:
@@ -32,6 +46,13 @@ kind: Ingress
 metadata:
   name: webapp-ingress-env # from-param: ${INGRESS_NAME}
   labels:
+    app: webapp
+    team: webapp-team
+    boundary: boundary # from-param: ${BOUNDARY}
+    stage: stage # from-param: ${STAGE}
+    tier: tier # from-param: ${TIER}
+    mode: mode # from-param: ${MODE}
+    # Legacy label for compatibility
     environment: env # from-param: ${ENVIRONMENT}
   annotations:
     kubernetes.io/ingress.class: "gce"

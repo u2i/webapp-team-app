@@ -1,6 +1,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# Namespace will be set dynamically based on boundary-stage-tier
+# For now, keep webapp-team for backward compatibility
 namespace: webapp-team
 
 resources:
@@ -9,3 +11,8 @@ resources:
 
 # Note: Profile selection happens at the Cloud Deploy level
 # by including the appropriate profile overlay in the skaffold.yaml
+
+# Common labels applied to all resources
+commonLabels:
+  app: webapp
+  team: webapp-team

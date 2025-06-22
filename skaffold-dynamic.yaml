@@ -18,8 +18,35 @@ profiles:
     kustomize:
       paths:
       - k8s-clean/overlays/dynamic-deploy
-      - k8s-clean/profiles/dev
-# Resource profiles that can be combined with dynamic deployment
+      - k8s-clean/profiles/tier-standard
+
+# Tier-based profiles (orthogonal to boundary/stage)
+- name: tier-standard
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/dynamic-deploy
+      - k8s-clean/profiles/tier-standard
+- name: tier-perf
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/dynamic-deploy
+      - k8s-clean/profiles/tier-perf
+- name: tier-ci
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/dynamic-deploy
+      - k8s-clean/profiles/tier-ci
+- name: tier-preview
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/dynamic-deploy
+      - k8s-clean/profiles/tier-preview
+
+# Legacy profiles for backward compatibility
 - name: dev-resources
   manifests:
     kustomize:
