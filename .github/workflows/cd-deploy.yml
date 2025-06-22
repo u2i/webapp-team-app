@@ -51,7 +51,7 @@ jobs:
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v1
       with:
-        workload_identity_provider: 'projects/310843575960/locations/global/workloadIdentityPools/webapp-github-pool/providers/github'
+        workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
         service_account: 'cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com'
     
     - name: Set up Cloud SDK
@@ -256,7 +256,7 @@ jobs:
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v1
       with:
-        workload_identity_provider: 'projects/310843575960/locations/global/workloadIdentityPools/webapp-github-pool/providers/github'
+        workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
         service_account: 'cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com'
     
     - name: Set up Cloud SDK
