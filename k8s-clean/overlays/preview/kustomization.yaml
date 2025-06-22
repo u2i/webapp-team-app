@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Lightweight preview overlay - no load balancer, fast startup
+namespace: webapp-team
+
+resources:
+- ../../base
+- ingress-nginx.yaml
+
+# Patch service to use ClusterIP instead of NodePort
+patches:
+- target:
+    kind: Service
+    name: webapp-service
+  patch: |-
+    - op: replace
+      path: /spec/type
+      value: ClusterIP
+
+# Labels for preview environments
+labels:
+- pairs:
+    team: webapp-team
+    tier: preview
+  includeSelectors: false

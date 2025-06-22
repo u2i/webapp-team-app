@@ -1,0 +1,29 @@
+# Lightweight ingress for preview - no static IP or certificate
+# Uses ephemeral IP for faster provisioning
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webapp-ingress-preview # from-param: ${INGRESS_NAME}
+  labels:
+    app: webapp
+    team: webapp-team
+    boundary: boundary # from-param: ${BOUNDARY}
+    stage: stage # from-param: ${STAGE}
+    tier: tier # from-param: ${TIER}
+    mode: mode # from-param: ${MODE}
+    environment: env # from-param: ${ENVIRONMENT}
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    # Allow HTTP for preview environments
+    kubernetes.io/ingress.allow-http: "true"
+    # No static IP - use ephemeral for faster startup
+    # No certificate - HTTP only for preview
+    # Add external DNS annotation for automatic DNS
+    external-dns.alpha.kubernetes.io/hostname: "example.webapp.example.com" # from-param: ${FULL_DOMAIN}
+    external-dns.alpha.kubernetes.io/ttl: "60" # Short TTL for preview
+spec:
+  defaultBackend:
+    service:
+      name: webapp-service
+      port:
+        number: 80

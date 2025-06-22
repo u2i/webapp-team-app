@@ -107,11 +107,25 @@ fi
 
 # Build namespace and resource names
 NAMESPACE="${BOUNDARY}-${STAGE}-${TIER}"
-IP_NAME="webapp-${STAGE}-ip"
-CERT_NAME="webapp-cert-${STAGE}"
-INGRESS_NAME="webapp-ingress-${STAGE}"
-FULL_DOMAIN="${STAGE}.webapp.${DOMAIN}"
-IP_DESCRIPTION="Static IP for webapp ${STAGE} (${NAMESPACE})"
+
+# Preview stages use lightweight ingress without LB
+if [[ "$STAGE" =~ ^preview- ]]; then
+    # No static IP or certificate for preview
+    IP_NAME=""
+    CERT_NAME=""
+    INGRESS_NAME="webapp-ingress-${STAGE}"
+    FULL_DOMAIN="${STAGE}.webapp.${DOMAIN}"
+    IP_DESCRIPTION=""
+    USE_NGINX_INGRESS="true"
+else
+    # Standard stages use GCP load balancer
+    IP_NAME="webapp-${STAGE}-ip"
+    CERT_NAME="webapp-cert-${STAGE}"
+    INGRESS_NAME="webapp-ingress-${STAGE}"
+    FULL_DOMAIN="${STAGE}.webapp.${DOMAIN}"
+    IP_DESCRIPTION="Static IP for webapp ${STAGE} (${NAMESPACE})"
+    USE_NGINX_INGRESS="false"
+fi
 
 # Map tier to Skaffold profile
 case $TIER in
@@ -129,8 +143,7 @@ case $TIER in
         ;;
 esac
 
-# Use non-prod profile for now (required by delivery pipeline)
-# The tier-based profile is already included in the skaffold config
+# Always use non-prod profile (required by delivery pipeline)
 SKAFFOLD_PROFILE="non-prod"
 
 echo -e "${BLUE}🚀 Deploying with boundary-stage-tier naming${NC}"
@@ -144,10 +157,16 @@ echo "  Target: $TARGET"
 echo "  Domain: $FULL_DOMAIN"
 echo ""
 echo -e "${YELLOW}Resources:${NC}"
-echo "  IP: $IP_NAME"
-echo "  Certificate: $CERT_NAME"
-echo "  Ingress: $INGRESS_NAME"
-echo "  Profile: $SKAFFOLD_PROFILE"
+if [[ "$STAGE" =~ ^preview- ]]; then
+    echo "  Ingress: $INGRESS_NAME (ephemeral IP, no certificate)"
+    echo "  Profile: $SKAFFOLD_PROFILE"
+    echo "  Note: Using lightweight configuration for fast startup"
+else
+    echo "  IP: $IP_NAME"
+    echo "  Certificate: $CERT_NAME"
+    echo "  Ingress: $INGRESS_NAME (static IP + certificate)"
+    echo "  Profile: $SKAFFOLD_PROFILE"
+fi
 echo ""
 echo -e "${YELLOW}Labels:${NC}"
 echo "  boundary: $BOUNDARY"
@@ -177,7 +196,13 @@ echo -e "${YELLOW}📊 Monitor deployment:${NC}"
 echo "  gcloud deploy rollouts list --release=$RELEASE_NAME --region=$DEFAULT_REGION --delivery-pipeline=$DEFAULT_PIPELINE"
 echo ""
 echo -e "${YELLOW}🌐 Your environment will be available at:${NC}"
-echo "  https://$FULL_DOMAIN"
+if [[ "$STAGE" =~ ^preview- ]]; then
+    echo "  http://$FULL_DOMAIN (ephemeral IP)"
+    echo "  Note: Preview uses HTTP only and ephemeral IP for faster startup"
+    echo "  The IP address will be assigned dynamically"
+else
+    echo "  https://$FULL_DOMAIN"
+fi
 echo ""
 echo -e "${YELLOW}🏷️  Resources are labeled with:${NC}"
 echo "  boundary=$BOUNDARY, stage=$STAGE, tier=$TIER, mode=$MODE"

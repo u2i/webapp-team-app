@@ -13,6 +13,7 @@ manifests:
     - k8s-clean/overlays/dynamic-deploy
 profiles:
 # Default profile expected by the delivery pipeline
+# We customize within this profile using deploy parameters
 - name: non-prod
   manifests:
     kustomize:
@@ -44,6 +45,14 @@ profiles:
     kustomize:
       paths:
       - k8s-clean/overlays/dynamic-deploy
+      - k8s-clean/profiles/tier-preview
+
+# Lightweight preview profile (ephemeral IP, no cert)
+- name: preview-lightweight
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/dynamic-preview-gce
       - k8s-clean/profiles/tier-preview
 
 # Legacy profiles for backward compatibility
