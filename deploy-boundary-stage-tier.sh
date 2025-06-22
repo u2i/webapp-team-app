@@ -108,23 +108,23 @@ fi
 # Build namespace and resource names
 NAMESPACE="${BOUNDARY}-${STAGE}-${TIER}"
 
-# Preview stages use lightweight ingress without LB
+# Preview stages use NodePort for zero infrastructure
 if [[ "$STAGE" =~ ^preview- ]]; then
-    # No static IP or certificate for preview
+    # No ingress, no external IP, no certificate
     IP_NAME=""
     CERT_NAME=""
-    INGRESS_NAME="webapp-ingress-${STAGE}"
+    INGRESS_NAME=""
     FULL_DOMAIN="${STAGE}.webapp.${DOMAIN}"
     IP_DESCRIPTION=""
-    USE_NGINX_INGRESS="true"
+    PREVIEW_MODE="nodeport"
 else
-    # Standard stages use GCP load balancer
+    # Standard stages use GCP load balancer with ingress
     IP_NAME="webapp-${STAGE}-ip"
     CERT_NAME="webapp-cert-${STAGE}"
     INGRESS_NAME="webapp-ingress-${STAGE}"
     FULL_DOMAIN="${STAGE}.webapp.${DOMAIN}"
     IP_DESCRIPTION="Static IP for webapp ${STAGE} (${NAMESPACE})"
-    USE_NGINX_INGRESS="false"
+    PREVIEW_MODE=""
 fi
 
 # Map tier to Skaffold profile
@@ -158,9 +158,10 @@ echo "  Domain: $FULL_DOMAIN"
 echo ""
 echo -e "${YELLOW}Resources:${NC}"
 if [[ "$STAGE" =~ ^preview- ]]; then
-    echo "  Ingress: $INGRESS_NAME (ephemeral IP, no certificate)"
+    echo "  Service: NodePort (no ingress/LB)"
     echo "  Profile: $SKAFFOLD_PROFILE"
-    echo "  Note: Using lightweight configuration for fast startup"
+    echo "  Access: Via node IP and assigned port"
+    echo "  Note: Zero infrastructure, instant deployment!"
 else
     echo "  IP: $IP_NAME"
     echo "  Certificate: $CERT_NAME"
@@ -195,13 +196,17 @@ echo ""
 echo -e "${YELLOW}📊 Monitor deployment:${NC}"
 echo "  gcloud deploy rollouts list --release=$RELEASE_NAME --region=$DEFAULT_REGION --delivery-pipeline=$DEFAULT_PIPELINE"
 echo ""
-echo -e "${YELLOW}🌐 Your environment will be available at:${NC}"
+echo -e "${YELLOW}🌐 Access instructions:${NC}"
 if [[ "$STAGE" =~ ^preview- ]]; then
-    echo "  http://$FULL_DOMAIN (ephemeral IP)"
-    echo "  Note: Preview uses HTTP only and ephemeral IP for faster startup"
-    echo "  The IP address will be assigned dynamically"
+    echo "  1. Get the NodePort: kubectl get svc webapp-service -n $NAMESPACE"
+    echo "  2. Get node IPs: kubectl get nodes -o wide"
+    echo "  3. Access via: http://<node-ip>:<nodeport>"
+    echo ""
+    echo "  Example: http://10.128.0.4:31234"
+    echo "  Note: Use VPN to access internal node IPs"
 else
-    echo "  https://$FULL_DOMAIN"
+    echo "  Your environment will be available at: https://$FULL_DOMAIN"
+    echo "  (May take 5-10 minutes for certificate provisioning)"
 fi
 echo ""
 echo -e "${YELLOW}🏷️  Resources are labeled with:${NC}"

@@ -47,12 +47,12 @@ profiles:
       - k8s-clean/overlays/dynamic-deploy
       - k8s-clean/profiles/tier-preview
 
-# Lightweight preview profile (ephemeral IP, no cert)
-- name: preview-lightweight
+# NodePort preview profile (zero infrastructure)
+- name: preview-nodeport
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/dynamic-preview-gce
+      - k8s-clean/overlays/preview-nodeport
       - k8s-clean/profiles/tier-preview
 
 # Legacy profiles for backward compatibility
