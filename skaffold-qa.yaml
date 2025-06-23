@@ -10,12 +10,21 @@ build:
   tagPolicy:
     gitCommit:
       variant: Tags
+  googleCloudBuild:
+    projectId: u2i-tenant-webapp
+    region: europe-west1
 manifests:
   kustomize:
     paths:
     - k8s-clean/overlays/qa
 profiles:
 - name: qa
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/qa
+# Add dev profile for Cloud Deploy compatibility
+- name: dev
   manifests:
     kustomize:
       paths:
