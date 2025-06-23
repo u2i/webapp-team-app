@@ -75,9 +75,12 @@ jobs:
         echo "✅ Docker image pushed: ${IMAGE_BASE}:${TAG}"
     
     - name: Create QA release
+      id: create-release
       run: |
         TAG="${{ steps.get-tag.outputs.tag }}"
-        RELEASE_NAME="qa-${TAG}-$(date +%Y%m%d-%H%M%S)"
+        # Sanitize tag for use in labels (replace dots with dashes)
+        LABEL_TAG=$(echo "$TAG" | tr '.' '-')
+        RELEASE_NAME="qa-${LABEL_TAG}-$(date +%Y%m%d-%H%M%S)"
         
         # Create Cloud Deploy release for QA
         gcloud deploy releases create $RELEASE_NAME \
@@ -86,7 +89,7 @@ jobs:
           --delivery-pipeline=$PIPELINE \
           --source=. \
           --gcs-source-staging-dir=gs://u2i-tenant-webapp-deploy-artifacts/source \
-          --labels="stage=qa,version=${TAG},trigger=${{ github.event_name }}" \
+          --labels="stage=qa,version=${LABEL_TAG},trigger=${{ github.event_name }}" \
           --annotations="tag=${TAG},reason=${{ github.event.inputs.reason || 'Tag push' }}" \
           --skaffold-file=skaffold-qa.yaml \
           --to-target=qa-gke
