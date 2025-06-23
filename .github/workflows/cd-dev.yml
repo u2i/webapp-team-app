@@ -1,0 +1,97 @@
+name: CD - Dev Deployment
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/workflows/**'
+      - '!.github/workflows/cd-dev.yml'
+
+env:
+  PROJECT_ID: u2i-tenant-webapp
+  REGION: europe-west1
+  PIPELINE: webapp-staged-pipeline
+
+jobs:
+  deploy-dev:
+    name: Deploy to Dev
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+        service_account: 'cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com'
+    
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+    
+    - name: Build and push Docker image
+      run: |
+        # Configure Docker to use gcloud for authentication
+        gcloud auth configure-docker europe-west1-docker.pkg.dev
+        
+        # Build with commit SHA tag
+        IMAGE_TAG="${GITHUB_SHA:0:7}"
+        IMAGE_BASE="europe-west1-docker.pkg.dev/${{ env.PROJECT_ID }}/webapp-images/webapp"
+        
+        docker build -t "${IMAGE_BASE}:${IMAGE_TAG}" .
+        docker tag "${IMAGE_BASE}:${IMAGE_TAG}" "${IMAGE_BASE}:dev-latest"
+        
+        # Push both tags
+        docker push "${IMAGE_BASE}:${IMAGE_TAG}"
+        docker push "${IMAGE_BASE}:dev-latest"
+        
+        echo "✅ Docker image pushed: ${IMAGE_BASE}:${IMAGE_TAG}"
+    
+    - name: Deploy to Dev
+      run: |
+        # Generate release name
+        RELEASE_NAME="dev-$(date +%Y%m%d-%H%M%S)-${GITHUB_SHA:0:7}"
+        
+        # Create Cloud Deploy release targeting dev
+        gcloud deploy releases create $RELEASE_NAME \
+          --project=$PROJECT_ID \
+          --region=$REGION \
+          --delivery-pipeline=$PIPELINE \
+          --source=. \
+          --gcs-source-staging-dir=gs://u2i-tenant-webapp-deploy-artifacts/source \
+          --labels="stage=dev,trigger=push-to-main,git-sha=${GITHUB_SHA:0:7}" \
+          --to-target=dev-gke
+        
+        echo "🚀 Deployed to dev: $RELEASE_NAME"
+        
+        # Wait for rollout to complete
+        gcloud deploy rollouts list \
+          --delivery-pipeline=$PIPELINE \
+          --release=$RELEASE_NAME \
+          --region=$REGION \
+          --project=$PROJECT_ID \
+          --format="value(name)" | head -1 | xargs -I {} \
+          gcloud deploy rollouts describe {} \
+            --delivery-pipeline=$PIPELINE \
+            --release=$RELEASE_NAME \
+            --region=$REGION \
+            --project=$PROJECT_ID \
+            --format="value(state)"
+    
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ Dev deployment successful"
+        else
+          echo "❌ Dev deployment failed"
+        fi

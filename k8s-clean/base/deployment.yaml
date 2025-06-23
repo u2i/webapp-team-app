@@ -50,6 +50,12 @@ spec:
           value: "8080"
         - name: BOUNDARY
           value: "nonprod"
+        - name: STAGE
+          valueFrom:
+            configMapKeyRef:
+              name: webapp-env-config
+              key: STAGE
+              optional: true
         - name: REGION
           value: "europe-west1"
         - name: COMPLIANCE_MODE
