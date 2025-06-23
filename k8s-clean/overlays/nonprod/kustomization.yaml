@@ -17,10 +17,10 @@ patches:
       value: 2
     - op: replace
       path: /spec/template/spec/containers/0/env/1/value
-      value: non-prod
+      value: nonprod
 
 configMapGenerator:
 - name: webapp-config
   literals:
-    - ENVIRONMENT=non-prod
+    - BOUNDARY=nonprod
     - LOG_LEVEL=debug

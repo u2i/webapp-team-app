@@ -51,7 +51,7 @@ jobs:
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v1
       with:
-        workload_identity_provider: 'projects/310843575960/locations/global/workloadIdentityPools/webapp-github-pool/providers/github'
+        workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
         service_account: 'cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com'
     
     - name: Set up Cloud SDK
@@ -76,6 +76,22 @@ jobs:
           --severity=INFO \
           --project=${{ env.PROJECT_ID }}
     
+    - name: Build and push Docker image
+      run: |
+        # Configure Docker to use gcloud for authentication
+        gcloud auth configure-docker europe-west1-docker.pkg.dev
+        
+        # Build the Docker image
+        docker build -t europe-west1-docker.pkg.dev/${{ env.PROJECT_ID }}/webapp-images/webapp:${{ github.sha }} .
+        docker tag europe-west1-docker.pkg.dev/${{ env.PROJECT_ID }}/webapp-images/webapp:${{ github.sha }} \
+                   europe-west1-docker.pkg.dev/${{ env.PROJECT_ID }}/webapp-images/webapp:latest
+        
+        # Push the image
+        docker push europe-west1-docker.pkg.dev/${{ env.PROJECT_ID }}/webapp-images/webapp:${{ github.sha }}
+        docker push europe-west1-docker.pkg.dev/${{ env.PROJECT_ID }}/webapp-images/webapp:latest
+        
+        echo "✅ Docker image pushed successfully"
+    
     - name: Deploy to non-production
       id: deploy
       run: |
@@ -90,7 +106,7 @@ jobs:
           --delivery-pipeline=$PIPELINE \
           --source=. \
           --gcs-source-staging-dir=gs://u2i-tenant-webapp-deploy-artifacts/source \
-          --labels="environment=non-production,compliance=iso27001-soc2-gdpr,deployed-by=github-actions"
+          --labels="environment=nonproduction,compliance=iso27001-soc2-gdpr,deployed-by=github-actions"
         
         echo "✅ Created release: $RELEASE_NAME"
         
@@ -256,7 +272,7 @@ jobs:
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v1
       with:
-        workload_identity_provider: 'projects/310843575960/locations/global/workloadIdentityPools/webapp-github-pool/providers/github'
+        workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
         service_account: 'cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com'
     
     - name: Set up Cloud SDK
@@ -270,9 +286,9 @@ jobs:
         # (In real implementation, you'd check GitHub issues API)
         
         # Verify non-prod is healthy
-        gcloud container clusters get-credentials nonprod-autopilot \
+        gcloud container clusters get-credentials webapp-cluster \
           --location=$REGION \
-          --project=u2i-gke-nonprod
+          --project=u2i-tenant-webapp
         
         if ! kubectl get pods -l app=webapp -n webapp-team --field-selector=status.phase=Running | grep -q webapp; then
           echo "❌ Non-production environment is not healthy"
@@ -320,9 +336,9 @@ jobs:
     - name: Post-deployment verification
       run: |
         # Get production cluster credentials
-        gcloud container clusters get-credentials prod-autopilot \
+        gcloud container clusters get-credentials webapp-cluster-prod \
           --location=$REGION \
-          --project=u2i-gke-prod
+          --project=u2i-tenant-webapp-prod
         
         # Verify deployment
         kubectl wait --for=condition=Ready pod \

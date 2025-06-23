@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Lightweight preview using GCE ingress but no static IP/cert
+namespace: webapp-team
+
+resources:
+- ../../base
+- ingress-ephemeral.yaml
+
+# Labels for preview environments
+labels:
+- pairs:
+    team: webapp-team
+    tier: preview
+  includeSelectors: false

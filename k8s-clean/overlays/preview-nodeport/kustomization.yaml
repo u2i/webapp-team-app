@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Ultra-lightweight preview - NodePort only, no LB
+# Access methods:
+# 1. kubectl port-forward svc/webapp-service 8080:80
+# 2. Through a shared preview ingress (if available)
+# 3. Direct node access (if nodes have public IPs)
+
+namespace: webapp-team
+
+resources:
+- ../../base
+# No ingress - rely on port-forward or shared ingress
+
+# Service is already NodePort in base, no changes needed
+
+# Labels for preview environments
+labels:
+- pairs:
+    team: webapp-team
+    tier: preview
+  includeSelectors: false

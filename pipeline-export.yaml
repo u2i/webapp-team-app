@@ -1,0 +1,17 @@
+apiVersion: deploy.cloud.google.com/v1
+description: Delivery pipeline for webapp using dedicated cluster
+kind: DeliveryPipeline
+metadata:
+  labels:
+    compliance: iso27001-soc2-gdpr
+    data_residency: eu
+    environment: nonprod
+    goog-terraform-provisioned: 'true'
+    team: webapp-team
+  name: webapp-delivery-pipeline
+serialPipeline:
+  stages:
+  - deployParameters:
+    - values:
+        environment: nonprod
+    targetId: nonprod-webapp-cluster

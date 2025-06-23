@@ -1,0 +1,22 @@
+apiVersion: skaffold/v4beta6
+kind: Config
+metadata:
+  name: webapp-qa-deployment
+build:
+  artifacts:
+  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
+    docker:
+      dockerfile: Dockerfile
+  tagPolicy:
+    gitCommit:
+      variant: Tags
+manifests:
+  kustomize:
+    paths:
+    - k8s-clean/overlays/qa
+profiles:
+- name: qa
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/qa

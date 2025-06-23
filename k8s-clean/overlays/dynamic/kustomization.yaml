@@ -1,0 +1,37 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: webapp-team
+
+resources:
+- ../../base
+- ../../profiles/${PROFILE}  # Profile from environment variable
+- config-connector-resources.yaml
+
+configMapGenerator:
+- name: webapp-env-config
+  literals:
+    - BOUNDARY=${BOUNDARY}
+    - API_URL=https://api-${BOUNDARY}.webapp.u2i.dev
+
+# Replace environment variables in resources
+replacements:
+- source:
+    kind: ConfigMap
+    name: webapp-env-config
+    fieldPath: data.BOUNDARY
+  targets:
+  - select:
+      kind: ManagedCertificate
+    fieldPaths:
+    - spec.domains.0
+    options:
+      delimiter: '.'
+      index: 0
+  - select:
+      kind: Ingress
+    fieldPaths:
+    - metadata.annotations.[external-dns.alpha.kubernetes.io/hostname]
+    options:
+      delimiter: '.'
+      index: 0

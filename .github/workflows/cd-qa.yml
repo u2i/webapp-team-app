@@ -1,0 +1,109 @@
+name: CD - QA Deployment
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to deploy (e.g., v1.0.0)'
+        required: true
+        type: string
+      reason:
+        description: 'Reason for deployment'
+        required: false
+        type: string
+
+env:
+  PROJECT_ID: u2i-tenant-webapp
+  REGION: europe-west1
+  PIPELINE: webapp-staged-pipeline
+
+jobs:
+  deploy-qa:
+    name: Deploy to QA
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+    - name: Determine tag
+      id: get-tag
+      run: |
+        if [ "${{ github.event_name }}" == "push" ]; then
+          TAG="${GITHUB_REF#refs/tags/}"
+        else
+          TAG="${{ github.event.inputs.tag }}"
+        fi
+        echo "tag=$TAG" >> $GITHUB_OUTPUT
+        echo "📌 Deploying tag: $TAG"
+    
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ steps.get-tag.outputs.tag }}
+    
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+        service_account: 'cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com'
+    
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+    
+    - name: Build and push Docker image
+      run: |
+        # Configure Docker to use gcloud for authentication
+        gcloud auth configure-docker europe-west1-docker.pkg.dev
+        
+        TAG="${{ steps.get-tag.outputs.tag }}"
+        IMAGE_BASE="europe-west1-docker.pkg.dev/${{ env.PROJECT_ID }}/webapp-images/webapp"
+        
+        # Build with tag
+        docker build -t "${IMAGE_BASE}:${TAG}" .
+        docker tag "${IMAGE_BASE}:${TAG}" "${IMAGE_BASE}:qa-latest"
+        
+        # Push both tags
+        docker push "${IMAGE_BASE}:${TAG}"
+        docker push "${IMAGE_BASE}:qa-latest"
+        
+        echo "✅ Docker image pushed: ${IMAGE_BASE}:${TAG}"
+    
+    - name: Create QA release
+      run: |
+        TAG="${{ steps.get-tag.outputs.tag }}"
+        RELEASE_NAME="qa-${TAG}-$(date +%Y%m%d-%H%M%S)"
+        
+        # Create Cloud Deploy release for QA
+        gcloud deploy releases create $RELEASE_NAME \
+          --project=$PROJECT_ID \
+          --region=$REGION \
+          --delivery-pipeline=$PIPELINE \
+          --source=. \
+          --gcs-source-staging-dir=gs://u2i-tenant-webapp-deploy-artifacts/source \
+          --labels="stage=qa,version=${TAG},trigger=${{ github.event_name }}" \
+          --annotations="tag=${TAG},reason=${{ github.event.inputs.reason || 'Tag push' }}" \
+          --skaffold-file=skaffold-qa.yaml \
+          --to-target=qa-gke
+        
+        echo "🚀 Created QA release: $RELEASE_NAME"
+        echo "release-name=$RELEASE_NAME" >> $GITHUB_OUTPUT
+    
+    - name: Create deployment record
+      run: |
+        gcloud logging write "webapp-qa-deployments" \
+          "{
+            \"message\": \"QA deployment initiated\",
+            \"tag\": \"${{ steps.get-tag.outputs.tag }}\",
+            \"release\": \"${{ steps.create-release.outputs.release-name }}\",
+            \"user\": \"${{ github.actor }}\",
+            \"trigger\": \"${{ github.event_name }}\",
+            \"reason\": \"${{ github.event.inputs.reason || 'Automatic tag deployment' }}\"
+          }" \
+          --severity=INFO \
+          --project=${{ env.PROJECT_ID }}

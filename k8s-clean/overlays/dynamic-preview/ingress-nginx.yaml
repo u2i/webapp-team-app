@@ -1,0 +1,36 @@
+# Lightweight ingress using nginx ingress controller
+# No GCP Load Balancer = faster startup, lower cost
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webapp-ingress-preview # from-param: ${INGRESS_NAME}
+  labels:
+    app: webapp
+    team: webapp-team
+    boundary: boundary # from-param: ${BOUNDARY}
+    stage: stage # from-param: ${STAGE}
+    tier: tier # from-param: ${TIER}
+    mode: mode # from-param: ${MODE}
+    environment: env # from-param: ${BOUNDARY}
+  annotations:
+    # Use nginx ingress controller (must be installed in cluster)
+    kubernetes.io/ingress.class: "nginx"
+    # No SSL redirect for simplicity
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    # Simple backend protocol
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    # Add CORS for preview environments
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+spec:
+  rules:
+  - host: example.webapp.example.com # from-param: ${FULL_DOMAIN}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: webapp-service
+            port:
+              number: 80

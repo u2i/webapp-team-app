@@ -1,0 +1,167 @@
+name: CD - Production Promotion
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to promote to production (e.g., v1.0.0)'
+        required: true
+        type: string
+      release_name:
+        description: 'QA release name to promote (optional - will find latest for tag if not specified)'
+        required: false
+        type: string
+      deployment_strategy:
+        description: 'Deployment strategy'
+        required: true
+        type: choice
+        options:
+          - canary
+          - blue-green
+          - direct
+        default: canary
+      reason:
+        description: 'Reason for promotion'
+        required: true
+        type: string
+
+env:
+  PROJECT_ID: u2i-tenant-webapp
+  REGION: europe-west1
+  PIPELINE: webapp-staged-pipeline
+
+jobs:
+  promote-to-production:
+    name: Promote to Production
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.inputs.tag }}
+    
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+        service_account: 'cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com'
+    
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+    
+    - name: Verify QA deployment
+      id: verify-qa
+      run: |
+        TAG="${{ github.event.inputs.tag }}"
+        
+        # Find the QA release if not specified
+        if [ -z "${{ github.event.inputs.release_name }}" ]; then
+          echo "🔍 Finding latest QA release for tag $TAG..."
+          
+          RELEASE_NAME=$(gcloud deploy releases list \
+            --delivery-pipeline=$PIPELINE \
+            --region=$REGION \
+            --project=$PROJECT_ID \
+            --filter="labels.version=$TAG AND labels.stage=qa" \
+            --sort-by=~createTime \
+            --limit=1 \
+            --format="value(name)")
+          
+          if [ -z "$RELEASE_NAME" ]; then
+            echo "❌ No QA release found for tag $TAG"
+            exit 1
+          fi
+        else
+          RELEASE_NAME="${{ github.event.inputs.release_name }}"
+        fi
+        
+        echo "release-name=$RELEASE_NAME" >> $GITHUB_OUTPUT
+        
+        # Verify the release has been successfully deployed to QA
+        QA_ROLLOUT=$(gcloud deploy rollouts list \
+          --delivery-pipeline=$PIPELINE \
+          --release=$RELEASE_NAME \
+          --region=$REGION \
+          --project=$PROJECT_ID \
+          --filter="targetId=qa-gke" \
+          --format="value(state)" | head -1)
+        
+        if [ "$QA_ROLLOUT" != "SUCCEEDED" ]; then
+          echo "❌ QA deployment not successful. Current state: $QA_ROLLOUT"
+          exit 1
+        fi
+        
+        echo "✅ QA deployment verified for release: $RELEASE_NAME"
+    
+    - name: Create production release
+      id: create-release
+      run: |
+        TAG="${{ github.event.inputs.tag }}"
+        QA_RELEASE="${{ steps.verify-qa.outputs.release-name }}"
+        PROD_RELEASE_NAME="prod-${TAG}-$(date +%Y%m%d-%H%M%S)"
+        
+        # Promote the QA release to production
+        gcloud deploy releases promote \
+          --release=$QA_RELEASE \
+          --delivery-pipeline=$PIPELINE \
+          --region=$REGION \
+          --project=$PROJECT_ID \
+          --to-target=prod-gke \
+          --quiet
+        
+        echo "🚀 Promoted to production: $PROD_RELEASE_NAME"
+        echo "release-name=$PROD_RELEASE_NAME" >> $GITHUB_OUTPUT
+    
+    - name: Apply deployment strategy
+      if: github.event.inputs.deployment_strategy == 'canary'
+      run: |
+        RELEASE_NAME="${{ steps.create-release.outputs.release-name }}"
+        
+        echo "🕯️ Starting canary deployment..."
+        
+        # The canary stages are defined in clouddeploy-stages.yaml
+        # Cloud Deploy will automatically handle the progressive rollout
+        
+        # Monitor initial canary phase (25%)
+        echo "📊 Deploying to 25% of traffic..."
+        
+        # You can add custom monitoring/validation here
+        sleep 60  # Wait 1 minute before checking metrics
+        
+        # In a real scenario, you would check metrics here
+        # and decide whether to continue or rollback
+    
+    - name: Create audit record
+      run: |
+        gcloud logging write "webapp-production-promotions" \
+          "{
+            \"message\": \"Production promotion initiated\",
+            \"tag\": \"${{ github.event.inputs.tag }}\",
+            \"qa_release\": \"${{ steps.verify-qa.outputs.release-name }}\",
+            \"prod_release\": \"${{ steps.create-release.outputs.release-name }}\",
+            \"user\": \"${{ github.actor }}\",
+            \"strategy\": \"${{ github.event.inputs.deployment_strategy }}\",
+            \"reason\": \"${{ github.event.inputs.reason }}\",
+            \"compliance_framework\": \"iso27001-soc2-gdpr\",
+            \"change_type\": \"production_deployment\",
+            \"approval_required\": true
+          }" \
+          --severity=WARNING \
+          --project=${{ env.PROJECT_ID }}
+    
+    - name: Notify stakeholders
+      run: |
+        echo "📧 Production deployment notification:"
+        echo "- Tag: ${{ github.event.inputs.tag }}"
+        echo "- Strategy: ${{ github.event.inputs.deployment_strategy }}"
+        echo "- Initiated by: ${{ github.actor }}"
+        echo "- Reason: ${{ github.event.inputs.reason }}"
+        echo ""
+        echo "🔗 View in Cloud Deploy: https://console.cloud.google.com/deploy/delivery-pipelines/$PIPELINE/releases/${{ steps.create-release.outputs.release-name }}?project=$PROJECT_ID"

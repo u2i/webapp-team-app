@@ -9,8 +9,12 @@ resources:
 - service.yaml
 - network-policy.yaml
 
-commonLabels:
-  app: webapp
-  tenant: webapp-team
-  compliance: iso27001-soc2-gdpr
-  data-residency: eu
+# Use labels instead of commonLabels to avoid modifying selectors
+# commonLabels would add these to selectors which breaks the service
+labels:
+- pairs:
+    tenant: webapp-team
+    compliance: iso27001-soc2-gdpr
+    data-residency: eu
+  includeSelectors: false
+# Keep app label in deployment/pod templates only, not in selectors

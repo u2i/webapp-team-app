@@ -1,0 +1,9 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: webapp-pdb
+spec:
+  minAvailable: 0  # Allow disruption for dev
+  selector:
+    matchLabels:
+      app: webapp

@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: webapp-qa
+
+resources:
+- ../../base
+- ../../profiles/dev  # QA uses dev resources (small)
+- config-connector-resources.yaml
+
+namePrefix: qa-
+
+commonLabels:
+  stage: qa
+  boundary: nonprod
+  tier: standard
+
+configMapGenerator:
+- name: webapp-env-config
+  literals:
+    - BOUNDARY=nonprod
+    - STAGE=qa
+    - API_URL=https://api-qa.webapp.u2i.dev
+    - ENABLE_TEST_ENDPOINTS=true

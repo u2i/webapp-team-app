@@ -14,12 +14,12 @@ spec:
   
   serialPipeline:
     stages:
-    # Non-prod stage (includes dev)
+    # Nonprod stage (includes dev)
     - targetId: nonprod-gke
-      profiles: [non-prod]
+      profiles: [nonprod]
       deployParameters:
       - name: environment
-        values: [non-prod]
+        values: [nonprod]
       
     # Production stage
     - targetId: prod-gke
@@ -45,10 +45,10 @@ metadata:
   name: nonprod-gke
   labels:
     compliance: iso27001-soc2-gdpr
-    environment: non-production
+    environment: nonproduction
     data-residency: eu
 spec:
-  description: "Non-production GKE cluster (includes dev)"
+  description: "Nonproduction GKE cluster (includes dev)"
   
   gke:
     cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
@@ -72,7 +72,7 @@ spec:
   description: "Production GKE cluster with strict compliance"
   
   gke:
-    cluster: projects/u2i-gke-prod/locations/europe-west1/clusters/prod-autopilot
+    cluster: projects/u2i-tenant-webapp-prod/locations/europe-west1/clusters/webapp-cluster-prod
     
   executionConfigs:
   - usages: [RENDER, DEPLOY, VERIFY]

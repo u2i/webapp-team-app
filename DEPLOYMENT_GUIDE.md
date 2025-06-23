@@ -139,13 +139,13 @@ gcloud deploy rollouts describe ROLLOUT_NAME \
 ### Verify Application Health
 ```bash
 # Non-production
-gcloud container clusters get-credentials nonprod-autopilot \
-  --location=europe-west1 --project=u2i-gke-nonprod
+gcloud container clusters get-credentials webapp-cluster \
+  --location=europe-west1 --project=u2i-tenant-webapp
 kubectl get pods -n webapp-team
 
 # Production  
-gcloud container clusters get-credentials prod-autopilot \
-  --location=europe-west1 --project=u2i-gke-prod
+gcloud container clusters get-credentials webapp-cluster-prod \
+  --location=europe-west1 --project=u2i-tenant-webapp-prod
 kubectl get pods -n webapp-team
 ```
 
