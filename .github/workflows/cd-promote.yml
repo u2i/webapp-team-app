@@ -1,0 +1,256 @@
+name: CD - Stage Promotion
+
+on:
+  workflow_dispatch:
+    inputs:
+      from_stage:
+        description: 'Source stage'
+        required: true
+        type: choice
+        options:
+          - dev
+          - qa
+      to_stage:
+        description: 'Target stage'
+        required: true
+        type: choice
+        options:
+          - qa
+          - prod
+      release_name:
+        description: 'Release name to promote (optional - will use latest if not specified)'
+        required: false
+        type: string
+      reason:
+        description: 'Reason for promotion'
+        required: true
+        type: string
+
+env:
+  PROJECT_ID: u2i-tenant-webapp
+  REGION: europe-west1
+  PIPELINE: webapp-pipeline
+
+jobs:
+  validate-promotion:
+    name: Validate Promotion
+    runs-on: ubuntu-latest
+    outputs:
+      valid: ${{ steps.validate.outputs.valid }}
+      release: ${{ steps.find-release.outputs.release }}
+    
+    steps:
+    - name: Validate promotion path
+      id: validate
+      run: |
+        FROM="${{ github.event.inputs.from_stage }}"
+        TO="${{ github.event.inputs.to_stage }}"
+        
+        # Validate promotion path
+        if [ "$FROM" == "dev" ] && [ "$TO" == "qa" ]; then
+          echo "✅ Valid promotion: dev → qa"
+          echo "valid=true" >> $GITHUB_OUTPUT
+        elif [ "$FROM" == "qa" ] && [ "$TO" == "prod" ]; then
+          echo "✅ Valid promotion: qa → prod"
+          echo "valid=true" >> $GITHUB_OUTPUT
+        else
+          echo "❌ Invalid promotion path: $FROM → $TO"
+          echo "valid=false" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+    
+    - name: Authenticate to Google Cloud
+      if: steps.validate.outputs.valid == 'true'
+      uses: google-github-actions/auth@v1
+      with:
+        workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+        service_account: 'cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com'
+    
+    - name: Set up Cloud SDK
+      if: steps.validate.outputs.valid == 'true'
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+    
+    - name: Find release to promote
+      id: find-release
+      if: steps.validate.outputs.valid == 'true'
+      run: |
+        FROM="${{ github.event.inputs.from_stage }}"
+        RELEASE_NAME="${{ github.event.inputs.release_name }}"
+        
+        if [ -z "$RELEASE_NAME" ]; then
+          echo "🔍 Finding latest successful release from $FROM..."
+          
+          # Find the latest release that has been successfully deployed to the source stage
+          RELEASE_NAME=$(gcloud deploy rollouts list \
+            --delivery-pipeline=$PIPELINE \
+            --region=$REGION \
+            --project=$PROJECT_ID \
+            --filter="targetId=${FROM}-gke AND state=SUCCEEDED" \
+            --sort-by=~createTime \
+            --limit=1 \
+            --format="value(name)" | \
+            awk -F'/rollouts/' '{print $1}' | \
+            awk -F'/releases/' '{print $2}')
+          
+          if [ -z "$RELEASE_NAME" ]; then
+            echo "❌ No successful release found in $FROM stage"
+            exit 1
+          fi
+        fi
+        
+        echo "📦 Release to promote: $RELEASE_NAME"
+        echo "release=$RELEASE_NAME" >> $GITHUB_OUTPUT
+
+  promote-release:
+    name: Promote Release
+    needs: validate-promotion
+    if: needs.validate-promotion.outputs.valid == 'true'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.to_stage }}
+    
+    steps:
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+        service_account: 'cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com'
+    
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+    
+    - name: Promote release
+      id: promote
+      run: |
+        RELEASE="${{ needs.validate-promotion.outputs.release }}"
+        TO="${{ github.event.inputs.to_stage }}"
+        
+        echo "🚀 Promoting $RELEASE to $TO..."
+        
+        # Promote the release
+        gcloud deploy releases promote \
+          --release=$RELEASE \
+          --delivery-pipeline=$PIPELINE \
+          --region=$REGION \
+          --project=$PROJECT_ID \
+          --to-target=${TO}-gke \
+          --quiet
+        
+        # Get the rollout name
+        ROLLOUT_NAME=$(gcloud deploy rollouts list \
+          --delivery-pipeline=$PIPELINE \
+          --release=$RELEASE \
+          --region=$REGION \
+          --project=$PROJECT_ID \
+          --filter="targetId=${TO}-gke" \
+          --sort-by=~createTime \
+          --limit=1 \
+          --format="value(name)")
+        
+        echo "rollout=$ROLLOUT_NAME" >> $GITHUB_OUTPUT
+        
+        # Check if approval is needed
+        APPROVAL_STATE=$(gcloud deploy rollouts describe \
+          $(basename $ROLLOUT_NAME) \
+          --release=$RELEASE \
+          --delivery-pipeline=$PIPELINE \
+          --region=$REGION \
+          --project=$PROJECT_ID \
+          --format="value(approvalState)")
+        
+        if [ "$APPROVAL_STATE" == "NEEDS_APPROVAL" ]; then
+          echo "⏳ Rollout requires approval"
+          echo "needs_approval=true" >> $GITHUB_OUTPUT
+        else
+          echo "✅ Rollout does not require approval"
+          echo "needs_approval=false" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Auto-approve if needed
+      if: steps.promote.outputs.needs_approval == 'true' && github.event.inputs.to_stage == 'qa'
+      run: |
+        ROLLOUT=$(basename "${{ steps.promote.outputs.rollout }}")
+        RELEASE="${{ needs.validate-promotion.outputs.release }}"
+        
+        echo "🔑 Auto-approving QA deployment..."
+        
+        gcloud deploy rollouts approve $ROLLOUT \
+          --release=$RELEASE \
+          --delivery-pipeline=$PIPELINE \
+          --region=$REGION \
+          --project=$PROJECT_ID
+    
+    - name: Create audit log
+      run: |
+        gcloud logging write "webapp-promotions" \
+          "{
+            \"message\": \"Stage promotion initiated\",
+            \"from_stage\": \"${{ github.event.inputs.from_stage }}\",
+            \"to_stage\": \"${{ github.event.inputs.to_stage }}\",
+            \"release\": \"${{ needs.validate-promotion.outputs.release }}\",
+            \"user\": \"${{ github.actor }}\",
+            \"reason\": \"${{ github.event.inputs.reason }}\",
+            \"rollout\": \"${{ steps.promote.outputs.rollout }}\"
+          }" \
+          --severity=INFO \
+          --project=${{ env.PROJECT_ID }}
+    
+    - name: Monitor deployment
+      run: |
+        ROLLOUT=$(basename "${{ steps.promote.outputs.rollout }}")
+        RELEASE="${{ needs.validate-promotion.outputs.release }}"
+        TO="${{ github.event.inputs.to_stage }}"
+        
+        echo "📊 Monitoring deployment to $TO..."
+        
+        # Wait for up to 10 minutes
+        for i in {1..60}; do
+          STATE=$(gcloud deploy rollouts describe $ROLLOUT \
+            --release=$RELEASE \
+            --delivery-pipeline=$PIPELINE \
+            --region=$REGION \
+            --project=$PROJECT_ID \
+            --format="value(state)")
+          
+          echo "Status: $STATE"
+          
+          case $STATE in
+            SUCCEEDED)
+              echo "✅ Deployment succeeded!"
+              exit 0
+              ;;
+            FAILED|CANCELLED)
+              echo "❌ Deployment failed with state: $STATE"
+              exit 1
+              ;;
+            PENDING_APPROVAL)
+              if [ "$TO" == "prod" ]; then
+                echo "⏳ Production deployment requires manual approval"
+                echo "🔗 Approve in Cloud Console: https://console.cloud.google.com/deploy/delivery-pipelines/$PIPELINE/releases/$RELEASE?project=$PROJECT_ID"
+                exit 0
+              fi
+              ;;
+          esac
+          
+          sleep 10
+        done
+        
+        echo "⏱️ Deployment still in progress after 10 minutes"
+    
+    - name: Summary
+      if: always()
+      run: |
+        echo "## Promotion Summary"
+        echo "- **From:** ${{ github.event.inputs.from_stage }}"
+        echo "- **To:** ${{ github.event.inputs.to_stage }}"
+        echo "- **Release:** ${{ needs.validate-promotion.outputs.release }}"
+        echo "- **Initiated by:** ${{ github.actor }}"
+        echo "- **Reason:** ${{ github.event.inputs.reason }}"
+        
+        if [ "${{ github.event.inputs.to_stage }}" == "prod" ]; then
+          echo ""
+          echo "⚠️ **Production deployments require manual approval in Cloud Console**"
+        fi

@@ -1,0 +1,124 @@
+# Cloud Deploy Configuration for webapp-team
+# Multi-stage pipeline with proper skaffold configuration
+
+apiVersion: deploy.cloud.google.com/v1
+kind: DeliveryPipeline
+metadata:
+  name: webapp-pipeline
+  labels:
+    compliance: iso27001-soc2-gdpr
+    team: webapp-team
+    data-residency: eu
+description: "Multi-stage delivery pipeline for webapp with dev/qa/prod stages"
+serialPipeline:
+  stages:
+  # Dev stage - continuous deployment from main
+  - targetId: dev-gke
+    profiles: 
+    - dev
+    deployParameters:
+    - values:
+        environment: "dev"
+        
+  # QA stage - tag-based deployments with approval
+  - targetId: qa-gke
+    profiles: 
+    - qa
+    strategy:
+      standard:
+        verify: false
+    deployParameters:
+    - values:
+        environment: "qa"
+        
+  # Production stage - promoted from QA with approval
+  - targetId: prod-gke
+    profiles: 
+    - prod
+    strategy:
+      standard:
+        verify: false
+    deployParameters:
+    - values:
+        environment: "prod"
+
+---
+# Development Target
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: dev-gke
+  labels:
+    compliance: iso27001-soc2-gdpr
+    stage: dev
+    environment: nonproduction
+    data-residency: eu
+description: "Development environment - continuous deployment"
+gke:
+  cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
+executionConfigs:
+- usages: 
+  - RENDER
+  - DEPLOY
+  - VERIFY
+  defaultPool:
+    serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
+    artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
+  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
+  artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
+  executionTimeout: 3600s
+
+---
+# QA Target
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: qa-gke
+  labels:
+    compliance: iso27001-soc2-gdpr
+    stage: qa
+    environment: nonproduction
+    data-residency: eu
+description: "QA environment - tag-based deployments"
+gke:
+  cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
+executionConfigs:
+- usages: 
+  - RENDER
+  - DEPLOY
+  - VERIFY
+  defaultPool:
+    serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
+    artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
+  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
+  artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
+  executionTimeout: 3600s
+requireApproval: true
+
+---
+# Production Target
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: prod-gke
+  labels:
+    compliance: iso27001-soc2-gdpr
+    stage: prod
+    environment: production
+    data-residency: eu
+    critical: "true"
+description: "Production environment with strict compliance"
+gke:
+  cluster: projects/u2i-tenant-webapp-prod/locations/europe-west1/clusters/webapp-cluster-prod
+executionConfigs:
+- usages: 
+  - RENDER
+  - DEPLOY
+  - VERIFY
+  defaultPool:
+    serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
+    artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
+  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
+  artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
+  executionTimeout: 3600s
+requireApproval: true

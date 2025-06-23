@@ -18,7 +18,7 @@ on:
 env:
   PROJECT_ID: u2i-tenant-webapp
   REGION: europe-west1
-  PIPELINE: webapp-staged-pipeline
+  PIPELINE: webapp-pipeline
 
 jobs:
   deploy-qa:
@@ -91,7 +91,7 @@ jobs:
           --gcs-source-staging-dir=gs://u2i-tenant-webapp-deploy-artifacts/source \
           --labels="stage=qa,version=${LABEL_TAG},trigger=${{ github.event_name }}" \
           --annotations="tag=${TAG},reason=${{ github.event.inputs.reason || 'Tag push' }}" \
-          --skaffold-file=skaffold-qa.yaml \
+          --skaffold-file=skaffold-unified.yaml \
           --to-target=qa-gke
         
         echo "🚀 Created QA release: $RELEASE_NAME"
