@@ -8,14 +8,12 @@ on:
         required: true
         type: choice
         options:
-          - dev
           - qa
       to_stage:
         description: 'Target stage'
         required: true
         type: choice
         options:
-          - qa
           - prod
       release_name:
         description: 'Release name to promote (optional - will use latest if not specified)'
@@ -46,15 +44,14 @@ jobs:
         FROM="${{ github.event.inputs.from_stage }}"
         TO="${{ github.event.inputs.to_stage }}"
         
-        # Validate promotion path
-        if [ "$FROM" == "dev" ] && [ "$TO" == "qa" ]; then
-          echo "✅ Valid promotion: dev → qa"
-          echo "valid=true" >> $GITHUB_OUTPUT
-        elif [ "$FROM" == "qa" ] && [ "$TO" == "prod" ]; then
+        # Validate promotion path - only qa to prod is allowed
+        if [ "$FROM" == "qa" ] && [ "$TO" == "prod" ]; then
           echo "✅ Valid promotion: qa → prod"
           echo "valid=true" >> $GITHUB_OUTPUT
         else
           echo "❌ Invalid promotion path: $FROM → $TO"
+          echo "❌ Only promotions from QA to Production are allowed"
+          echo "❌ QA deployments happen automatically when tags are created"
           echo "valid=false" >> $GITHUB_OUTPUT
           exit 1
         fi
@@ -169,19 +166,8 @@ jobs:
           echo "needs_approval=false" >> $GITHUB_OUTPUT
         fi
     
-    - name: Auto-approve if needed
-      if: steps.promote.outputs.needs_approval == 'true' && github.event.inputs.to_stage == 'qa'
-      run: |
-        ROLLOUT=$(basename "${{ steps.promote.outputs.rollout }}")
-        RELEASE="${{ needs.validate-promotion.outputs.release }}"
-        
-        echo "🔑 Auto-approving QA deployment..."
-        
-        gcloud deploy rollouts approve $ROLLOUT \
-          --release=$RELEASE \
-          --delivery-pipeline=$PIPELINE \
-          --region=$REGION \
-          --project=$PROJECT_ID
+    # Note: No auto-approval needed since we only promote to production
+    # Production deployments require manual approval in Cloud Console
     
     - name: Create audit log
       run: |
