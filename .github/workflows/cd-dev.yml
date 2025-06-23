@@ -13,7 +13,7 @@ on:
 env:
   PROJECT_ID: u2i-tenant-webapp
   REGION: europe-west1
-  PIPELINE: webapp-staged-pipeline
+  PIPELINE: webapp-pipeline
 
 jobs:
   deploy-dev:
@@ -69,6 +69,7 @@ jobs:
           --source=. \
           --gcs-source-staging-dir=gs://u2i-tenant-webapp-deploy-artifacts/source \
           --labels="stage=dev,trigger=push-to-main,git-sha=${GITHUB_SHA:0:7}" \
+          --skaffold-file=skaffold-unified.yaml \
           --to-target=dev-gke
         
         echo "🚀 Deployed to dev: $RELEASE_NAME"

@@ -1,0 +1,118 @@
+apiVersion: skaffold/v4beta6
+kind: Config
+metadata:
+  name: webapp-unified-deployment
+build:
+  artifacts:
+  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
+    docker:
+      dockerfile: Dockerfile
+  tagPolicy:
+    gitCommit: {}
+  local: {}  # Use local build by default
+manifests:
+  kustomize:
+    paths:
+    - k8s-clean/base  # Default base manifests
+profiles:
+# Development profile
+- name: dev
+  build:
+    artifacts:
+    - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
+      docker:
+        dockerfile: Dockerfile
+    tagPolicy:
+      gitCommit: {}
+    googleCloudBuild:
+      projectId: u2i-tenant-webapp
+      region: europe-west1
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/dev
+  deploy:
+    kubectl: {}
+
+# QA profile  
+- name: qa
+  build:
+    artifacts:
+    - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
+      docker:
+        dockerfile: Dockerfile
+    tagPolicy:
+      gitCommit:
+        variant: Tags  # Use git tags for QA
+    googleCloudBuild:
+      projectId: u2i-tenant-webapp
+      region: europe-west1
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/qa
+  deploy:
+    kubectl: {}
+
+# Production profile
+- name: prod
+  build:
+    artifacts:
+    - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-prod/webapp-images/webapp
+      docker:
+        dockerfile: Dockerfile
+    tagPolicy:
+      gitCommit:
+        variant: Tags  # Use git tags for production
+    googleCloudBuild:
+      projectId: u2i-tenant-webapp-prod
+      region: europe-west1
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/production
+  deploy:
+    kubectl: {}
+
+# Staging profile (uses production configs in nonprod environment)
+- name: staging
+  build:
+    artifacts:
+    - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
+      docker:
+        dockerfile: Dockerfile
+    tagPolicy:
+      gitCommit: {}
+    googleCloudBuild:
+      projectId: u2i-tenant-webapp
+      region: europe-west1
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/staging
+  deploy:
+    kubectl: {}
+
+# Local development profile
+- name: local
+  build:
+    artifacts:
+    - image: webapp-local
+      docker:
+        dockerfile: Dockerfile
+    tagPolicy:
+      gitCommit: {}
+    local: {}
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/dev
+  deploy:
+    kubectl:
+      defaultNamespace: webapp-dev
+  portForward:
+  - resourceType: service
+    resourceName: webapp-service
+    namespace: webapp-dev
+    port: 80
+    localPort: 8080
