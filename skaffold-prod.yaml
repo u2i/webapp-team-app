@@ -1,0 +1,36 @@
+apiVersion: skaffold/v4beta6
+kind: Config
+metadata:
+  name: webapp-prod-deployment
+build:
+  artifacts:
+  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-prod/webapp-images/webapp
+    docker:
+      dockerfile: Dockerfile
+  tagPolicy:
+    gitCommit:
+      variant: Tags
+  googleCloudBuild:
+    projectId: u2i-tenant-webapp-prod
+    region: europe-west1
+manifests:
+  kustomize:
+    paths:
+    - k8s-clean/overlays/production
+profiles:
+- name: prod
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/production
+# Add other profiles for Cloud Deploy compatibility
+- name: dev
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/production
+- name: qa
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/production
