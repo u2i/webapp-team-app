@@ -57,3 +57,17 @@ profiles:
     kustomize:
       paths:
       - k8s-clean/overlays/production
+# Alias for Cloud Deploy compatibility
+- name: prod
+  build:
+    artifacts:
+    - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-prod/webapp-images/webapp
+      docker:
+        dockerfile: Dockerfile
+    googleCloudBuild:
+      projectId: u2i-tenant-webapp-prod
+      region: europe-west1
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/production
