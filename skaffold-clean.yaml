@@ -15,16 +15,26 @@ manifests:
     paths:
     - k8s-clean/overlays/nonprod
 profiles:
+- name: dev
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/dev
+- name: qa
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/qa
+- name: prod
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/production
 - name: nonprod
   manifests:
     kustomize:
       paths:
       - k8s-clean/overlays/nonprod
-- name: prod
-  manifests:
-    kustomize:
-      paths:
-      - k8s-clean/overlays/prod
 - name: foo
   manifests:
     kustomize:
