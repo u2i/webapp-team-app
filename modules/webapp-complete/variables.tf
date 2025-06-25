@@ -165,6 +165,12 @@ variable "skip_group_creation" {
   default     = false
 }
 
+variable "deploy_k8s_resources" {
+  description = "Whether to deploy Kubernetes resources (set to false on first run)"
+  type        = bool
+  default     = false
+}
+
 variable "groups" {
   description = "Map of group names to email addresses (when skip_group_creation is true)"
   type        = map(string)

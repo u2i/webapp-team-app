@@ -63,3 +63,23 @@ output "compliance_status" {
     environment      = var.environment
   }
 }
+
+output "config_connector_sa_email" {
+  description = "Config Connector service account email"
+  value       = google_service_account.config_connector.email
+}
+
+output "external_dns_sa_email" {
+  description = "External DNS service account email"
+  value       = google_service_account.external_dns.email
+}
+
+output "cloud_deploy_sa_email" {
+  description = "Cloud Deploy service account email"
+  value       = google_service_account.cloud_deploy_sa.email
+}
+
+output "dns_zone_name" {
+  description = "DNS zone name"
+  value       = google_dns_managed_zone.webapp.name
+}
