@@ -112,4 +112,4 @@ Before each deployment, ensure:
 
 ## Deployment Status
 
-Last deployment triggered after workload identity fix.# Test GitOps Pipeline - Post WIF Fix
+Last deployment triggered after workload identity fix.
