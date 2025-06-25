@@ -28,7 +28,7 @@ locals {
   )
 }
 
-# Import existing webapp nonprod project
+# Webapp nonprod project
 resource "google_project" "webapp_nonprod" {
   name            = "u2i-tenant-webapp"  # Match existing name
   project_id      = var.project_id
