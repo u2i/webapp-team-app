@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 8080;
+// Deployment trigger after WIF fix
 const boundary = process.env.BOUNDARY || 'nonprod';
 const stage = process.env.STAGE || 'unknown';
 const version = process.env.VERSION || process.env.K_REVISION || 'local';
