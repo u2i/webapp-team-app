@@ -1,0 +1,10 @@
+// Detect suspicious IAM changes
+resource.type == "project" &&
+protoPayload.methodName == "SetIamPolicy" &&
+(
+  // Granting high privilege roles
+  protoPayload.request.policy.bindings.exists(b, 
+    b.role in ["roles/owner", "roles/editor", "roles/iam.securityAdmin"] &&
+    b.members.exists(m, !m.endsWith("@" + org.domain))
+  )
+)

@@ -1,0 +1,5 @@
+// Detect potential data exfiltration
+resource.type == "gcs_bucket" &&
+protoPayload.methodName == "storage.objects.get" &&
+protoPayload.request.size > 1073741824 && // 1GB
+!protoPayload.authenticationInfo.principalEmail.endsWith("@" + org.domain)

@@ -1,0 +1,59 @@
+name: Terramate Apply
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Terramate
+        run: |
+          curl -Lo terramate https://github.com/terramate-io/terramate/releases/latest/download/terramate_linux_amd64
+          chmod +x terramate
+          sudo mv terramate /usr/local/bin/
+          terramate version
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.1
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/providers/github'
+          service_account: 'github-actions@u2i-bootstrap.iam.gserviceaccount.com'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: List changed stacks
+        run: |
+          echo "### Changed Stacks" >> $GITHUB_STEP_SUMMARY
+          terramate list --changed >> $GITHUB_STEP_SUMMARY
+
+      - name: Generate Terramate files
+        run: terramate generate
+
+      - name: Run Terraform init
+        run: terramate run --changed -- terraform init -no-color
+
+      - name: Run Terraform apply
+        run: terramate run --changed -- terraform apply -auto-approve -no-color
+
+      - name: Update deployment status
+        run: |
+          echo "### Deployment Complete ✅" >> $GITHUB_STEP_SUMMARY
+          echo "All changed stacks have been successfully deployed." >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,83 @@
+name: Terramate Plan
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Terramate
+        run: |
+          curl -Lo terramate https://github.com/terramate-io/terramate/releases/latest/download/terramate_linux_amd64
+          chmod +x terramate
+          sudo mv terramate /usr/local/bin/
+          terramate version
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.1
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/providers/github'
+          service_account: 'github-actions@u2i-bootstrap.iam.gserviceaccount.com'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: List changed stacks
+        run: |
+          echo "### Changed Stacks" >> $GITHUB_STEP_SUMMARY
+          terramate list --changed >> $GITHUB_STEP_SUMMARY
+
+      - name: Generate Terramate files
+        run: terramate generate
+
+      - name: Run Terraform init
+        run: terramate run --changed -- terraform init -no-color
+
+      - name: Run Terraform plan
+        id: plan
+        run: |
+          terramate run --changed -- terraform plan -no-color -out=tfplan 2>&1 | tee plan_output.txt
+        continue-on-error: true
+
+      - name: Comment PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const fs = require('fs');
+            const planOutput = fs.readFileSync('plan_output.txt', 'utf8');
+            const output = `#### Terraform Plan 📖
+            
+            <details><summary>Show Plan</summary>
+            
+            \`\`\`terraform
+            ${planOutput}
+            \`\`\`
+            
+            </details>
+            
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
