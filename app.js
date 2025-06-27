@@ -16,12 +16,13 @@ app.get('/ready', (req, res) => {
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'Hello from webapp-team! v5 - Multi-stage deployment',
+    message: 'Hello from webapp-team! v6 - Testing Preview Deployments',
     boundary: boundary,
     stage: stage,
     version: version,
     region: 'europe-west1',
     compliance: 'iso27001-soc2-gdpr',
+    preview: process.env.PREVIEW_NAME || false,
     timestamp: new Date().toISOString()
   });
 });
