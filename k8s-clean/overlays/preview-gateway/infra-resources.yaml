@@ -28,6 +28,6 @@ spec:
   mapRef:
     external: projects/u2i-tenant-webapp/locations/global/certificateMaps/webapp-cert-map
   certificatesRefs:
-  - name: webapp-preview-cert-preview # from-param: ${CERT_NAME}
+  - name: preview-webapp-preview-cert-preview # from-param: ${CERT_NAME_WITH_PREFIX}
     namespace: infra-gw
   hostname: preview.webapp.u2i.dev # from-param: ${DOMAIN}

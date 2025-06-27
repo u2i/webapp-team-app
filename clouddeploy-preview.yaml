@@ -14,7 +14,6 @@ description: "Preview deployment pipeline with parameterized domains"
 serialPipeline:
   stages:
   - targetId: preview-gke
-    profiles: [preview-gateway]
 
 ---
 apiVersion: deploy.cloud.google.com/v1
