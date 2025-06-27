@@ -67,3 +67,6 @@ temp/
 # Logs
 logs/
 *.log
+
+# Old pipeline files (archived)
+.old-pipeline-files/

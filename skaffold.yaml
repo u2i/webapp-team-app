@@ -1,7 +1,7 @@
-apiVersion: skaffold/v4beta6
+apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
-  name: webapp-deployment
+  name: webapp
 build:
   artifacts:
   - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
@@ -10,80 +10,66 @@ build:
   googleCloudBuild:
     projectId: u2i-tenant-webapp
     region: europe-west1
+  tagPolicy:
+    gitCommit:
+      variant: AbbrevCommitSha
 manifests:
   kustomize:
     paths:
-    - k8s-clean/overlays/dev  # Default to dev
+    - k8s-clean/overlays/dev
+    buildArgs:
+    - --load-restrictor=LoadRestrictionsNone
+deploy:
+  kubectl:
+    flags:
+      apply: ["--wait=true"]
+      global: ["--request-timeout=300s"]
+
 profiles:
-# Nonprod profile for Cloud Deploy
-- name: nonprod
-  manifests:
-    kustomize:
-      paths:
-      - k8s-clean/overlays/nonprod
-# Resource-based profiles that can be reused across environments
-- name: dev-resources
-  manifests:
-    kustomize:
-      paths:
-      - k8s-clean/overlays/dev
-- name: prod-resources
-  manifests:
-    kustomize:
-      paths:
-      - k8s-clean/overlays/production
-# Specific environment deployments
-- name: dev
-  manifests:
-    kustomize:
-      paths:
-      - k8s-clean/overlays/dev
-- name: qa
-  # QA uses dev resources but with qa-specific config
-  manifests:
-    kustomize:
-      paths:
-      - k8s-clean/overlays/qa
-- name: staging
-  # Staging uses prod resources but in nonprod project
-  manifests:
-    kustomize:
-      paths:
-      - k8s-clean/overlays/staging
-- name: production
-  build:
-    artifacts:
-    - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-prod/webapp-images/webapp
-      docker:
-        dockerfile: Dockerfile
-    googleCloudBuild:
-      projectId: u2i-tenant-webapp-prod
-      region: europe-west1
-  manifests:
-    kustomize:
-      paths:
-      - k8s-clean/overlays/production
-# Alias for Cloud Deploy compatibility
+# Production profile
 - name: prod
   build:
-    artifacts:
-    - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-prod/webapp-images/webapp
-      docker:
-        dockerfile: Dockerfile
     googleCloudBuild:
       projectId: u2i-tenant-webapp-prod
-      region: europe-west1
+    tagPolicy:
+      gitCommit:
+        variant: Tags
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/production
-# Preview deployment with Gateway API and parameterized domain
-- name: preview-gateway
+      - k8s-clean/overlays/prod
+  deploy:
+    kubectl:
+      defaultNamespace: webapp-prod
+
+# Pre-production profile (dev, qa)
+- name: preprod
+  build:
+    tagPolicy:
+      gitCommit:
+        variant: AbbrevCommitSha
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/preprod
+  deploy:
+    kubectl:
+      defaultNamespace: webapp-${NAMESPACE}
+
+# Preview profile for PR deployments
+- name: preview
+  build:
+    tagPolicy:
+      sha256: {}
   manifests:
     kustomize:
       paths:
       - k8s-clean/overlays/preview-gateway
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
-    rawYaml:
-    - k8s-clean/overlays/preview-gateway/infra-resources.yaml
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true"]
+        global: ["--request-timeout=600s"]
+    statusCheckDeadlineSeconds: 1200

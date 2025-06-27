@@ -1,11 +1,17 @@
 #!/bin/bash
 # Deploy preview with custom domain
 # Usage: ./deploy-preview.sh <preview-name> [domain]
+# For PRs: ./deploy-preview.sh pr-123
 
 set -euo pipefail
 
 PREVIEW_NAME="${1:-preview}"
-DOMAIN="${2:-${PREVIEW_NAME}.webapp.u2i.dev}"
+# Support pr-NNN naming convention
+if [[ "$PREVIEW_NAME" =~ ^pr-[0-9]+$ ]]; then
+    DOMAIN="${PREVIEW_NAME}.webapp.u2i.dev"
+else
+    DOMAIN="${2:-${PREVIEW_NAME}.webapp.u2i.dev}"
+fi
 NAMESPACE="webapp-preview-${PREVIEW_NAME}"
 
 echo "Deploying preview: ${PREVIEW_NAME}"

@@ -1,0 +1,34 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
+
+resources:
+- ../../base
+- ../../profiles/dev  # Use dev profile resources for preprod envs
+
+# Environment config
+configMapGenerator:
+- name: webapp-env-config
+  literals:
+  - ENV=${ENV} # from-param: ${ENV}
+  - API_URL=${API_URL} # from-param: ${API_URL}
+  - LOG_LEVEL=info
+  - ENABLE_PROFILING=false
+  - SECURE_COOKIES=true
+  - REGION=europe-west1
+  - COMPLIANCE_MODE=standard
+
+commonLabels:
+  app: webapp
+  environment: ${ENV} # from-param: ${ENV}
+  stage: preprod
+  boundary: nonprod
+  tier: standard
+  team: webapp-team
+  compliance: iso27001-soc2-gdpr
+  data-residency: eu
+
+images:
+- name: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
+  newTag: latest  # Will be overridden by Skaffold
