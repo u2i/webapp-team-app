@@ -116,6 +116,31 @@ All deployments are triggered via GitHub Actions:
 - Prod: Full monitoring, alerts, and SLO tracking
 - Preview: Minimal monitoring
 
+## Preview Cleanup
+
+### Automatic Cleanup
+
+1. **PR Closed**: When a PR is closed/merged, the preview is automatically cleaned up
+2. **Scheduled**: Daily cleanup of previews older than 7 days (runs at 2 AM UTC)
+
+### Manual Cleanup
+
+#### Clean up specific PR preview:
+```bash
+./scripts/cleanup-preview-pr.sh 123
+# Removes namespace, certificate, and certificate map entry
+```
+
+#### Clean up all preview namespaces:
+```bash
+./scripts/cleanup-previews.sh
+```
+
+#### Clean up previews matching pattern:
+```bash
+./scripts/cleanup-previews.sh webapp-preview-pr-
+```
+
 ## Troubleshooting
 
 ### Check Deployment Status
@@ -130,8 +155,14 @@ gcloud deploy releases list --delivery-pipeline=webapp-qa-prod-pipeline --region
 gcloud deploy rollouts describe <rollout-name> --release=<release-name> --delivery-pipeline=<pipeline> --region=europe-west1
 ```
 
-### Manual Cleanup of Preview
+### List All Preview Environments
 
 ```bash
-kubectl delete namespace webapp-preview-pr-123
+kubectl get namespaces | grep webapp-preview-
+```
+
+### Check Certificate Status
+
+```bash
+gcloud certificate-manager certificates list --project=u2i-tenant-webapp | grep webapp-preview
 ```

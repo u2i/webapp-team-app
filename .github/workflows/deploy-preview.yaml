@@ -76,9 +76,50 @@ jobs:
     
     - uses: google-github-actions/setup-gcloud@v2
     
+    - name: Setup kubectl
+      run: |
+        gcloud container clusters get-credentials webapp-cluster \
+          --region=${{ env.GCP_REGION }} \
+          --project=${{ env.GCP_PROJECT }}
+    
     - name: Cleanup Preview
       run: |
         PR_NUMBER=${{ github.event.pull_request.number }}
-        NAMESPACE="webapp-preview-pr-${PR_NUMBER}"
+        PREVIEW_NAME="pr-${PR_NUMBER}"
+        NAMESPACE="webapp-preview-${PREVIEW_NAME}"
         
-        kubectl delete namespace ${NAMESPACE} --ignore-not-found=true
+        echo "🧹 Cleaning up preview environment for PR #${PR_NUMBER}"
+        
+        # Delete namespace (this will also delete the HTTPRoute)
+        echo "Deleting namespace: ${NAMESPACE}"
+        kubectl delete namespace ${NAMESPACE} --ignore-not-found=true || true
+        
+        # Delete certificate map entry
+        ENTRY_NAME="webapp-preview-entry-${PREVIEW_NAME}"
+        echo "Deleting certificate map entry: ${ENTRY_NAME}"
+        gcloud certificate-manager maps entries delete ${ENTRY_NAME} \
+          --map="webapp-cert-map" \
+          --project=${{ env.GCP_PROJECT }} \
+          --quiet || true
+        
+        # Delete certificate
+        CERT_NAME="webapp-preview-cert-${PREVIEW_NAME}"
+        echo "Deleting certificate: ${CERT_NAME}"
+        gcloud certificate-manager certificates delete ${CERT_NAME} \
+          --project=${{ env.GCP_PROJECT }} \
+          --quiet || true
+        
+        echo "✅ Preview cleanup completed"
+    
+    - name: Comment on PR
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const body = `🧹 Preview environment has been cleaned up.\n\nThe preview deployment for this PR has been removed.`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          });
