@@ -8,7 +8,7 @@ resources:
 - ../../profiles/dev  # Use dev profile for preview resources
 - httproute.yaml
 - configmap.yaml
-- infra-resources.yaml
+- certificate-resources.yaml
 
 # Name prefix can be overridden via --name-prefix
 namePrefix: preview-
