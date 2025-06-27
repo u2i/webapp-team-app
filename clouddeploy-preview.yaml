@@ -110,7 +110,6 @@ selector:
 rules:
 - promoteReleaseRule:
     id: promote-to-infra
-    wait: 1m
     toTargetId: preview-gke-infra
 
 ---
@@ -129,5 +128,4 @@ selector:
 rules:
 - promoteReleaseRule:
     id: promote-to-app
-    wait: 1m
     toTargetId: preview-gke-app
