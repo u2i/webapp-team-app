@@ -1,23 +1,22 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Each resource will have namespace set via Cloud Deploy substitution
-
+# Stage 2: Infrastructure resources (configmap, service, network policy, routes)
 resources:
-- ../../base/deployment.yaml
-- ../../profiles/dev  # Use dev profile for preview resources
+- ../preview-gateway/configmap.yaml
+- ../preview-gateway/httproute.yaml
+- ../../base/service.yaml
+- ../../base/network-policy.yaml
 
 # Name prefix can be overridden via --name-prefix
 namePrefix: preview-
 
 # Service patch to ensure ClusterIP
 patches:
-- path: service-patch.yaml
+- path: ../preview-gateway/service-patch.yaml
   target:
     kind: Service
     name: webapp-service
-
-# Namespace is added directly to each manifest file
 
 # Common labels for preview deployments
 commonLabels:
@@ -27,6 +26,3 @@ commonLabels:
   tenant: webapp-team
   compliance: iso27001-soc2-gdpr
   data-residency: eu
-
-# Note: ${DOMAIN} and ${PREVIEW_NAME} will be substituted by Cloud Deploy
-# at release creation time using --deploy-parameters

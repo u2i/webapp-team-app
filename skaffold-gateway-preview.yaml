@@ -1,4 +1,4 @@
-apiVersion: skaffold/v4beta6
+apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
   name: webapp-preview-deployment
@@ -18,25 +18,48 @@ manifests:
     - k8s-clean/overlays/preview-gateway
     buildArgs:
     - --load-restrictor=LoadRestrictionsNone
-customActions:
-- name: wait-cert
-  containers:
-  - name: gcloud-wait
-    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
-    command: ["/bin/sh"]
-    args:
-    - -c
-    - |
-      set -e
-      echo "⏳ Waiting for Certificate Manager cert ${CERT_NAME} to become ACTIVE..."
-      while true; do
-        state=$(gcloud certificate-manager certificates describe "${CERT_NAME}" \
-          --project="u2i-tenant-webapp" --location=global \
-          --format="value(state)")
-        if [ "$state" = "ACTIVE" ]; then
-          echo "✅ Certificate is ACTIVE"
-          break
-        fi
-        echo "Current state: $state - waiting 10 seconds..."
-        sleep 10
-      done
+deploy:
+  kubectl:
+    flags:
+      apply: ["--wait=true"]
+      global: ["--request-timeout=600s"]
+  statusCheckDeadlineSeconds: 1200
+profiles:
+- name: cert-only
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/preview-gateway-cert
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true"]
+        global: ["--request-timeout=600s"]
+  
+- name: infra-only
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/preview-gateway-infra
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true"]
+        global: ["--request-timeout=60s"]
+
+- name: app-only
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/preview-gateway
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true"]
+        global: ["--request-timeout=300s"]

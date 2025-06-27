@@ -18,8 +18,8 @@ gcloud deploy releases create "preview-${PREVIEW_NAME}-$(date +%Y%m%d%H%M%S)" \
 	--region=europe-west1 \
 	--project=u2i-tenant-webapp \
 	--skaffold-file=skaffold-gateway-preview.yaml \
-	--deploy-parameters="DOMAIN=${DOMAIN},PREVIEW_NAME=${PREVIEW_NAME},NAMESPACE=${NAMESPACE},CERT_NAME=webapp-preview-cert-${PREVIEW_NAME},CERT_NAME_WITH_PREFIX=preview-webapp-preview-cert-${PREVIEW_NAME},CERT_ENTRY_NAME=webapp-preview-entry-${PREVIEW_NAME},ROUTE_NAME=webapp-preview-route-${PREVIEW_NAME},CERT_DESCRIPTION=Certificate for ${DOMAIN},API_URL=https://api-${DOMAIN}" \
-	--to-target=preview-gke
+	--deploy-parameters="DOMAIN=${DOMAIN},PREVIEW_NAME=${PREVIEW_NAME},NAMESPACE=${NAMESPACE},CERT_NAME=webapp-preview-cert-${PREVIEW_NAME},CERT_ENTRY_NAME=webapp-preview-entry-${PREVIEW_NAME},ROUTE_NAME=webapp-preview-route-${PREVIEW_NAME},CERT_DESCRIPTION=Certificate for ${DOMAIN},API_URL=https://api-${DOMAIN}" \
+	--to-target=preview-gke-cert
 
 echo "Preview deployment initiated for ${DOMAIN}"
 echo "Note: DNS records will be created automatically by External DNS"
