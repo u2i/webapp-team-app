@@ -1,0 +1,4 @@
+# Set webapp-dev namespace for app resources
+- op: replace
+  path: /metadata/namespace
+  value: webapp-dev

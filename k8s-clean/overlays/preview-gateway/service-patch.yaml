@@ -1,0 +1,7 @@
+# Ensure service is ClusterIP for Gateway API
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-service
+spec:
+  type: ClusterIP

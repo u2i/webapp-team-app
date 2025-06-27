@@ -1,0 +1,20 @@
+apiVersion: skaffold/v4beta6
+kind: Config
+metadata:
+  name: webapp-preview-deployment
+build:
+  artifacts:
+  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
+    docker:
+      dockerfile: Dockerfile
+  googleCloudBuild:
+    projectId: u2i-tenant-webapp
+    region: europe-west1
+  tagPolicy:
+    sha256: {}
+manifests:
+  kustomize:
+    paths:
+    - k8s-clean/overlays/preview-gateway
+    buildArgs:
+    - --load-restrictor=LoadRestrictionsNone

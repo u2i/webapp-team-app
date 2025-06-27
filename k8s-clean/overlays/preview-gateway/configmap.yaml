@@ -1,0 +1,12 @@
+# ConfigMap for preview environment variables
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webapp-env-config
+  namespace: webapp-dev
+data:
+  BOUNDARY: nonprod
+  STAGE: preview  
+  PREVIEW_NAME: preview # from-param: ${PREVIEW_NAME}
+  DOMAIN: preview.webapp.u2i.dev # from-param: ${DOMAIN}
+  API_URL: https://api-preview.webapp.u2i.dev # from-param: ${API_URL}
