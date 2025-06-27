@@ -15,6 +15,12 @@ manifests:
     paths:
     - k8s-clean/overlays/dev  # Default to dev
 profiles:
+# Nonprod profile for Cloud Deploy
+- name: nonprod
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/nonprod
 # Resource-based profiles that can be reused across environments
 - name: dev-resources
   manifests:

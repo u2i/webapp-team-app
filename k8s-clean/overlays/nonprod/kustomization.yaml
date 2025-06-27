@@ -1,13 +1,17 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: webapp-team
+namespace: webapp-dev
 
 resources:
 - ../../base
-- config-connector-resources.yaml
+- gateway-resources.yaml
 
 patches:
+- path: service-patch.yaml
+  target:
+    kind: Service
+    name: webapp-service
 - target:
     kind: Deployment
     name: webapp

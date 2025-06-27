@@ -1,0 +1,24 @@
+# Gateway API resources for dev environment
+# Simplified to just use HTTPRoute - certificates are managed separately
+
+# ─────────────────────────────────────────────────────────────
+# HTTPRoute connecting dev.webapp.u2i.dev to the service
+# ─────────────────────────────────────────────────────────────
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: webapp-dev-route
+  annotations:
+    # External DNS will pick this up and create the DNS record
+    external-dns.alpha.kubernetes.io/hostname: "dev.webapp.u2i.dev"
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  hostnames: 
+  - "dev.webapp.u2i.dev"
+  parentRefs:
+  - name: webapp-gateway
+    namespace: infra-gw
+  rules:
+  - backendRefs:
+    - name: dev-webapp-service
+      port: 80

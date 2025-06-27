@@ -6,9 +6,15 @@ namespace: webapp-dev
 resources:
 - ../../base
 - ../../profiles/dev  # Use dev profile for resources
-- config-connector-resources.yaml
+- gateway-resources.yaml
 
 namePrefix: dev-
+
+patches:
+- path: service-patch.yaml
+  target:
+    kind: Service
+    name: webapp-service
 
 commonLabels:
   stage: dev

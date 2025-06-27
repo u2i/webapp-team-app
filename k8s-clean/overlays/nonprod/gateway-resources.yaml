@@ -1,0 +1,74 @@
+# Gateway API resources for nonprod dev environment
+# These replace the old Ingress + ManagedCertificate approach
+
+# ─────────────────────────────────────────────────────────────
+# Google-managed TLS certificate for dev.webapp.u2i.dev
+# ─────────────────────────────────────────────────────────────
+apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
+kind: CertificateManagerCertificate
+metadata:
+  name: webapp-dev-cert
+  annotations:
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
+spec:
+  location: global
+  managed:
+    domains: 
+    - "dev.webapp.u2i.dev"
+    dnsAuthorizationsRefs:
+    - name: webapp-dev-dns-auth
+
+# ─────────────────────────────────────────────────────────────
+# DNS-01 authorization for certificate validation
+# ─────────────────────────────────────────────────────────────
+---
+apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
+kind: CertificateManagerDNSAuthorization
+metadata:
+  name: webapp-dev-dns-auth
+  annotations:
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
+spec:
+  domain: dev.webapp.u2i.dev
+  location: global
+
+# ─────────────────────────────────────────────────────────────
+# Certificate map entry to bind hostname to certificate
+# ─────────────────────────────────────────────────────────────
+---
+apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
+kind: CertificateManagerCertificateMapEntry
+metadata:
+  name: webapp-dev-entry
+  annotations:
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
+spec:
+  hostname: dev.webapp.u2i.dev
+  matcher: PRIMARY
+  mapRef:
+    name: webapp-cert-map       # References the shared cert map we created
+    namespace: infra-gw
+  certificatesRefs:
+  - name: webapp-dev-cert
+
+# ─────────────────────────────────────────────────────────────
+# HTTPRoute connecting dev.webapp.u2i.dev to the service
+# ─────────────────────────────────────────────────────────────
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: webapp-dev-route
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: "dev.webapp.u2i.dev"
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  hostnames: 
+  - "dev.webapp.u2i.dev"
+  parentRefs:
+  - name: webapp-gateway        # References our shared Gateway
+    namespace: infra-gw
+  rules:
+  - backendRefs:
+    - name: webapp-service
+      port: 80
