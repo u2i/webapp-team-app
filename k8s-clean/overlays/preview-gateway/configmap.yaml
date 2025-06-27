@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: webapp-env-config
-  namespace: webapp-dev
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
 data:
   BOUNDARY: nonprod
   STAGE: preview  

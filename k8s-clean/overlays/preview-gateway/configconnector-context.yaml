@@ -1,0 +1,8 @@
+# ConfigConnectorContext to configure the namespace for Config Connector
+apiVersion: core.cnrm.cloud.google.com/v1beta1
+kind: ConfigConnectorContext
+metadata:
+  name: configconnectorcontext.core.cnrm.cloud.google.com
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
+spec:
+  googleServiceAccount: config-connector@u2i-tenant-webapp.iam.gserviceaccount.com

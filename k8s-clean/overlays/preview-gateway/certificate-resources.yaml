@@ -5,7 +5,7 @@ apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
 kind: CertificateManagerCertificate
 metadata:
   name: webapp-preview-cert-preview # from-param: ${CERT_NAME}
-  namespace: webapp-dev
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
@@ -21,13 +21,13 @@ apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
 kind: CertificateManagerCertificateMapEntry  
 metadata:
   name: webapp-preview-entry-preview # from-param: ${CERT_ENTRY_NAME}
-  namespace: webapp-dev
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
   mapRef:
     name: webapp-cert-map
+    namespace: infra-gw
   certificatesRefs:
   - name: preview-webapp-preview-cert-preview # from-param: ${CERT_NAME_WITH_PREFIX}
-    namespace: webapp-dev
   hostname: preview.webapp.u2i.dev # from-param: ${DOMAIN}

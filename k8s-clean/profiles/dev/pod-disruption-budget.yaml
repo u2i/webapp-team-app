@@ -2,6 +2,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: webapp-pdb
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
 spec:
   minAvailable: 0  # Allow disruption for dev
   selector:
