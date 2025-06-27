@@ -26,7 +26,7 @@ metadata:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp
 spec:
   mapRef:
-    external: projects/u2i-tenant-webapp/locations/global/certificateMaps/webapp-cert-map
+    name: webapp-cert-map
   certificatesRefs:
   - name: preview-webapp-preview-cert-preview # from-param: ${CERT_NAME_WITH_PREFIX}
     namespace: infra-gw
