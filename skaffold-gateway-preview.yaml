@@ -36,6 +36,37 @@ customActions:
       set -ex
       echo "=== Starting setup for certificate and infrastructure ==="
       
+      # Debug: Show where we are and what's available
+      echo "Current directory: $(pwd)"
+      echo "Directory contents:"
+      ls -la
+      echo ""
+      echo "Checking common mount points for source:"
+      echo "--- Checking /workspace ---"
+      if [ -d "/workspace" ]; then
+        ls -la /workspace | head -10
+      else
+        echo "/workspace does not exist"
+      fi
+      echo ""
+      echo "--- Checking /source ---"
+      if [ -d "/source" ]; then
+        ls -la /source | head -10
+      else
+        echo "/source does not exist"
+      fi
+      echo ""
+      echo "--- Checking /skaffold ---"
+      if [ -d "/skaffold" ]; then
+        ls -la /skaffold | head -10
+      else
+        echo "/skaffold does not exist"
+      fi
+      echo ""
+      echo "--- Checking for k8s-clean directory ---"
+      find . -name "k8s-clean" -type d 2>/dev/null | head -10
+      echo ""
+      
       # The gcr.io/cloud-builders/kubectl image has kubectl and is authenticated
       echo "1. Creating namespace..."
       cat k8s-clean/overlays/preview-gateway-cert/namespace.yaml | envsubst | kubectl apply -f - --server-side
