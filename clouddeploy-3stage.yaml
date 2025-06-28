@@ -258,6 +258,7 @@ rules:
 - promoteReleaseRule:
     id: promote-to-infra
     toTargetId: dev-infra
+    wait: 0s
 
 ---
 apiVersion: deploy.cloud.google.com/v1
@@ -276,6 +277,7 @@ rules:
 - promoteReleaseRule:
     id: promote-to-app
     toTargetId: dev-app
+    wait: 0s
 
 ---
 # Automations for QA stages only (not prod)
@@ -295,6 +297,7 @@ rules:
 - promoteReleaseRule:
     id: promote-to-infra
     toTargetId: qa-infra
+    wait: 0s
 
 ---
 apiVersion: deploy.cloud.google.com/v1
@@ -313,6 +316,7 @@ rules:
 - promoteReleaseRule:
     id: promote-to-app
     toTargetId: qa-app
+    wait: 0s
 
 ---
 # Prod stages automation (after manual approval)
@@ -332,6 +336,7 @@ rules:
 - promoteReleaseRule:
     id: promote-to-infra
     toTargetId: prod-infra
+    wait: 0s
 
 ---
 apiVersion: deploy.cloud.google.com/v1
@@ -350,3 +355,4 @@ rules:
 - promoteReleaseRule:
     id: promote-to-app
     toTargetId: prod-app
+    wait: 0s
