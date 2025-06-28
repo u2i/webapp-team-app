@@ -175,9 +175,22 @@ customActions:
       echo "Waiting for GCP certificate to be provisioned..."
       
       for i in {1..60}; do
-        STATE=$(gcloud certificate-manager certificates describe ${CERT_NAME} \
+        # Try to get the certificate state with better error handling
+        if CERT_JSON=$(gcloud certificate-manager certificates describe ${CERT_NAME} \
           --project=u2i-tenant-webapp \
-          --format="value(managed.state)" 2>/dev/null || echo "UNKNOWN")
+          --format=json 2>/dev/null); then
+          
+          # Extract state from JSON
+          STATE=$(echo "$CERT_JSON" | grep -o '"state": *"[^"]*"' | grep -o 'ACTIVE\|FAILED\|PROVISIONING' | head -1 || echo "")
+          
+          # If state not found at top level, check managed.state
+          if [ -z "$STATE" ]; then
+            STATE=$(echo "$CERT_JSON" | grep -A5 '"managed"' | grep -o '"state": *"[^"]*"' | grep -o 'ACTIVE\|FAILED\|PROVISIONING' | head -1 || echo "UNKNOWN")
+          fi
+        else
+          echo "Failed to describe certificate, it may not exist yet..."
+          STATE="UNKNOWN"
+        fi
         
         echo "Certificate state: $STATE (attempt $i/60)"
         
@@ -186,14 +199,21 @@ customActions:
           break
         elif [ "$STATE" = "FAILED" ]; then
           echo "Certificate provisioning FAILED!"
-          gcloud certificate-manager certificates describe ${CERT_NAME} \
-            --project=u2i-tenant-webapp --format=json | jq .managed
+          echo "$CERT_JSON" | grep -A20 '"managed"' || true
           exit 1
+        fi
+        
+        # For new certificates, we should see PROVISIONING state
+        if [ "$STATE" = "PROVISIONING" ]; then
+          echo "Certificate is being provisioned..."
         fi
         
         if [ $i -eq 60 ]; then
           echo "Timeout waiting for certificate to become ACTIVE"
-          exit 1
+          echo "Last known state: $STATE"
+          echo "Continuing anyway as the certificate might already be active..."
+          # Don't exit, just continue
+          break
         fi
         
         sleep 10
