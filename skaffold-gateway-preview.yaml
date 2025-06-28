@@ -15,6 +15,8 @@ build:
 manifests:
   kustomize:
     paths:
+    - k8s-clean/overlays/preview-gateway-cert
+    - k8s-clean/overlays/preview-gateway-infra
     - k8s-clean/overlays/preview-gateway
     buildArgs:
     - --load-restrictor=LoadRestrictionsNone
@@ -37,12 +39,19 @@ customActions:
       echo "Directory contents:"
       ls -la
       
-      # Check for k8s-clean directory
-      if [ -d "k8s-clean" ]; then
-        echo "Found k8s-clean directory"
+      # Download rendered manifest from Cloud Storage
+      # Cloud Deploy stores artifacts in: gs://ARTIFACT_STORAGE/PIPELINE/RELEASE/ROLLOUT/
+      echo "Downloading rendered manifest from Cloud Storage..."
+      gsutil cp gs://u2i-tenant-webapp-deploy-artifacts/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/${CLOUD_DEPLOY_ROLLOUT}/rendered.yaml . || {
+        echo "Failed to download from expected path, checking bucket contents..."
+        gsutil ls -r gs://u2i-tenant-webapp-deploy-artifacts/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/ | grep rendered.yaml || true
+      }
+      
+      if [ -f "rendered.yaml" ]; then
+        echo "Successfully downloaded rendered.yaml"
       else
-        echo "k8s-clean directory not found, checking other locations..."
-        find . -name "k8s-clean" -type d || true
+        echo "ERROR: Could not find rendered.yaml"
+        exit 1
       fi
       
       # Get cluster credentials
@@ -50,18 +59,14 @@ customActions:
         --region=europe-west1 \
         --project=u2i-tenant-webapp
       
-      echo "1. Creating namespace..."
-      kubectl apply -f - <<EOF
-      apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: ${NAMESPACE}
-        labels:
-          app.kubernetes.io/component: certificate
-      EOF
+      echo "1. Creating namespace (from certificate resources)..."
+      kubectl apply -f rendered.yaml \
+        --selector=app.kubernetes.io/component=certificate,kind=Namespace \
+        --server-side
       
       echo "2. Applying certificate resources..."
-      kubectl apply -k k8s-clean/overlays/preview-gateway-cert \
+      kubectl apply -f rendered.yaml \
+        --selector=app.kubernetes.io/component=certificate \
         --server-side --timeout=600s
       
       echo "3. Waiting for certificate to become ACTIVE..."
@@ -74,7 +79,8 @@ customActions:
       echo "Certificate is ACTIVE!"
       
       echo "4. Applying infrastructure resources..."
-      kubectl apply -k k8s-clean/overlays/preview-gateway-infra \
+      kubectl apply -f rendered.yaml \
+        --selector=app.kubernetes.io/component=infrastructure \
         --server-side --timeout=300s
       
       echo "=== Predeploy completed successfully ==="
