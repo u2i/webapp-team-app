@@ -28,7 +28,7 @@ customActions:
 - name: setup-cert-and-infra
   containers:
   - name: kubectl-setup
-    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
+    image: google/cloud-sdk:slim
     command: ["/bin/bash"]
     args:
     - -c
@@ -36,8 +36,8 @@ customActions:
       set -e
       echo "=== Starting setup for certificate and infrastructure ==="
       
-      # Install kubectl
-      gcloud components install kubectl --quiet
+      # Install kubectl and kustomize
+      apt-get update && apt-get install -y kubectl
       
       # Configure kubectl
       gcloud container clusters get-credentials webapp-cluster \
