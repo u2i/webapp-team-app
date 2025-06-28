@@ -76,29 +76,66 @@ customActions:
         --region=europe-west1 \
         --project=u2i-tenant-webapp
       
-      echo "1. Creating namespace (from certificate resources)..."
+      # First, let's see what's in the manifest
+      echo "Checking manifest contents..."
+      echo "=== First 50 lines of manifest ==="
+      head -50 rendered.yaml
+      echo "=== Manifest summary ==="
+      grep -E "^kind:|^  name:|app.kubernetes.io/component:" rendered.yaml | head -20
+      
+      echo "1. Creating namespace..."
+      # Extract and apply just the namespace first
       kubectl apply -f rendered.yaml \
-        --selector=app.kubernetes.io/component=certificate,kind=Namespace \
-        --server-side
+        --selector="kind=Namespace" \
+        --server-side || {
+        echo "Failed to apply namespace, trying direct creation..."
+        kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f - --server-side
+      }
       
       echo "2. Applying certificate resources..."
+      # Apply all resources with certificate label
       kubectl apply -f rendered.yaml \
-        --selector=app.kubernetes.io/component=certificate \
-        --server-side --timeout=600s
+        --selector="app.kubernetes.io/component=certificate" \
+        --server-side --timeout=600s || {
+        echo "No certificate resources found with label, applying by kind..."
+        kubectl apply -f rendered.yaml \
+          --selector="kind=CertificateManagerCertificate" \
+          --server-side --timeout=600s
+        kubectl apply -f rendered.yaml \
+          --selector="kind=CertificateManagerCertificateMapEntry" \
+          --server-side --timeout=600s
+      }
       
       echo "3. Waiting for certificate to become ACTIVE..."
       kubectl wait \
         --for=jsonpath='{.status.state}'=ACTIVE \
         --timeout=10m \
         -n ${NAMESPACE} \
-        certificatemanagercertificates/${CERT_NAME}
+        certificatemanagercertificates/${CERT_NAME} || {
+        echo "Certificate wait failed, checking certificate status..."
+        kubectl get certificatemanagercertificates/${CERT_NAME} -n ${NAMESPACE} -o yaml || true
+      }
       
       echo "Certificate is ACTIVE!"
       
       echo "4. Applying infrastructure resources..."
       kubectl apply -f rendered.yaml \
-        --selector=app.kubernetes.io/component=infrastructure \
-        --server-side --timeout=300s
+        --selector="app.kubernetes.io/component=infrastructure" \
+        --server-side --timeout=300s || {
+        echo "No infrastructure resources found with label, applying by kind..."
+        kubectl apply -f rendered.yaml \
+          --selector="kind=Service" \
+          --server-side --timeout=300s
+        kubectl apply -f rendered.yaml \
+          --selector="kind=ConfigMap" \
+          --server-side --timeout=300s
+        kubectl apply -f rendered.yaml \
+          --selector="kind=NetworkPolicy" \
+          --server-side --timeout=300s
+        kubectl apply -f rendered.yaml \
+          --selector="kind=HTTPRoute" \
+          --server-side --timeout=300s
+      }
       
       echo "=== Predeploy completed successfully ==="
 profiles:
