@@ -2,6 +2,8 @@
 
 This repository contains the WebApp Team's application deployment infrastructure following ISO 27001, SOC 2 Type II, and GDPR compliance requirements.
 
+Test PR 85 - Single stage deployment with status checks enabled
+
 ## 🏗️ Repository Structure
 
 ```
