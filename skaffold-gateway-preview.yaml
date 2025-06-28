@@ -24,31 +24,48 @@ deploy:
       apply: ["--wait=true"]
       global: ["--request-timeout=600s"]
   statusCheckDeadlineSeconds: 1200
+customActions:
+- name: create-preview-cert
+  containers:
+  - name: cert-creator
+    image: google/cloud-sdk:alpine
+    command: ["sh", "-c"]
+    args:
+    - |
+      echo "Creating certificate for ${DOMAIN}..."
+      gcloud certificate-manager certificates create ${CERT_NAME} \
+        --project=u2i-tenant-webapp \
+        --description="${CERT_DESCRIPTION}" \
+        --domains="${DOMAIN}" \
+        --quiet || echo "Certificate already exists"
+      
+      echo "Waiting for certificate to become ACTIVE..."
+      while true; do
+        STATE=$(gcloud certificate-manager certificates describe ${CERT_NAME} \
+          --project=u2i-tenant-webapp \
+          --format="value(managed.state)" 2>/dev/null || echo "PROVISIONING")
+        echo "Certificate state: $STATE"
+        if [ "$STATE" = "ACTIVE" ]; then
+          echo "Certificate is ACTIVE!"
+          break
+        fi
+        sleep 10
+      done
+      
+      echo "Creating certificate map entry..."
+      gcloud certificate-manager maps entries create ${CERT_ENTRY_NAME} \
+        --map="webapp-cert-map" \
+        --project=u2i-tenant-webapp \
+        --certificates=${CERT_NAME} \
+        --hostname="${DOMAIN}" \
+        --quiet || echo "Certificate map entry already exists"
 profiles:
-# Profile A: Certificate only
-- name: preview-cert
+# Single profile that creates cert via gcloud then deploys k8s resources
+- name: preview-all
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/preview-gateway-cert
-      buildArgs:
-      - --load-restrictor=LoadRestrictionsNone
-  deploy:
-    kubectl:
-      flags:
-        apply: ["--wait=true", "--server-side", "--timeout=600s"]
-        global: ["--request-timeout=600s"]
-    # Wait for certificate to be ACTIVE
-    hooks:
-      after:
-      - host:
-          command: ["sh", "-c", "kubectl wait --for=jsonpath='{.status.state}'=ACTIVE --timeout=10m certificatemanagercertificates/${CERT_NAME} -n ${NAMESPACE}"]
-
-# Profile B: Infrastructure + Application
-- name: preview-infra-app
-  manifests:
-    kustomize:
-      paths:
+      # Only deploy namespace, infra, and app - no Certificate CR
       - k8s-clean/overlays/preview-gateway-infra
       - k8s-clean/overlays/preview-gateway
       buildArgs:
