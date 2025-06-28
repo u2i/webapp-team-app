@@ -46,37 +46,57 @@ customActions:
       echo "CLOUD_DEPLOY_ROLLOUT: ${CLOUD_DEPLOY_ROLLOUT}"
       echo "CLOUD_DEPLOY_PHASE: ${CLOUD_DEPLOY_PHASE}"
       
-      # Explore the artifact storage to find rendered manifest
-      echo "Exploring artifact storage structure..."
-      BUCKET_BASE="gs://u2i-tenant-webapp-deploy-artifacts"
+      # Try both possible bucket locations
+      echo "Looking for rendered manifests..."
       
-      # List contents at different levels to understand structure
-      echo "Listing pipeline level:"
-      gsutil ls "${BUCKET_BASE}/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/" | head -10 || true
+      # Try the custom artifact storage first
+      BUCKET1="gs://u2i-tenant-webapp-deploy-artifacts"
+      # Try the default Cloud Deploy storage location
+      BUCKET2="gs://europe-west1.deploy-artifacts.u2i-tenant-webapp.appspot.com"
       
-      echo "Listing release level:"
-      gsutil ls "${BUCKET_BASE}/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/" | head -10 || true
-      
-      echo "Listing rollout level:"
-      gsutil ls "${BUCKET_BASE}/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/${CLOUD_DEPLOY_ROLLOUT}/" | head -10 || true
-      
-      # Try to find any rendered files
-      echo "Searching for rendered files..."
-      gsutil ls -r "${BUCKET_BASE}/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/" | grep -E "(rendered|manifest)" | head -20 || true
-      
-      # Check if there's a manifest.yaml or other common names
-      for filename in rendered.yaml manifest.yaml manifests.yaml rendered-manifest.yaml; do
-        echo "Trying to download ${filename}..."
-        if gsutil cp "${BUCKET_BASE}/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/${CLOUD_DEPLOY_ROLLOUT}/${filename}" . 2>/dev/null; then
-          echo "Successfully downloaded ${filename}"
-          mv "${filename}" rendered.yaml
-          break
+      for BUCKET in "${BUCKET1}" "${BUCKET2}"; do
+        echo "Checking bucket: ${BUCKET}"
+        
+        # First, check what's in the release directory
+        echo "Exploring ${BUCKET} structure..."
+        MANIFEST_PATH="${BUCKET}/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/artifacts.json"
+        
+        # Download artifacts.json which contains the manifest location
+        if gsutil cp "${MANIFEST_PATH}" artifacts.json 2>/dev/null; then
+          echo "Found artifacts.json, extracting manifest path..."
+          # Extract the rendered manifest path from artifacts.json
+          RENDERED_PATH=$(cat artifacts.json | grep -o '"renderManifestPath":"[^"]*"' | cut -d'"' -f4 || true)
+          
+          if [ -n "${RENDERED_PATH}" ]; then
+            echo "Found manifest path: ${RENDERED_PATH}"
+            # Download the actual rendered manifest
+            if gsutil cp "${BUCKET}/${RENDERED_PATH}" rendered.yaml 2>/dev/null; then
+              echo "Successfully downloaded rendered.yaml from ${BUCKET}/${RENDERED_PATH}"
+              break
+            fi
+          fi
         fi
+        
+        # If artifacts.json approach didn't work, try direct paths
+        echo "Trying direct paths in ${BUCKET}..."
+        for subpath in \
+          "${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/rendered-manifests.yaml" \
+          "${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/manifests/rendered.yaml" \
+          "${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/manifest.yaml"; do
+          
+          if gsutil cp "${BUCKET}/${subpath}" rendered.yaml 2>/dev/null; then
+            echo "Successfully downloaded rendered.yaml from ${BUCKET}/${subpath}"
+            break 2
+          fi
+        done
       done
       
       if [ ! -f "rendered.yaml" ]; then
-        echo "ERROR: Could not find rendered manifest in expected locations"
-        echo "Please check the bucket structure above"
+        echo "ERROR: Could not find rendered manifest"
+        echo "Searched in both custom and default bucket locations"
+        # List what's actually there to help debug
+        echo "Listing release directory contents:"
+        gsutil ls -r "${BUCKET1}/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/" | head -20 || true
         exit 1
       fi
       
@@ -110,5 +130,7 @@ customActions:
         --server-side --timeout=300s
       
       echo "=== Predeploy completed successfully ==="
+  executionMode:
+    kubernetesCluster: {}
 profiles:
 - name: preview-all
