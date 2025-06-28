@@ -21,7 +21,10 @@ manifests:
     buildArgs:
     - --load-restrictor=LoadRestrictionsNone
 deploy:
-  kubectl: {}
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+    defaultNamespace: ${NAMESPACE}
 customActions:
 - name: setup-cert-and-infra
   containers:
