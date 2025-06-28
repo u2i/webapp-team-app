@@ -19,6 +19,14 @@ serialPipeline:
     strategy:
       standard:
         verify: false
+    deployParameters:
+    - values:
+        DOMAIN: ""
+        PREVIEW_NAME: ""
+        NAMESPACE: ""
+        CERT_NAME: ""
+        CERT_ENTRY_NAME: ""
+        CERT_DESCRIPTION: ""
   
   # Stage 2: Deploy infrastructure (service, configmap, routes)
   - targetId: preview-gke-infra
@@ -26,6 +34,21 @@ serialPipeline:
     strategy:
       standard:
         verify: false
+    deployParameters:
+    - values:
+        DOMAIN: ""
+        PREVIEW_NAME: ""
+        NAMESPACE: ""
+        CERT_NAME: ""
+        CERT_ENTRY_NAME: ""
+        ROUTE_NAME: ""
+        API_URL: ""
+        ENV: ""
+        STAGE: ""
+        BOUNDARY: ""
+        TIER: ""
+        NAME_PREFIX: ""
+        SERVICE_NAME: ""
   
   # Stage 3: Deploy the application
   - targetId: preview-gke-app
@@ -33,6 +56,17 @@ serialPipeline:
     strategy:
       standard:
         verify: false
+    deployParameters:
+    - values:
+        DOMAIN: ""
+        PREVIEW_NAME: ""
+        NAMESPACE: ""
+        API_URL: ""
+        ENV: ""
+        STAGE: ""
+        BOUNDARY: ""
+        TIER: ""
+        NAME_PREFIX: ""
 
 ---
 apiVersion: deploy.cloud.google.com/v1
