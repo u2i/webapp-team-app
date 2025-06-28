@@ -28,31 +28,16 @@ customActions:
 - name: setup-cert-and-infra
   containers:
   - name: kubectl-setup
-    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:alpine
-    command: ["/bin/sh"]
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
+    command: ["/bin/bash"]
     args:
     - -c
     - |
       set -e
       echo "=== Starting setup for certificate and infrastructure ==="
       
-      # List available directories to debug
-      echo "Current directory: $(pwd)"
-      echo "Directory contents:"
-      ls -la
-      
-      # Check if skaffold mounted the source
-      if [ -d "/skaffold" ]; then
-        cd /skaffold
-      elif [ -d "/source" ]; then
-        cd /source
-      else
-        echo "Source directory not found, staying in current directory"
-      fi
-      
-      echo "Working directory: $(pwd)"
-      echo "Contents:"
-      ls -la
+      # Install kubectl
+      gcloud components install kubectl --quiet
       
       # Configure kubectl
       gcloud container clusters get-credentials webapp-cluster \
