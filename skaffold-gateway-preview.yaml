@@ -50,40 +50,26 @@ customActions:
       echo "Downloading rendered manifest..."
       BUCKET="gs://u2i-tenant-webapp-deploy-artifacts"
       
-      # Extract the pipeline ID from CLOUD_DEPLOY_DELIVERY_PIPELINE (format: projects/PROJECT/locations/LOCATION/deliveryPipelines/PIPELINE_NAME)
-      PIPELINE_ID=$(echo "${CLOUD_DEPLOY_DELIVERY_PIPELINE}" | awk -F'/' '{print $NF}')
-      echo "Pipeline ID: ${PIPELINE_ID}"
+      # The pipeline name in the bucket already includes the hash
+      PIPELINE_WITH_HASH="webapp-preview-pipeline-a0f698d2aeb6418abfb81846b21d3b53"
       
-      # For preview deployments, the release name is the same as in CLOUD_DEPLOY_RELEASE but we need just the name part
+      # Extract just the release name from the full path
       RELEASE_NAME=$(echo "${CLOUD_DEPLOY_RELEASE}" | awk -F'/' '{print $NF}')
       echo "Release name: ${RELEASE_NAME}"
       
       # The target is preview-gke
       TARGET_NAME="preview-gke"
       
-      # Construct the full path - use a hash of the pipeline name followed by the release name
-      PIPELINE_HASH=$(echo -n "${PIPELINE_ID}" | md5sum | cut -d' ' -f1)
-      MANIFEST_PATH="${BUCKET}/${PIPELINE_ID}-${PIPELINE_HASH}/${RELEASE_NAME}/${TARGET_NAME}/stable/manifest.yaml"
+      # Construct the full path
+      MANIFEST_PATH="${BUCKET}/${PIPELINE_WITH_HASH}/${RELEASE_NAME}/${TARGET_NAME}/stable/manifest.yaml"
       
-      echo "Attempting to download from: ${MANIFEST_PATH}"
-      if ! gsutil cp "${MANIFEST_PATH}" rendered.yaml 2>/dev/null; then
-        echo "Failed with hash, trying without hash..."
-        # Try without the hash (some pipelines might not use it)
-        MANIFEST_PATH="${BUCKET}/${PIPELINE_ID}/${RELEASE_NAME}/${TARGET_NAME}/stable/manifest.yaml"
-        echo "Attempting to download from: ${MANIFEST_PATH}"
-        
-        if ! gsutil cp "${MANIFEST_PATH}" rendered.yaml 2>/dev/null; then
-          echo "Still failed, listing actual structure..."
-          # List to see the actual structure
-          echo "Listing bucket root:"
-          gsutil ls "${BUCKET}/" | head -10
-          echo "Searching for our release:"
-          gsutil ls -r "${BUCKET}/" | grep "${RELEASE_NAME}" | head -20
-          exit 1
-        fi
+      echo "Downloading from: ${MANIFEST_PATH}"
+      if gsutil cp "${MANIFEST_PATH}" rendered.yaml; then
+        echo "Successfully downloaded rendered manifest"
+      else
+        echo "Failed to download manifest"
+        exit 1
       fi
-      
-      echo "Successfully downloaded rendered manifest"
       
       # Get cluster credentials
       gcloud container clusters get-credentials webapp-cluster \
