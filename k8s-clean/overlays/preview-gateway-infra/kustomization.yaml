@@ -27,4 +27,6 @@ configMapGenerator:
 
 # Labels removed - labels are applied directly in manifests
 
-# Labels removed - will be applied by parent overlay
+# Common labels for all infrastructure resources
+commonLabels:
+  app.kubernetes.io/component: infrastructure

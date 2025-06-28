@@ -6,4 +6,6 @@ resources:
 - namespace.yaml
 - certificate-resources.yaml
 
-# Labels removed - will be applied by parent overlay
+# Common labels for all certificate resources
+commonLabels:
+  app.kubernetes.io/component: certificate
