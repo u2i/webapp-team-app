@@ -107,14 +107,34 @@ customActions:
       }
       
       echo "3. Waiting for certificate to become ACTIVE..."
-      kubectl wait \
-        --for=jsonpath='{.status.state}'=ACTIVE \
-        --timeout=10m \
-        -n ${NAMESPACE} \
-        certificatemanagercertificates/${CERT_NAME} || {
-        echo "Certificate wait failed, checking certificate status..."
-        kubectl get certificatemanagercertificates/${CERT_NAME} -n ${NAMESPACE} -o yaml || true
-      }
+      # The certificate state is in the GCP resource, not the K8s resource
+      # We need to wait for the actual GCP certificate to be provisioned
+      echo "Waiting for GCP certificate to be provisioned..."
+      
+      for i in {1..60}; do
+        STATE=$(gcloud certificate-manager certificates describe ${CERT_NAME} \
+          --project=u2i-tenant-webapp \
+          --format="value(managed.state)" 2>/dev/null || echo "UNKNOWN")
+        
+        echo "Certificate state: $STATE (attempt $i/60)"
+        
+        if [ "$STATE" = "ACTIVE" ]; then
+          echo "Certificate is ACTIVE!"
+          break
+        elif [ "$STATE" = "FAILED" ]; then
+          echo "Certificate provisioning FAILED!"
+          gcloud certificate-manager certificates describe ${CERT_NAME} \
+            --project=u2i-tenant-webapp --format=json | jq .managed
+          exit 1
+        fi
+        
+        if [ $i -eq 60 ]; then
+          echo "Timeout waiting for certificate to become ACTIVE"
+          exit 1
+        fi
+        
+        sleep 10
+      done
       
       echo "Certificate is ACTIVE!"
       
