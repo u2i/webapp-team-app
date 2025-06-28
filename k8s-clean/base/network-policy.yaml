@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: ${NAME_PREFIX}webapp-network-policy # from-param: ${NAME_PREFIX}
+  name: webapp-network-policy # from-param: ${NAME_PREFIX}webapp-network-policy
   namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
   labels:
     app: webapp
