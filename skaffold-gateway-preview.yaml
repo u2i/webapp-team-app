@@ -104,7 +104,8 @@ customActions:
     - -c
     - |
       echo "Deploying Config Connector resources (namespace + cert)..."
-      # Let skaffold deploy handle rendering and applying with proper parameter substitution
+      # Since we removed deployParameters from pipeline, we need to pass them explicitly
+      # Cloud Deploy will set these as environment variables from --deploy-parameters
       skaffold deploy -p config-connector \
         --status-check=false
       echo "Config Connector deployment complete"
