@@ -28,63 +28,25 @@ customActions:
 - name: setup-cert-and-infra
   containers:
   - name: kubectl-setup
-    image: gcr.io/cloud-builders/kustomize
-    command: ["/bin/bash"]
+    image: gcr.io/cloud-builders/kubectl
+    command: ["/bin/sh", "-c"]
     args:
-    - -c
     - |
       set -ex
       echo "=== Starting setup for certificate and infrastructure ==="
       
-      # Debug: Show where we are and what's available
-      echo "Current directory: $(pwd)"
-      echo "Directory contents:"
-      ls -la
-      echo ""
-      echo "Checking common mount points for source:"
-      echo "--- Checking /workspace ---"
-      if [ -d "/workspace" ]; then
-        ls -la /workspace | head -10
-      else
-        echo "/workspace does not exist"
-      fi
-      echo ""
-      echo "--- Checking /source ---"
-      if [ -d "/source" ]; then
-        ls -la /source | head -10
-      else
-        echo "/source does not exist"
-      fi
-      echo ""
-      echo "--- Checking /skaffold ---"
-      if [ -d "/skaffold" ]; then
-        ls -la /skaffold | head -10
-      else
-        echo "/skaffold does not exist"
-      fi
-      echo ""
-      echo "--- Checking for k8s-clean directory ---"
-      find . -name "k8s-clean" -type d 2>/dev/null | head -10
-      echo ""
+      echo "Working directory: $(pwd)"
+      echo "Contents of /workspace:"
+      ls -al /workspace
       
-      # The gcr.io/cloud-builders/kustomize image has kustomize and kubectl
-      echo "1. Creating namespace..."
-      if [ -f "k8s-clean/overlays/preview-gateway-cert/namespace.yaml" ]; then
-        cat k8s-clean/overlays/preview-gateway-cert/namespace.yaml | envsubst | kubectl apply -f - --server-side
-      else
-        echo "namespace.yaml not found, checking if we can build with kustomize..."
-        kustomize build k8s-clean/overlays/preview-gateway-cert 2>/dev/null | grep -A10 "kind: Namespace" || echo "Could not find namespace in kustomize output"
-      fi
+      # Change to workspace where source is mounted
+      cd /workspace
       
-      echo "2. Applying certificate resources..."
-      if [ -d "k8s-clean/overlays/preview-gateway-cert" ]; then
-        kustomize build k8s-clean/overlays/preview-gateway-cert | kubectl apply -f - --server-side
-      else
-        echo "ERROR: k8s-clean/overlays/preview-gateway-cert directory not found"
-        exit 1
-      fi
+      echo "1. Applying certificate resources (namespace + cert)..."
+      kubectl apply -k k8s-clean/overlays/preview-gateway-cert \
+        --server-side --timeout=600s
       
-      echo "3. Waiting for certificate to become ACTIVE..."
+      echo "2. Waiting for certificate to become ACTIVE..."
       kubectl wait \
         --for=jsonpath='{.status.state}'=ACTIVE \
         --timeout=10m \
@@ -93,13 +55,9 @@ customActions:
       
       echo "Certificate is ACTIVE!"
       
-      echo "4. Applying infrastructure resources..."
-      if [ -d "k8s-clean/overlays/preview-gateway-infra" ]; then
-        kustomize build k8s-clean/overlays/preview-gateway-infra | kubectl apply -f - --server-side
-      else
-        echo "ERROR: k8s-clean/overlays/preview-gateway-infra directory not found"
-        exit 1
-      fi
+      echo "3. Applying infrastructure resources..."
+      kubectl apply -k k8s-clean/overlays/preview-gateway-infra \
+        --server-side --timeout=300s
       
       echo "=== Setup completed successfully ==="
 profiles:
