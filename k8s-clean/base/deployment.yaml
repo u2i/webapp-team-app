@@ -1,8 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: webapp
+  name: ${NAME_PREFIX}webapp # from-param: ${NAME_PREFIX}
   namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
+  labels:
+    app: webapp
+    stage: ${STAGE} # from-param: ${STAGE}
+    boundary: ${BOUNDARY} # from-param: ${BOUNDARY}
+    tier: ${TIER} # from-param: ${TIER}
+    environment: ${ENV} # from-param: ${ENV}
 spec:
   replicas: 2
   selector:
