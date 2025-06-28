@@ -7,13 +7,13 @@ namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
 resources:
 - ../../base/service.yaml
 - ../../base/network-policy.yaml
-- gateway-resources.yaml
+- ../dev/gateway-resources.yaml
 
 namePrefix: ${NAME_PREFIX} # from-param: ${NAME_PREFIX}
 
 # Service patch to ensure ClusterIP
 patches:
-- path: service-patch.yaml
+- path: ../dev/service-patch.yaml
   target:
     kind: Service
     name: webapp-service

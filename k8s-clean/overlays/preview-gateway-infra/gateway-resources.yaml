@@ -1,8 +1,8 @@
-# Gateway API resources for dev environment
-# Simplified to just use HTTPRoute - certificates are managed separately
+# Gateway API resources for preview environment
+# Uses HTTPRoute with Certificate Manager for SSL
 
 # ─────────────────────────────────────────────────────────────
-# HTTPRoute connecting dev.webapp.u2i.dev to the service
+# HTTPRoute connecting preview domain to the service
 # ─────────────────────────────────────────────────────────────
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute

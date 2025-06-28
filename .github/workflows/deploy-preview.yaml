@@ -43,7 +43,7 @@ jobs:
           --project=${{ env.GCP_PROJECT }} \
           --skaffold-file=skaffold-gateway-preview.yaml \
           --to-target=preview-gke-cert \
-          --deploy-parameters="DOMAIN=${DOMAIN},PREVIEW_NAME=${PREVIEW_NAME},NAMESPACE=${NAMESPACE},CERT_NAME=webapp-preview-cert-${PREVIEW_NAME},CERT_ENTRY_NAME=webapp-preview-entry-${PREVIEW_NAME},ROUTE_NAME=webapp-preview-route-${PREVIEW_NAME},CERT_DESCRIPTION=Certificate for ${DOMAIN},API_URL=https://api-${DOMAIN}"
+          --deploy-parameters="DOMAIN=${DOMAIN},PREVIEW_NAME=${PREVIEW_NAME},NAMESPACE=${NAMESPACE},CERT_NAME=webapp-preview-cert-${PREVIEW_NAME},CERT_ENTRY_NAME=webapp-preview-entry-${PREVIEW_NAME},ROUTE_NAME=webapp-preview-route-${PREVIEW_NAME},CERT_DESCRIPTION=Certificate for ${DOMAIN},API_URL=https://api-${DOMAIN},ENV=preview,STAGE=preview,BOUNDARY=nonprod,TIER=preview,NAME_PREFIX=preview-,SERVICE_NAME=preview-webapp-service"
         
         echo "preview_url=https://${DOMAIN}" >> $GITHUB_OUTPUT
     
