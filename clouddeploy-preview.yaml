@@ -1,5 +1,5 @@
 # Cloud Deploy Configuration for Preview Deployments
-# Single stage with predeploy certificate creation
+# Single stage with kubectl preDeploy hook for proper sequencing
 
 apiVersion: deploy.cloud.google.com/v1
 kind: DeliveryPipeline
@@ -9,7 +9,7 @@ metadata:
     compliance: iso27001-soc2-gdpr
     team: webapp-team
     purpose: preview
-description: "Preview deployment with GCP-native certificate provisioning"
+description: "Preview deployment with Config Connector certificate provisioning"
 
 serialPipeline:
   stages:
@@ -18,8 +18,6 @@ serialPipeline:
     strategy:
       standard:
         verify: false
-        predeploy:
-          actions: ["create-preview-cert"]
 
 ---
 apiVersion: deploy.cloud.google.com/v1
@@ -36,6 +34,6 @@ gke:
   cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
   
 executionConfigs:
-- usages: [RENDER, DEPLOY, PREDEPLOY]
+- usages: [RENDER, DEPLOY]
   serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
   artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
