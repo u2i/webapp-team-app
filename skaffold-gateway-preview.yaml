@@ -46,57 +46,18 @@ customActions:
       echo "CLOUD_DEPLOY_ROLLOUT: ${CLOUD_DEPLOY_ROLLOUT}"
       echo "CLOUD_DEPLOY_PHASE: ${CLOUD_DEPLOY_PHASE}"
       
-      # Try both possible bucket locations
-      echo "Looking for rendered manifests..."
+      # Download the rendered manifest from the correct path
+      echo "Downloading rendered manifest..."
+      BUCKET="gs://u2i-tenant-webapp-deploy-artifacts"
+      MANIFEST_PATH="${BUCKET}/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/${CLOUD_DEPLOY_TARGET}/stable/manifest.yaml"
       
-      # Try the custom artifact storage first
-      BUCKET1="gs://u2i-tenant-webapp-deploy-artifacts"
-      # Try the default Cloud Deploy storage location
-      BUCKET2="gs://europe-west1.deploy-artifacts.u2i-tenant-webapp.appspot.com"
-      
-      for BUCKET in "${BUCKET1}" "${BUCKET2}"; do
-        echo "Checking bucket: ${BUCKET}"
-        
-        # First, check what's in the release directory
-        echo "Exploring ${BUCKET} structure..."
-        MANIFEST_PATH="${BUCKET}/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/artifacts.json"
-        
-        # Download artifacts.json which contains the manifest location
-        if gsutil cp "${MANIFEST_PATH}" artifacts.json 2>/dev/null; then
-          echo "Found artifacts.json, extracting manifest path..."
-          # Extract the rendered manifest path from artifacts.json
-          RENDERED_PATH=$(cat artifacts.json | grep -o '"renderManifestPath":"[^"]*"' | cut -d'"' -f4 || true)
-          
-          if [ -n "${RENDERED_PATH}" ]; then
-            echo "Found manifest path: ${RENDERED_PATH}"
-            # Download the actual rendered manifest
-            if gsutil cp "${BUCKET}/${RENDERED_PATH}" rendered.yaml 2>/dev/null; then
-              echo "Successfully downloaded rendered.yaml from ${BUCKET}/${RENDERED_PATH}"
-              break
-            fi
-          fi
-        fi
-        
-        # If artifacts.json approach didn't work, try direct paths
-        echo "Trying direct paths in ${BUCKET}..."
-        for subpath in \
-          "${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/rendered-manifests.yaml" \
-          "${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/manifests/rendered.yaml" \
-          "${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/manifest.yaml"; do
-          
-          if gsutil cp "${BUCKET}/${subpath}" rendered.yaml 2>/dev/null; then
-            echo "Successfully downloaded rendered.yaml from ${BUCKET}/${subpath}"
-            break 2
-          fi
-        done
-      done
-      
-      if [ ! -f "rendered.yaml" ]; then
-        echo "ERROR: Could not find rendered manifest"
-        echo "Searched in both custom and default bucket locations"
-        # List what's actually there to help debug
-        echo "Listing release directory contents:"
-        gsutil ls -r "${BUCKET1}/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/" | head -20 || true
+      echo "Attempting to download from: ${MANIFEST_PATH}"
+      if gsutil cp "${MANIFEST_PATH}" rendered.yaml; then
+        echo "Successfully downloaded rendered manifest"
+      else
+        echo "Failed to download manifest, checking directory structure..."
+        # List the release directory to see the actual structure
+        gsutil ls -r "${BUCKET}/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/" | head -20
         exit 1
       fi
       
