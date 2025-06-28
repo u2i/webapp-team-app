@@ -106,15 +106,51 @@ customActions:
       DOMAIN="${DOMAIN:-pr-${PR_NUMBER}.webapp.u2i.dev}"
       echo "Checking DNS for domain: ${DOMAIN}"
       
-      for i in {1..30}; do
-        if nslookup ${DOMAIN} 8.8.8.8 >/dev/null 2>&1; then
-          echo "DNS record found for ${DOMAIN}"
-          break
-        else
-          echo "Waiting for DNS record... (attempt $i/30)"
-          if [ $i -eq 30 ]; then
-            echo "Warning: DNS record not found after 5 minutes, continuing anyway..."
+      # Give External DNS some time to process the HTTPRoute
+      echo "Waiting 30 seconds for External DNS to process HTTPRoute..."
+      sleep 30
+      
+      # Try different DNS check methods
+      for i in {1..20}; do
+        echo "DNS check attempt $i/20..."
+        
+        # Method 1: Try using getent if available
+        if command -v getent >/dev/null 2>&1; then
+          if getent hosts ${DOMAIN} >/dev/null 2>&1; then
+            echo "DNS record found for ${DOMAIN} (using getent)"
+            break
           fi
+        fi
+        
+        # Method 2: Try using host if available
+        if command -v host >/dev/null 2>&1; then
+          if host ${DOMAIN} 8.8.8.8 >/dev/null 2>&1; then
+            echo "DNS record found for ${DOMAIN} (using host)"
+            break
+          fi
+        fi
+        
+        # Method 3: Try using dig if available
+        if command -v dig >/dev/null 2>&1; then
+          if dig +short ${DOMAIN} @8.8.8.8 | grep -q .; then
+            echo "DNS record found for ${DOMAIN} (using dig)"
+            break
+          fi
+        fi
+        
+        # Method 4: Try using Python if available
+        if command -v python3 >/dev/null 2>&1; then
+          if python3 -c "import socket; socket.gethostbyname('${DOMAIN}')" >/dev/null 2>&1; then
+            echo "DNS record found for ${DOMAIN} (using python)"
+            break
+          fi
+        fi
+        
+        if [ $i -eq 20 ]; then
+          echo "Warning: Could not verify DNS record after multiple attempts"
+          echo "Continuing anyway as External DNS should have created the record..."
+        else
+          echo "DNS not yet resolvable, waiting... (attempt $i/20)"
           sleep 10
         fi
       done
