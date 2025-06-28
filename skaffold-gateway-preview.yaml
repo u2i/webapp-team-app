@@ -28,7 +28,7 @@ customActions:
 - name: setup-cert-and-infra
   containers:
   - name: kubectl-setup
-    image: gcr.io/cloud-builders/kubectl
+    image: gcr.io/cloud-builders/kustomize
     command: ["/bin/bash"]
     args:
     - -c
@@ -67,12 +67,22 @@ customActions:
       find . -name "k8s-clean" -type d 2>/dev/null | head -10
       echo ""
       
-      # The gcr.io/cloud-builders/kubectl image has kubectl and is authenticated
+      # The gcr.io/cloud-builders/kustomize image has kustomize and kubectl
       echo "1. Creating namespace..."
-      cat k8s-clean/overlays/preview-gateway-cert/namespace.yaml | envsubst | kubectl apply -f - --server-side
+      if [ -f "k8s-clean/overlays/preview-gateway-cert/namespace.yaml" ]; then
+        cat k8s-clean/overlays/preview-gateway-cert/namespace.yaml | envsubst | kubectl apply -f - --server-side
+      else
+        echo "namespace.yaml not found, checking if we can build with kustomize..."
+        kustomize build k8s-clean/overlays/preview-gateway-cert 2>/dev/null | grep -A10 "kind: Namespace" || echo "Could not find namespace in kustomize output"
+      fi
       
       echo "2. Applying certificate resources..."
-      kubectl apply -k k8s-clean/overlays/preview-gateway-cert --server-side
+      if [ -d "k8s-clean/overlays/preview-gateway-cert" ]; then
+        kustomize build k8s-clean/overlays/preview-gateway-cert | kubectl apply -f - --server-side
+      else
+        echo "ERROR: k8s-clean/overlays/preview-gateway-cert directory not found"
+        exit 1
+      fi
       
       echo "3. Waiting for certificate to become ACTIVE..."
       kubectl wait \
@@ -84,7 +94,12 @@ customActions:
       echo "Certificate is ACTIVE!"
       
       echo "4. Applying infrastructure resources..."
-      kubectl apply -k k8s-clean/overlays/preview-gateway-infra --server-side
+      if [ -d "k8s-clean/overlays/preview-gateway-infra" ]; then
+        kustomize build k8s-clean/overlays/preview-gateway-infra | kubectl apply -f - --server-side
+      else
+        echo "ERROR: k8s-clean/overlays/preview-gateway-infra directory not found"
+        exit 1
+      fi
       
       echo "=== Setup completed successfully ==="
 profiles:
