@@ -23,36 +23,35 @@ deploy:
     flags:
       apply: ["--wait=true", "--server-side", "--timeout=600s"]
       global: ["--request-timeout=600s"]
+    hooks:
+      before:
+        - host:
+            command:
+              - sh
+              - -c
+              - |
+                set -e
+                echo "=== Starting preDeploy hook for certificate provisioning ==="
+                
+                echo "1. Applying certificate resources..."
+                kubectl apply -k k8s-clean/overlays/preview-gateway-cert \
+                  --wait=true --server-side --timeout=600s
+                
+                echo "2. Waiting for certificate to become ACTIVE..."
+                kubectl wait \
+                  --for=jsonpath='{.status.state}'=ACTIVE \
+                  --timeout=10m \
+                  -n ${NAMESPACE} \
+                  certificatemanagercertificates/${CERT_NAME}
+                
+                echo "Certificate is ACTIVE!"
+                
+                echo "3. Applying infrastructure resources..."
+                kubectl apply -k k8s-clean/overlays/preview-gateway-infra \
+                  --wait=true --server-side --timeout=300s
+                
+                echo "=== PreDeploy hook completed successfully ==="
   statusCheckDeadlineSeconds: 1200
-  hooks:
-    before:
-    - host:
-        command: ["sh", "-c"]
-        args:
-        - |
-          echo "=== Starting preDeploy hook for certificate provisioning ==="
-          
-          # 1️⃣ Create namespace and certificate
-          echo "Applying certificate resources..."
-          kubectl apply -k k8s-clean/overlays/preview-gateway-cert \
-            --wait=true --server-side --timeout=600s
-          
-          # 2️⃣ Wait for certificate to be ACTIVE
-          echo "Waiting for certificate to become ACTIVE..."
-          kubectl wait \
-            --for=jsonpath='{.status.state}'=ACTIVE \
-            --timeout=10m \
-            -n ${NAMESPACE} \
-            certificatemanagercertificates/${CERT_NAME}
-          
-          echo "Certificate is ACTIVE!"
-          
-          # 3️⃣ Apply infrastructure resources
-          echo "Applying infrastructure resources..."
-          kubectl apply -k k8s-clean/overlays/preview-gateway-infra \
-            --wait=true --server-side --timeout=300s
-          
-          echo "=== PreDeploy hook completed successfully ==="
 profiles:
 # Single profile - app deployment only (cert and infra handled by preDeploy hook)
 - name: preview-all
