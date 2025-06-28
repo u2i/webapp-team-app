@@ -1,0 +1,70 @@
+steps:
+# Step 1: Apply certificate resources
+- name: 'gcr.io/cloud-builders/kubectl'
+  args:
+  - 'apply'
+  - '-k'
+  - 'k8s-clean/overlays/preview-gateway-cert'
+  - '--server-side'
+  - '--timeout=600s'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=europe-west1'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=webapp-cluster'
+
+# Step 2: Wait for certificate to be ACTIVE
+- name: 'gcr.io/cloud-builders/kubectl'
+  args:
+  - 'wait'
+  - '--for=jsonpath={.status.state}=ACTIVE'
+  - '--timeout=10m'
+  - '-n'
+  - '${_NAMESPACE}'
+  - 'certificatemanagercertificates/${_CERT_NAME}'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=europe-west1'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=webapp-cluster'
+
+# Step 3: Apply infrastructure resources
+- name: 'gcr.io/cloud-builders/kubectl'
+  args:
+  - 'apply'
+  - '-k'
+  - 'k8s-clean/overlays/preview-gateway-infra'
+  - '--server-side'
+  - '--timeout=300s'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=europe-west1'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=webapp-cluster'
+
+# Step 4: Build and push Docker image
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+  - 'build'
+  - '-t'
+  - 'europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp:${_IMAGE_TAG}'
+  - '.'
+
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+  - 'push'
+  - 'europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp:${_IMAGE_TAG}'
+
+# Step 5: Apply application deployment
+- name: 'gcr.io/cloud-builders/kubectl'
+  args:
+  - 'apply'
+  - '-k'
+  - 'k8s-clean/overlays/preview-gateway'
+  - '--server-side'
+  - '--timeout=600s'
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=europe-west1'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=webapp-cluster'
+
+substitutions:
+  _NAMESPACE: '${_NAMESPACE}'
+  _CERT_NAME: '${_CERT_NAME}'
+  _IMAGE_TAG: '${_IMAGE_TAG}'
+
+options:
+  substitution_option: 'ALLOW_LOOSE'

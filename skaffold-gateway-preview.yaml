@@ -2,71 +2,32 @@ apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
   name: webapp-preview-deployment
-build:
-  artifacts:
-  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
-    docker:
-      dockerfile: Dockerfile
-  googleCloudBuild:
-    projectId: u2i-tenant-webapp
-    region: europe-west1
-  tagPolicy:
-    sha256: {}
-manifests:
-  kustomize:
-    paths:
-    - k8s-clean/overlays/preview-gateway
-    buildArgs:
-    - --load-restrictor=LoadRestrictionsNone
+# No build section - Cloud Build handles building
+# No manifests section - Cloud Build handles applying manifests
 deploy:
-  kubectl:
-    flags:
-      apply: ["--wait=true", "--server-side", "--timeout=600s"]
-      global: ["--request-timeout=600s"]
-  statusCheckDeadlineSeconds: 1200
+  # Empty deploy section - everything handled by custom action
+  kubectl: {}
 customActions:
-- name: setup-cert-and-infra
+- name: deploy-with-cloud-build
   containers:
-  - name: kubectl-setup
-    image: gcr.io/cloud-builders/kubectl
+  - name: cloud-build-trigger
+    image: gcr.io/cloud-builders/gcloud
     command: ["/bin/sh", "-c"]
     args:
     - |
       set -ex
-      echo "=== Starting setup for certificate and infrastructure ==="
+      echo "=== Triggering Cloud Build for full deployment ==="
       
-      echo "Working directory: $(pwd)"
-      echo "Contents of /workspace:"
-      ls -al /workspace
+      # Submit Cloud Build with substitutions
+      gcloud builds submit \
+        --config=cloudbuild-preview-deploy.yaml \
+        --project=u2i-tenant-webapp \
+        --region=europe-west1 \
+        --substitutions="_NAMESPACE=${NAMESPACE},_CERT_NAME=${CERT_NAME},_IMAGE_TAG=${GITHUB_SHA}" \
+        .
       
-      # Change to workspace where source is mounted
-      cd /workspace
-      
-      echo "1. Applying certificate resources (namespace + cert)..."
-      kubectl apply -k k8s-clean/overlays/preview-gateway-cert \
-        --server-side --timeout=600s
-      
-      echo "2. Waiting for certificate to become ACTIVE..."
-      kubectl wait \
-        --for=jsonpath='{.status.state}'=ACTIVE \
-        --timeout=10m \
-        -n ${NAMESPACE} \
-        certificatemanagercertificates/${CERT_NAME}
-      
-      echo "Certificate is ACTIVE!"
-      
-      echo "3. Applying infrastructure resources..."
-      kubectl apply -k k8s-clean/overlays/preview-gateway-infra \
-        --server-side --timeout=300s
-      
-      echo "=== Setup completed successfully ==="
+      echo "=== Cloud Build completed successfully ==="
 profiles:
-# Single profile - app deployment only (cert and infra handled by custom action)
+# Cloud Build profile - no manifests since everything is handled by Cloud Build
 - name: preview-all
-  manifests:
-    kustomize:
-      paths:
-      # Only the application deployment - cert and infra are handled by custom action
-      - k8s-clean/overlays/preview-gateway
-      buildArgs:
-      - --load-restrictor=LoadRestrictionsNone
+  # Empty profile - all deployment handled by Cloud Build custom action
