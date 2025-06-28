@@ -37,7 +37,7 @@ jobs:
           --project=${{ env.GCP_PROJECT }} \
           --skaffold-file=skaffold.yaml \
           --to-target=qa \
-          --deploy-parameters="NAMESPACE=webapp-qa,ENV=qa,API_URL=https://api-qa.webapp.u2i.dev"
+          --deploy-parameters="NAMESPACE=webapp-qa,ENV=qa,API_URL=https://api-qa.webapp.u2i.dev,STAGE=qa,BOUNDARY=nonprod,TIER=standard"
     
     - name: Create Production Promotion Issue
       uses: actions/github-script@v7

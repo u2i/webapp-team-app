@@ -1,14 +1,14 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: webapp-dev
+namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
 
 resources:
 - ../../base
 - ../../profiles/dev  # Use dev profile for resources
 - gateway-resources.yaml
 
-namePrefix: dev-
+namePrefix: ${NAME_PREFIX} # from-param: ${NAME_PREFIX}
 
 patches:
 - path: service-patch.yaml
@@ -17,13 +17,15 @@ patches:
     name: webapp-service
 
 commonLabels:
-  stage: dev
-  boundary: nonprod
-  tier: standard
+  stage: ${STAGE} # from-param: ${STAGE}
+  boundary: ${BOUNDARY} # from-param: ${BOUNDARY}
+  tier: ${TIER} # from-param: ${TIER}
+  environment: ${ENV} # from-param: ${ENV}
 
 configMapGenerator:
 - name: webapp-env-config
   literals:
-    - BOUNDARY=nonprod
-    - STAGE=dev
-    - API_URL=https://api-dev.webapp.u2i.dev
+    - BOUNDARY=${BOUNDARY} # from-param: ${BOUNDARY}
+    - STAGE=${STAGE} # from-param: ${STAGE}
+    - API_URL=${API_URL} # from-param: ${API_URL}
+    - ENV=${ENV} # from-param: ${ENV}

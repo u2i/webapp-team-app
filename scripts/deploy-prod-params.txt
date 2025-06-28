@@ -1,0 +1,9 @@
+# Production deployment parameters
+# Use with: gcloud deploy releases promote ... --deploy-parameters="$(cat scripts/deploy-prod-params.txt)"
+
+NAMESPACE=webapp-team
+ENV=prod
+API_URL=https://api.webapp.u2i.com
+STAGE=prod
+BOUNDARY=prod
+TIER=standard
