@@ -25,6 +25,36 @@ deploy:
       global: ["--request-timeout=600s"]
   statusCheckDeadlineSeconds: 1200
 profiles:
+# Profile for Config Connector resources (namespace + cert)
+- name: config-connector
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/preview-gateway-cert
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true", "--server-side"]
+        global: ["--request-timeout=600s"]
+
+# Profile for remaining infra + app (includes docker build)
+- name: infra-app
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/preview-gateway-infra
+      - k8s-clean/overlays/preview-gateway
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true"]
+        global: ["--request-timeout=300s"]
+
+# Legacy profiles for compatibility
 - name: cert-only
   manifests:
     kustomize:
@@ -65,33 +95,24 @@ profiles:
         global: ["--request-timeout=300s"]
 
 customActions:
-- name: cert-action
+- name: deploy-config-connector
   containers:
-  - name: run-cert
+  - name: config-connector-deploy
     image: gcr.io/google.com/cloudsdktool/cloud-sdk:alpine
     command: ["/bin/sh"]
     args:
     - -c
     - |
-      echo "Deploying certificate resources..."
-      # The manifests are already rendered by Cloud Deploy with parameters substituted
-      # We just need to apply them
-      kubectl apply -f <(skaffold render -p cert-only) \
+      echo "Deploying Config Connector resources (namespace + cert)..."
+      # Apply the pre-rendered config-connector manifests
+      kubectl apply -f <(skaffold render -p config-connector) \
         --wait=true \
+        --server-side \
         --timeout=600s
-      echo "Certificate deployment complete"
-
-- name: infra-action  
-  containers:
-  - name: run-infra
-    image: gcr.io/google.com/cloudsdktool/cloud-sdk:alpine
-    command: ["/bin/sh"]
-    args:
-    - -c
-    - |
-      echo "Deploying infrastructure resources..."
-      # The manifests are already rendered by Cloud Deploy with parameters substituted
-      kubectl apply -f <(skaffold render -p infra-only) \
-        --wait=true \
-        --timeout=60s
-      echo "Infrastructure deployment complete"
+      
+      # Wait for namespace to be ready
+      echo "Waiting for namespace to be ready..."
+      kubectl wait namespace/${NAMESPACE} --for=jsonpath='{.status.phase}'=Active --timeout=60s || true
+      
+      # Note: Certificate readiness is checked by Config Connector itself
+      echo "Config Connector deployment complete"

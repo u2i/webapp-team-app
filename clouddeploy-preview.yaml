@@ -1,5 +1,5 @@
 # Cloud Deploy Configuration for Preview Deployments
-# Sequential deployment using predeploy hooks: cert → infra → app
+# Two-phase deployment: Config Connector → Infra/App
 
 apiVersion: deploy.cloud.google.com/v1
 kind: DeliveryPipeline
@@ -9,17 +9,17 @@ metadata:
     compliance: iso27001-soc2-gdpr
     team: webapp-team
     purpose: preview
-description: "Preview deploy: cert → infra → app as one unit"
+description: "Preview deployment: Config Connector resources → Infra/App"
 
 serialPipeline:
   stages:
   - targetId: preview-gke
-    profiles: ["app-only"]  # Only run the app profile as main deploy
+    profiles: ["infra-app"]  # Main deploy profile
     strategy:
       standard:
         verify: false
         predeploy:
-          actions: ["cert-action", "infra-action"]  # Run these in order first
+          actions: ["deploy-config-connector"]  # Config Connector resources first
     deployParameters:
     - values:
         DOMAIN: ""
@@ -46,7 +46,7 @@ metadata:
     compliance: iso27001-soc2-gdpr
     environment: preview
     data-residency: eu
-description: "All-in-one preview stage with sequential deployment"
+description: "Preview deployment target"
 
 gke:
   cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
