@@ -24,13 +24,18 @@ customActions:
 - name: setup-cert-and-infra
   containers:
   - name: kubectl-setup
-    image: gcr.io/cloud-builders/kubectl
-    command: ["/bin/sh"]
+    image: gcr.io/google.com/cloudsdktool/cloud-sdk:latest
+    command: ["/bin/bash"]
     args:
     - "-c"
     - |
       set -ex
       echo "=== Starting predeploy for certificate and infrastructure ==="
+      
+      # Get cluster credentials
+      gcloud container clusters get-credentials webapp-cluster \
+        --region=europe-west1 \
+        --project=u2i-tenant-webapp
       
       echo "1. Creating namespace..."
       kubectl apply -f - <<EOF
