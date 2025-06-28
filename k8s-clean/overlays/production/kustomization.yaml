@@ -1,15 +1,15 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: webapp-team
+namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
 
+# Stage 3: Application deployment
 resources:
-- ../../base
+- ../../base/deployment.yaml
 - ../../profiles/prod  # Use prod profile for resources
-- config-connector-resources.yaml
 
-configMapGenerator:
-- name: webapp-env-config
-  literals:
-    - BOUNDARY=production
-    - API_URL=https://api.webapp.u2i.com
+commonLabels:
+  stage: ${STAGE} # from-param: ${STAGE}
+  boundary: ${BOUNDARY} # from-param: ${BOUNDARY}
+  tier: ${TIER} # from-param: ${TIER}
+  environment: ${ENV} # from-param: ${ENV}

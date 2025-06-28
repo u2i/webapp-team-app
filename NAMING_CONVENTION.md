@@ -14,7 +14,6 @@ We use an orthogonal naming scheme that separates different concerns into indepe
 - `nonprod-dev-standard` - Development environment with standard resources
 - `nonprod-staging-perf` - Staging environment with performance tier
 - `nonprod-preview-42-preview` - PR #42 preview with minimal resources
-- `prod-preprod-standard` - Pre-production validation
 - `prod-prod-perf` - Production with performance resources
 
 ## Axes Explained
@@ -32,7 +31,6 @@ We use an orthogonal naming scheme that separates different concerns into indepe
 | `qa` | QA testing | nonprod only |
 | `staging` | Production-like testing | both |
 | `preview-*` | PR previews | nonprod only |
-| `preprod` | Final validation | prod only |
 | `prod` | Live production | prod only |
 
 ### Tier (Resources)
@@ -58,7 +56,7 @@ labels:
   app: webapp
   team: webapp-team
   boundary: nonprod|prod
-  stage: dev|qa|staging|preprod|prod|preview-*
+  stage: dev|qa|staging|prod|preview-*
   tier: standard|perf|ci|preview
   mode: production|development|test
 ```

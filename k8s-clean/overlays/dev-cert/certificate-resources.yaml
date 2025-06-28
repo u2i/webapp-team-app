@@ -1,0 +1,31 @@
+# Certificate resources for dev environment
+---
+apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
+kind: CertificateManagerCertificate
+metadata:
+  name: ${CERT_NAME} # from-param: ${CERT_NAME}
+  namespace: config-control
+spec:
+  projectRef:
+    external: u2i-tenant-webapp
+  location: global
+  description: ${CERT_DESCRIPTION} # from-param: ${CERT_DESCRIPTION}
+  managed:
+    domains:
+    - ${DOMAIN} # from-param: ${DOMAIN}
+---
+apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
+kind: CertificateManagerCertificateMapEntry
+metadata:
+  name: ${CERT_ENTRY_NAME} # from-param: ${CERT_ENTRY_NAME}
+  namespace: config-control
+spec:
+  projectRef:
+    external: u2i-tenant-webapp
+  location: global
+  description: Certificate map entry for ${DOMAIN} # from-param: ${DOMAIN}
+  mapRef:
+    name: webapp-cert-map
+  hostname: ${DOMAIN} # from-param: ${DOMAIN}
+  certificatesRefs:
+  - name: ${CERT_NAME} # from-param: ${CERT_NAME}

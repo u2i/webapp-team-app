@@ -2,6 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: webapp-network-policy
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
 spec:
   podSelector:
     matchLabels:
