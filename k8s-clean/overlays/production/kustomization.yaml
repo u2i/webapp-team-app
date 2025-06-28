@@ -6,7 +6,8 @@ namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
 resources:
 - ../../base
 - ../../profiles/prod  # Use prod profile for resources
-- config-connector-resources.yaml
+- gateway-resources.yaml
+# config-connector-resources.yaml is kept but empty - infra managed in u2i-infrastructure
 
 commonLabels:
   stage: ${STAGE} # from-param: ${STAGE}
