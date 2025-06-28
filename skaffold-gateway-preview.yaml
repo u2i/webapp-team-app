@@ -32,6 +32,19 @@ customActions:
       set -ex
       echo "=== Starting predeploy for certificate and infrastructure ==="
       
+      # Check current directory and contents
+      echo "Current directory: $(pwd)"
+      echo "Directory contents:"
+      ls -la
+      
+      # Check for k8s-clean directory
+      if [ -d "k8s-clean" ]; then
+        echo "Found k8s-clean directory"
+      else
+        echo "k8s-clean directory not found, checking other locations..."
+        find . -name "k8s-clean" -type d || true
+      fi
+      
       # Get cluster credentials
       gcloud container clusters get-credentials webapp-cluster \
         --region=europe-west1 \
