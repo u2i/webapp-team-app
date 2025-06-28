@@ -106,6 +106,26 @@ customActions:
       DOMAIN="${DOMAIN:-pr-${PR_NUMBER}.webapp.u2i.dev}"
       echo "Checking DNS for domain: ${DOMAIN}"
       
+      # Determine the authoritative DNS server for this domain
+      echo "Finding authoritative nameserver for the domain..."
+      ZONE_NAME=""
+      DNS_SERVER=""
+      
+      # Extract the parent domain (e.g., webapp.u2i.dev from pr-123.webapp.u2i.dev)
+      PARENT_DOMAIN=$(echo ${DOMAIN} | sed 's/^[^.]*\.//')
+      echo "Parent domain: ${PARENT_DOMAIN}"
+      
+      # Find the DNS zone
+      if ZONE_INFO=$(gcloud dns managed-zones list --project=u2i-tenant-webapp --filter="dnsName:${PARENT_DOMAIN}." --format="value(name,nameServers[0])" 2>/dev/null); then
+        ZONE_NAME=$(echo "$ZONE_INFO" | awk '{print $1}')
+        DNS_SERVER=$(echo "$ZONE_INFO" | awk '{print $2}')
+        echo "Found DNS zone: ${ZONE_NAME}"
+        echo "Authoritative nameserver: ${DNS_SERVER}"
+      else
+        echo "Could not determine authoritative nameserver, using Google DNS"
+        DNS_SERVER="8.8.8.8"
+      fi
+      
       # Give External DNS some time to process the HTTPRoute
       echo "Waiting 30 seconds for External DNS to process HTTPRoute..."
       sleep 30
@@ -122,18 +142,18 @@ customActions:
           fi
         fi
         
-        # Method 2: Try using host if available
+        # Method 2: Try using host if available - check authoritative nameserver
         if command -v host >/dev/null 2>&1; then
-          if host ${DOMAIN} 8.8.8.8 >/dev/null 2>&1; then
-            echo "DNS record found for ${DOMAIN} (using host)"
+          if host ${DOMAIN} ${DNS_SERVER} >/dev/null 2>&1; then
+            echo "DNS record found for ${DOMAIN} (using host with ${DNS_SERVER})"
             break
           fi
         fi
         
-        # Method 3: Try using dig if available
+        # Method 3: Try using dig if available - check authoritative nameserver
         if command -v dig >/dev/null 2>&1; then
-          if dig +short ${DOMAIN} @8.8.8.8 | grep -q .; then
-            echo "DNS record found for ${DOMAIN} (using dig)"
+          if dig +short ${DOMAIN} @${DNS_SERVER} | grep -q .; then
+            echo "DNS record found for ${DOMAIN} (using dig with ${DNS_SERVER})"
             break
           fi
         fi
