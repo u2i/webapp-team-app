@@ -41,7 +41,7 @@ profiles:
   deploy:
     kubectl:
       flags:
-        apply: ["--wait=true", "--server-side"]
+        apply: ["--wait=true"]
         global: ["--request-timeout=600s"]
 
 # Legacy profiles kept for compatibility
@@ -55,7 +55,7 @@ profiles:
   deploy:
     kubectl:
       flags:
-        apply: ["--wait=true", "--server-side"]
+        apply: ["--wait=true"]
         global: ["--request-timeout=600s"]
 
 - name: infra-app
