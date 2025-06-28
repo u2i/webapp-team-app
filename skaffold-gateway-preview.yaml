@@ -92,16 +92,9 @@ customActions:
         kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f - --server-side
       }
       
-      echo "2. Applying Service and HTTPRoute for External DNS..."
-      # Apply Service first as HTTPRoute depends on it
-      kubectl apply -f rendered.yaml \
-        --selector="kind=Service" \
-        --server-side --timeout=300s || {
-        echo "No Service found"
-      }
-      
-      # Apply HTTPRoute which has External DNS annotations
-      echo "Applying HTTPRoute for External DNS to create DNS records..."
+      echo "2. Applying HTTPRoute for External DNS..."
+      # Apply HTTPRoute which has External DNS annotations to create DNS records
+      echo "HTTPRoute will trigger External DNS to create DNS records..."
       kubectl apply -f rendered.yaml \
         --selector="kind=HTTPRoute" \
         --server-side --timeout=300s || {
