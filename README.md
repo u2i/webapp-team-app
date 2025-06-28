@@ -115,3 +115,4 @@ Before each deployment, ensure:
 ## Deployment Status
 
 Last deployment triggered after workload identity fix.
+Preview deployment test: 2025-06-28
