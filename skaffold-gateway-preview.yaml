@@ -68,28 +68,30 @@ customActions:
 - name: cert-action
   containers:
   - name: run-cert
-    image: gcr.io/k8s-skaffold/skaffold:latest
+    image: gcr.io/google.com/cloudsdktool/cloud-sdk:alpine
     command: ["/bin/sh"]
     args:
     - -c
     - |
-      skaffold deploy -p cert-only \
-        --status-check=false \
-        --kube-context=$(kubectl config current-context)
-      # Wait for certificate to be ready if needed
-      # kubectl wait certificate/${CERT_NAME} \
-      #   --namespace=${NAMESPACE} \
-      #   --for=condition=Ready \
-      #   --timeout=300s || true
+      echo "Deploying certificate resources..."
+      # The manifests are already rendered by Cloud Deploy with parameters substituted
+      # We just need to apply them
+      kubectl apply -f <(skaffold render -p cert-only) \
+        --wait=true \
+        --timeout=600s
+      echo "Certificate deployment complete"
 
 - name: infra-action  
   containers:
   - name: run-infra
-    image: gcr.io/k8s-skaffold/skaffold:latest
+    image: gcr.io/google.com/cloudsdktool/cloud-sdk:alpine
     command: ["/bin/sh"]
     args:
     - -c
     - |
-      skaffold deploy -p infra-only \
-        --status-check=false \
-        --kube-context=$(kubectl config current-context)
+      echo "Deploying infrastructure resources..."
+      # The manifests are already rendered by Cloud Deploy with parameters substituted
+      kubectl apply -f <(skaffold render -p infra-only) \
+        --wait=true \
+        --timeout=60s
+      echo "Infrastructure deployment complete"
