@@ -1,0 +1,34 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
+
+# Stage 2: Infrastructure resources (configmap, service, network policy, routes)
+resources:
+- ../../base/service.yaml
+- ../../base/network-policy.yaml
+- ../dev/gateway-resources.yaml
+
+namePrefix: ${NAME_PREFIX} # from-param: ${NAME_PREFIX}
+
+# Service patch to ensure ClusterIP
+patches:
+- path: ../dev/service-patch.yaml
+  target:
+    kind: Service
+    name: webapp-service
+
+# Environment config
+configMapGenerator:
+- name: webapp-env-config
+  literals:
+    - BOUNDARY=${BOUNDARY} # from-param: ${BOUNDARY}
+    - STAGE=${STAGE} # from-param: ${STAGE}
+    - API_URL=${API_URL} # from-param: ${API_URL}
+    - ENV=${ENV} # from-param: ${ENV}
+
+commonLabels:
+  stage: ${STAGE} # from-param: ${STAGE}
+  boundary: ${BOUNDARY} # from-param: ${BOUNDARY}
+  tier: ${TIER} # from-param: ${TIER}
+  environment: ${ENV} # from-param: ${ENV}

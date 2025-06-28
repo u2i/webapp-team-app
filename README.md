@@ -10,8 +10,10 @@ webapp-team-app/
 ├── k8s-manifests/              # Kubernetes application manifests
 ├── k8s-infra/                  # Team-managed infrastructure (RBAC, quotas)
 ├── configs/                    # Environment-specific configurations
-├── clouddeploy.yaml           # Cloud Deploy pipeline configuration
-├── skaffold.yaml              # Application build and deploy
+├── clouddeploy-3stage.yaml    # Cloud Deploy 3-stage pipelines
+├── clouddeploy-preview.yaml   # Preview deployment pipeline
+├── skaffold-3stage.yaml       # 3-stage deployment configuration
+├── skaffold-gateway-preview.yaml # Preview deployment configuration
 ├── app.js                     # Sample application code
 ├── Dockerfile                 # Container image definition
 └── README.md                  # This file
@@ -113,3 +115,4 @@ Before each deployment, ensure:
 ## Deployment Status
 
 Last deployment triggered after workload identity fix.
+Preview deployment test: 2025-06-28
