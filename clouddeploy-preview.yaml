@@ -52,6 +52,6 @@ gke:
   cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
   
 executionConfigs:
-- usages: [RENDER, DEPLOY]
+- usages: [RENDER, DEPLOY, PREDEPLOY]
   serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
   artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
