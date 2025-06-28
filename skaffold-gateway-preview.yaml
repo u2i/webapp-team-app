@@ -36,6 +36,9 @@ customActions:
       set -e
       echo "=== Starting setup for certificate and infrastructure ==="
       
+      # Change to workspace directory
+      cd /workspace
+      
       # Configure kubectl
       gcloud container clusters get-credentials webapp-cluster \
         --region=europe-west1 \
