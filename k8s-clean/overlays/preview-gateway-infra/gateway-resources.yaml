@@ -23,8 +23,8 @@ spec:
   hostnames: 
   - "example.webapp.u2i.dev" # from-param: ${DOMAIN}
   parentRefs:
-  - name: webapp-gateway
-    namespace: infra-gw
+  - name: external-gateway
+    namespace: asm-gateway
   rules:
   - backendRefs:
     - name: preview-webapp-service # from-param: ${SERVICE_NAME}

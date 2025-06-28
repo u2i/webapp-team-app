@@ -92,7 +92,41 @@ customActions:
         kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f - --server-side
       }
       
-      echo "2. Applying certificate resources..."
+      echo "2. Applying Service and HTTPRoute for External DNS..."
+      # Apply Service first as HTTPRoute depends on it
+      kubectl apply -f rendered.yaml \
+        --selector="kind=Service" \
+        --server-side --timeout=300s || {
+        echo "No Service found"
+      }
+      
+      # Apply HTTPRoute which has External DNS annotations
+      echo "Applying HTTPRoute for External DNS to create DNS records..."
+      kubectl apply -f rendered.yaml \
+        --selector="kind=HTTPRoute" \
+        --server-side --timeout=300s || {
+        echo "No HTTPRoute found"
+      }
+      
+      # Wait for DNS records to be created
+      echo "Waiting for DNS records to be created..."
+      DOMAIN="${DOMAIN:-pr-${PR_NUMBER}.webapp.u2i.dev}"
+      echo "Checking DNS for domain: ${DOMAIN}"
+      
+      for i in {1..30}; do
+        if nslookup ${DOMAIN} 8.8.8.8 >/dev/null 2>&1; then
+          echo "DNS record found for ${DOMAIN}"
+          break
+        else
+          echo "Waiting for DNS record... (attempt $i/30)"
+          if [ $i -eq 30 ]; then
+            echo "Warning: DNS record not found after 5 minutes, continuing anyway..."
+          fi
+          sleep 10
+        fi
+      done
+      
+      echo "3. Applying certificate resources..."
       # Apply all resources with certificate label
       kubectl apply -f rendered.yaml \
         --selector="app.kubernetes.io/component=certificate" \
@@ -106,7 +140,7 @@ customActions:
           --server-side --timeout=600s
       }
       
-      echo "3. Waiting for certificate to become ACTIVE..."
+      echo "4. Waiting for certificate to become ACTIVE..."
       # The certificate state is in the GCP resource, not the K8s resource
       # We need to wait for the actual GCP certificate to be provisioned
       echo "Waiting for GCP certificate to be provisioned..."
@@ -138,7 +172,7 @@ customActions:
       
       echo "Certificate is ACTIVE!"
       
-      echo "4. Applying infrastructure resources..."
+      echo "5. Applying remaining infrastructure resources..."
       kubectl apply -f rendered.yaml \
         --selector="app.kubernetes.io/component=infrastructure" \
         --server-side --timeout=300s || {
