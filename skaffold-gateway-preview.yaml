@@ -33,11 +33,15 @@ deploy:
                 set -e
                 echo "=== Starting preDeploy hook for certificate provisioning ==="
                 
-                echo "1. Applying certificate resources..."
+                echo "1. Creating namespace..."
+                kubectl apply -f k8s-clean/overlays/preview-gateway-cert/namespace.yaml \
+                  --server-side
+                
+                echo "2. Applying certificate resources..."
                 kubectl apply -k k8s-clean/overlays/preview-gateway-cert \
                   --wait=true --server-side --timeout=600s
                 
-                echo "2. Waiting for certificate to become ACTIVE..."
+                echo "3. Waiting for certificate to become ACTIVE..."
                 kubectl wait \
                   --for=jsonpath='{.status.state}'=ACTIVE \
                   --timeout=10m \
@@ -46,7 +50,7 @@ deploy:
                 
                 echo "Certificate is ACTIVE!"
                 
-                echo "3. Applying infrastructure resources..."
+                echo "4. Applying infrastructure resources..."
                 kubectl apply -k k8s-clean/overlays/preview-gateway-infra \
                   --wait=true --server-side --timeout=300s
                 
