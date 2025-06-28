@@ -19,22 +19,6 @@ serialPipeline:
     strategy:
       standard:
         verify: false
-    deployParameters:
-    - values:
-        DOMAIN: ""
-        PREVIEW_NAME: ""
-        NAMESPACE: ""
-        CERT_NAME: ""
-        CERT_ENTRY_NAME: ""
-        CERT_DESCRIPTION: ""
-        ROUTE_NAME: ""
-        API_URL: ""
-        ENV: ""
-        STAGE: ""
-        BOUNDARY: ""
-        TIER: ""
-        NAME_PREFIX: ""
-        SERVICE_NAME: ""
 
 ---
 apiVersion: deploy.cloud.google.com/v1
