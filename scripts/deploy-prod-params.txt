@@ -10,3 +10,6 @@ TIER=standard
 DOMAIN=webapp.u2i.com
 ROUTE_NAME=webapp-prod-route
 SERVICE_NAME=webapp-service
+CERT_NAME=webapp-prod-cert
+CERT_ENTRY_NAME=webapp-prod-entry
+CERT_DESCRIPTION=Certificate for webapp.u2i.com

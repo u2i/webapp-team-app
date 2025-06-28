@@ -3,29 +3,15 @@ kind: Kustomization
 
 namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
 
+# Stage 3: Application deployment
 resources:
-- ../../base
+- ../../base/deployment.yaml
 - ../../profiles/dev  # Use dev profile for resources
-- gateway-resources.yaml
 
 namePrefix: ${NAME_PREFIX} # from-param: ${NAME_PREFIX}
-
-patches:
-- path: service-patch.yaml
-  target:
-    kind: Service
-    name: webapp-service
 
 commonLabels:
   stage: ${STAGE} # from-param: ${STAGE}
   boundary: ${BOUNDARY} # from-param: ${BOUNDARY}
   tier: ${TIER} # from-param: ${TIER}
   environment: ${ENV} # from-param: ${ENV}
-
-configMapGenerator:
-- name: webapp-env-config
-  literals:
-    - BOUNDARY=${BOUNDARY} # from-param: ${BOUNDARY}
-    - STAGE=${STAGE} # from-param: ${STAGE}
-    - API_URL=${API_URL} # from-param: ${API_URL}
-    - ENV=${ENV} # from-param: ${ENV}

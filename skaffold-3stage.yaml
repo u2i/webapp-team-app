@@ -1,0 +1,165 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-3stage-deployment
+build:
+  artifacts:
+  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
+    docker:
+      dockerfile: Dockerfile
+  googleCloudBuild:
+    projectId: u2i-tenant-webapp
+    region: europe-west1
+  tagPolicy:
+    gitCommit:
+      variant: AbbrevCommitSha
+manifests:
+  kustomize:
+    paths:
+    - k8s-clean/overlays/dev
+    buildArgs:
+    - --load-restrictor=LoadRestrictionsNone
+deploy:
+  kubectl:
+    flags:
+      apply: ["--wait=true"]
+      global: ["--request-timeout=300s"]
+
+profiles:
+# Dev environment profiles
+- name: dev-cert
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/dev-cert
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true"]
+        global: ["--request-timeout=600s"]
+  
+- name: dev-infra
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/dev-infra
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true"]
+        global: ["--request-timeout=60s"]
+
+- name: dev-app
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/dev
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true"]
+        global: ["--request-timeout=300s"]
+
+# Production environment profiles
+- name: prod-cert
+  build:
+    googleCloudBuild:
+      projectId: u2i-tenant-webapp-prod
+    tagPolicy:
+      gitCommit:
+        variant: Tags
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/production-cert
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true"]
+        global: ["--request-timeout=600s"]
+  
+- name: prod-infra
+  build:
+    googleCloudBuild:
+      projectId: u2i-tenant-webapp-prod
+    tagPolicy:
+      gitCommit:
+        variant: Tags
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/production-infra
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true"]
+        global: ["--request-timeout=60s"]
+
+- name: prod-app
+  build:
+    googleCloudBuild:
+      projectId: u2i-tenant-webapp-prod
+    tagPolicy:
+      gitCommit:
+        variant: Tags
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/production
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true"]
+        global: ["--request-timeout=300s"]
+
+# QA environment profiles (using nonprod overlays)
+- name: qa-cert
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/dev-cert  # Reuse dev cert overlay with different params
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true"]
+        global: ["--request-timeout=600s"]
+  
+- name: qa-infra
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/dev-infra  # Reuse dev infra overlay with different params
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true"]
+        global: ["--request-timeout=60s"]
+
+- name: qa-app
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/nonprod  # Use nonprod overlay for app
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true"]
+        global: ["--request-timeout=300s"]

@@ -32,9 +32,9 @@ jobs:
     - name: Deploy to Dev
       run: |
         gcloud deploy releases create "dev-${GITHUB_SHA:0:7}" \
-          --delivery-pipeline=${{ env.PIPELINE }} \
+          --delivery-pipeline=webapp-dev-pipeline-3stage \
           --region=${{ env.GCP_REGION }} \
           --project=${{ env.GCP_PROJECT }} \
-          --skaffold-file=skaffold.yaml \
-          --to-target=dev \
-          --deploy-parameters="NAMESPACE=webapp-dev,ENV=dev,API_URL=https://api-dev.webapp.u2i.dev,STAGE=dev,BOUNDARY=nonprod,TIER=standard,NAME_PREFIX=dev-,DOMAIN=dev.webapp.u2i.dev,ROUTE_NAME=webapp-dev-route,SERVICE_NAME=dev-webapp-service"
+          --skaffold-file=skaffold-3stage.yaml \
+          --to-target=dev-cert \
+          --deploy-parameters="NAMESPACE=webapp-dev,ENV=dev,API_URL=https://api-dev.webapp.u2i.dev,STAGE=dev,BOUNDARY=nonprod,TIER=standard,NAME_PREFIX=dev-,DOMAIN=dev.webapp.u2i.dev,ROUTE_NAME=webapp-dev-route,SERVICE_NAME=dev-webapp-service,CERT_NAME=webapp-dev-cert,CERT_ENTRY_NAME=webapp-dev-entry,CERT_DESCRIPTION=Certificate for dev.webapp.u2i.dev"
