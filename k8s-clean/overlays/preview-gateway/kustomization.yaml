@@ -10,6 +10,4 @@ resources:
 
 # Labels removed - labels are applied directly in manifests
 
-# Common labels for all resources
-commonLabels:
-  app.kubernetes.io/component: application
+# Labels removed - will be applied by parent overlay

@@ -15,9 +15,7 @@ build:
 manifests:
   kustomize:
     paths:
-    - k8s-clean/overlays/preview-gateway-cert
-    - k8s-clean/overlays/preview-gateway-infra
-    - k8s-clean/overlays/preview-gateway
+    - k8s-clean/overlays/preview-gateway-all
     buildArgs:
     - --load-restrictor=LoadRestrictionsNone
 deploy:

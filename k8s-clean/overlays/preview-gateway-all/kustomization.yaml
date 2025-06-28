@@ -1,0 +1,70 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# This overlay includes all resources for preview deployments
+resources:
+# Certificate resources
+- ../preview-gateway-cert
+
+# Infrastructure resources
+- ../preview-gateway-infra
+
+# Application resources
+- ../preview-gateway
+
+# These patches will add the component labels to different resource groups
+patches:
+# Add certificate component label to certificate resources
+- patch: |-
+    - op: add
+      path: /metadata/labels/app.kubernetes.io~1component
+      value: certificate
+  target:
+    kind: CertificateManagerCertificate
+- patch: |-
+    - op: add
+      path: /metadata/labels/app.kubernetes.io~1component
+      value: certificate
+  target:
+    kind: CertificateManagerCertificateMapEntry
+- patch: |-
+    - op: add
+      path: /metadata/labels/app.kubernetes.io~1component
+      value: certificate
+  target:
+    kind: Namespace
+
+# Add infrastructure component label to infrastructure resources  
+- patch: |-
+    - op: add
+      path: /metadata/labels/app.kubernetes.io~1component
+      value: infrastructure
+  target:
+    kind: Service
+- patch: |-
+    - op: add
+      path: /metadata/labels/app.kubernetes.io~1component
+      value: infrastructure
+  target:
+    kind: NetworkPolicy
+- patch: |-
+    - op: add
+      path: /metadata/labels/app.kubernetes.io~1component
+      value: infrastructure
+  target:
+    kind: HTTPRoute
+- patch: |-
+    - op: add
+      path: /metadata/labels/app.kubernetes.io~1component
+      value: infrastructure
+  target:
+    kind: ConfigMap
+    name: webapp-env-config
+
+# Add application component label to application resources
+- patch: |-
+    - op: add
+      path: /metadata/labels/app.kubernetes.io~1component
+      value: application
+  target:
+    kind: Deployment
