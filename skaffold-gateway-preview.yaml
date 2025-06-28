@@ -23,46 +23,53 @@ deploy:
     flags:
       apply: ["--wait=true", "--server-side", "--timeout=600s"]
       global: ["--request-timeout=600s"]
-    hooks:
-      before:
-        - host:
-            command:
-              - sh
-              - -c
-              - |
-                set -e
-                echo "=== Starting preDeploy hook for certificate provisioning ==="
-                
-                echo "1. Creating namespace..."
-                kubectl apply -f k8s-clean/overlays/preview-gateway-cert/namespace.yaml \
-                  --server-side
-                
-                echo "2. Applying certificate resources..."
-                kubectl apply -k k8s-clean/overlays/preview-gateway-cert \
-                  --wait=true --server-side --timeout=600s
-                
-                echo "3. Waiting for certificate to become ACTIVE..."
-                kubectl wait \
-                  --for=jsonpath='{.status.state}'=ACTIVE \
-                  --timeout=10m \
-                  -n ${NAMESPACE} \
-                  certificatemanagercertificates/${CERT_NAME}
-                
-                echo "Certificate is ACTIVE!"
-                
-                echo "4. Applying infrastructure resources..."
-                kubectl apply -k k8s-clean/overlays/preview-gateway-infra \
-                  --wait=true --server-side --timeout=300s
-                
-                echo "=== PreDeploy hook completed successfully ==="
   statusCheckDeadlineSeconds: 1200
+customActions:
+- name: setup-cert-and-infra
+  containers:
+  - name: kubectl-setup
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:alpine
+    command: ["/bin/sh"]
+    args:
+    - -c
+    - |
+      set -e
+      echo "=== Starting setup for certificate and infrastructure ==="
+      
+      # Configure kubectl
+      gcloud container clusters get-credentials webapp-cluster \
+        --region=europe-west1 \
+        --project=u2i-tenant-webapp
+      
+      echo "1. Creating namespace..."
+      kubectl apply -f k8s-clean/overlays/preview-gateway-cert/namespace.yaml \
+        --server-side
+      
+      echo "2. Applying certificate resources..."
+      kubectl apply -k k8s-clean/overlays/preview-gateway-cert \
+        --wait=true --server-side --timeout=600s
+      
+      echo "3. Waiting for certificate to become ACTIVE..."
+      kubectl wait \
+        --for=jsonpath='{.status.state}'=ACTIVE \
+        --timeout=10m \
+        -n ${NAMESPACE} \
+        certificatemanagercertificates/${CERT_NAME}
+      
+      echo "Certificate is ACTIVE!"
+      
+      echo "4. Applying infrastructure resources..."
+      kubectl apply -k k8s-clean/overlays/preview-gateway-infra \
+        --wait=true --server-side --timeout=300s
+      
+      echo "=== Setup completed successfully ==="
 profiles:
-# Single profile - app deployment only (cert and infra handled by preDeploy hook)
+# Single profile - app deployment only (cert and infra handled by custom action)
 - name: preview-all
   manifests:
     kustomize:
       paths:
-      # Only the application deployment - cert and infra are handled by the hook
+      # Only the application deployment - cert and infra are handled by custom action
       - k8s-clean/overlays/preview-gateway
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
