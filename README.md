@@ -6,12 +6,17 @@ This repository contains the WebApp Team's application deployment infrastructure
 
 ```
 webapp-team-app/
-├── .github/workflows/           # GitOps CI/CD workflows for application
-├── k8s-manifests/              # Kubernetes application manifests
-├── k8s-infra/                  # Team-managed infrastructure (RBAC, quotas)
-├── configs/                    # Environment-specific configurations
-├── clouddeploy.yaml           # Cloud Deploy pipeline configuration
-├── skaffold.yaml              # Application build and deploy
+├── .github/workflows/         # CI/CD workflows (GitHub Actions)
+├── deploy/                    # Deployment configurations
+│   ├── clouddeploy/          # Google Cloud Deploy pipelines
+│   └── skaffold/             # Skaffold build configurations
+├── docs/                      # Documentation
+│   └── deployment/           # Deployment guides
+├── k8s/                       # Kubernetes manifests
+│   ├── base/                 # Base application manifests
+│   ├── overlays/             # Environment-specific overlays
+│   └── profiles/             # Resource profiles
+├── scripts/                   # Utility scripts
 ├── app.js                     # Sample application code
 ├── Dockerfile                 # Container image definition
 └── README.md                  # This file

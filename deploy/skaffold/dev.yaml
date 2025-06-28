@@ -1,21 +1,22 @@
 apiVersion: skaffold/v4beta6
 kind: Config
 metadata:
-  name: webapp-deployment-preview
+  name: webapp-dev-deployment
 build:
   artifacts:
   - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
     docker:
       dockerfile: Dockerfile
+  tagPolicy:
+    gitCommit:
+      variant: AbbrevCommitSha
 manifests:
   kustomize:
     paths:
-    - k8s-clean/overlays/dynamic-deploy-preview
+    - k8s/overlays/dev
 profiles:
-# Default profile for preview environments
-- name: nonprod
+- name: dev
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/dynamic-deploy-preview
-      - k8s-clean/profiles/tier-preview
+      - k8s/overlays/dev

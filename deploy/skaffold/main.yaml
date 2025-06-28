@@ -13,37 +13,37 @@ build:
 manifests:
   kustomize:
     paths:
-    - k8s-clean/overlays/dev  # Default to dev
+    - k8s/overlays/dev  # Default to dev
 profiles:
 # Resource-based profiles that can be reused across environments
 - name: dev-resources
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/dev
+      - k8s/overlays/dev
 - name: prod-resources
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/production
+      - k8s/overlays/production
 # Specific environment deployments
 - name: dev
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/dev
+      - k8s/overlays/dev
 - name: qa
   # QA uses dev resources but with qa-specific config
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/qa
+      - k8s/overlays/qa
 - name: staging
   # Staging uses prod resources but in nonprod project
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/staging
+      - k8s/overlays/staging
 - name: production
   build:
     artifacts:
@@ -56,7 +56,7 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/production
+      - k8s/overlays/production
 # Alias for Cloud Deploy compatibility
 - name: prod
   build:
@@ -70,4 +70,4 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/production
+      - k8s/overlays/production

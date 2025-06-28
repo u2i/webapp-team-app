@@ -16,21 +16,21 @@ build:
 manifests:
   kustomize:
     paths:
-    - k8s-clean/overlays/production
+    - k8s/overlays/production
 profiles:
 - name: prod
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/production
+      - k8s/overlays/production
 # Add other profiles for Cloud Deploy compatibility
 - name: dev
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/production
+      - k8s/overlays/production
 - name: qa
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/production
+      - k8s/overlays/production

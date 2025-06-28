@@ -13,7 +13,7 @@ build:
 manifests:
   kustomize:
     paths:
-    - k8s-clean/base  # Default base manifests
+    - k8s/base  # Default base manifests
 profiles:
 # Development profile
 - name: dev
@@ -30,7 +30,7 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/dev
+      - k8s/overlays/dev
   deploy:
     kubectl: {}
 
@@ -50,7 +50,7 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/qa
+      - k8s/overlays/qa
   deploy:
     kubectl: {}
 
@@ -70,7 +70,7 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/production
+      - k8s/overlays/production
   deploy:
     kubectl: {}
 
@@ -89,7 +89,7 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/staging
+      - k8s/overlays/staging
   deploy:
     kubectl: {}
 
@@ -106,7 +106,7 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/dev
+      - k8s/overlays/dev
   deploy:
     kubectl:
       defaultNamespace: webapp-dev

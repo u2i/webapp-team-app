@@ -16,16 +16,16 @@ build:
 manifests:
   kustomize:
     paths:
-    - k8s-clean/overlays/qa
+    - k8s/overlays/qa
 profiles:
 - name: qa
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/qa
+      - k8s/overlays/qa
 # Add dev profile for Cloud Deploy compatibility
 - name: dev
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/qa
+      - k8s/overlays/qa
