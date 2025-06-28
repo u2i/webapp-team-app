@@ -6,7 +6,7 @@ build:
   artifacts:
   - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
     docker:
-      dockerfile: Dockerfile
+      dockerfile: ../../Dockerfile
   googleCloudBuild:
     projectId: u2i-tenant-webapp
     region: europe-west1
@@ -15,7 +15,7 @@ build:
 manifests:
   kustomize:
     paths:
-    - k8s/overlays/preview-gateway
+    - ../../k8s/overlays/preview-gateway
     buildArgs:
     - --load-restrictor=LoadRestrictionsNone
 deploy:
@@ -29,7 +29,7 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s/overlays/preview-gateway-cert
+      - ../../k8s/overlays/preview-gateway-cert
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
   deploy:
@@ -42,7 +42,7 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s/overlays/preview-gateway-infra
+      - ../../k8s/overlays/preview-gateway-infra
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
   deploy:
@@ -55,7 +55,7 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s/overlays/preview-gateway
+      - ../../k8s/overlays/preview-gateway
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
   deploy:
