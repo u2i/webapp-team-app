@@ -2,13 +2,28 @@ apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
   name: webapp-preview-deployment
-# No build section - Cloud Build handles building
-# No manifests section - Cloud Build handles applying manifests
+build:
+  artifacts:
+  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
+    docker:
+      dockerfile: Dockerfile
+  googleCloudBuild:
+    projectId: u2i-tenant-webapp
+    region: europe-west1
+  tagPolicy:
+    sha256: {}
+manifests:
+  kustomize:
+    paths:
+    - k8s-clean/overlays/preview-gateway-cert
+    - k8s-clean/overlays/preview-gateway-infra
+    - k8s-clean/overlays/preview-gateway
+    buildArgs:
+    - --load-restrictor=LoadRestrictionsNone
 deploy:
-  # Empty deploy section - everything handled by custom action
   kubectl: {}
 customActions:
-- name: deploy-with-cloud-build
+- name: deploy-preview
   containers:
   - name: cloud-build-trigger
     image: gcr.io/cloud-builders/gcloud
@@ -16,18 +31,16 @@ customActions:
     args:
     - |
       set -ex
-      echo "=== Triggering Cloud Build for full deployment ==="
+      echo "=== Triggering Cloud Build for deployment ==="
       
-      # Submit Cloud Build with substitutions
+      # Cloud Build will use rendered.yaml from the current directory
       gcloud builds submit \
         --config=cloudbuild-preview-deploy.yaml \
         --project=u2i-tenant-webapp \
         --region=europe-west1 \
-        --substitutions="_NAMESPACE=${NAMESPACE},_CERT_NAME=${CERT_NAME},_IMAGE_TAG=${GITHUB_SHA}" \
-        .
+        --substitutions="_NAMESPACE=${NAMESPACE},_CERT_NAME=${CERT_NAME}" \
+        . 
       
       echo "=== Cloud Build completed successfully ==="
 profiles:
-# Cloud Build profile - no manifests since everything is handled by Cloud Build
 - name: preview-all
-  # Empty profile - all deployment handled by Cloud Build custom action

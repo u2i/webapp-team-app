@@ -1,62 +1,75 @@
 steps:
-# Step 1: Apply certificate resources
+# Step 1: Create namespace first (from certificate resources)
 - name: 'gcr.io/cloud-builders/kubectl'
+  entrypoint: 'bash'
   args:
-  - 'apply'
-  - '-k'
-  - 'k8s-clean/overlays/preview-gateway-cert'
-  - '--server-side'
-  - '--timeout=600s'
+  - '-c'
+  - |
+    echo "=== Starting deployment for certificate provisioning ==="
+    echo "1. Creating namespace..."
+    kubectl apply -f rendered.yaml \
+      --selector=app.kubernetes.io/component=certificate,kind=Namespace \
+      --server-side
   env:
   - 'CLOUDSDK_COMPUTE_REGION=europe-west1'
   - 'CLOUDSDK_CONTAINER_CLUSTER=webapp-cluster'
 
-# Step 2: Wait for certificate to be ACTIVE
+# Step 2: Apply certificate resources
 - name: 'gcr.io/cloud-builders/kubectl'
+  entrypoint: 'bash'
   args:
-  - 'wait'
-  - '--for=jsonpath={.status.state}=ACTIVE'
-  - '--timeout=10m'
-  - '-n'
-  - '${_NAMESPACE}'
-  - 'certificatemanagercertificates/${_CERT_NAME}'
+  - '-c'
+  - |
+    echo "2. Applying certificate resources..."
+    kubectl apply -f rendered.yaml \
+      --selector=app.kubernetes.io/component=certificate \
+      --wait=true --server-side --timeout=600s
   env:
   - 'CLOUDSDK_COMPUTE_REGION=europe-west1'
   - 'CLOUDSDK_CONTAINER_CLUSTER=webapp-cluster'
 
-# Step 3: Apply infrastructure resources
+# Step 3: Wait for certificate to be ACTIVE
 - name: 'gcr.io/cloud-builders/kubectl'
+  entrypoint: 'bash'
   args:
-  - 'apply'
-  - '-k'
-  - 'k8s-clean/overlays/preview-gateway-infra'
-  - '--server-side'
-  - '--timeout=300s'
+  - '-c'
+  - |
+    echo "3. Waiting for certificate to become ACTIVE..."
+    kubectl wait \
+      --for=jsonpath='{.status.state}'=ACTIVE \
+      --timeout=10m \
+      -n ${_NAMESPACE} \
+      certificatemanagercertificates/${_CERT_NAME}
+    echo "Certificate is ACTIVE!"
   env:
   - 'CLOUDSDK_COMPUTE_REGION=europe-west1'
   - 'CLOUDSDK_CONTAINER_CLUSTER=webapp-cluster'
 
-# Step 4: Build and push Docker image
-- name: 'gcr.io/cloud-builders/docker'
-  args:
-  - 'build'
-  - '-t'
-  - 'europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp:${_IMAGE_TAG}'
-  - '.'
-
-- name: 'gcr.io/cloud-builders/docker'
-  args:
-  - 'push'
-  - 'europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp:${_IMAGE_TAG}'
-
-# Step 5: Apply application deployment
+# Step 4: Apply infrastructure resources
 - name: 'gcr.io/cloud-builders/kubectl'
+  entrypoint: 'bash'
   args:
-  - 'apply'
-  - '-k'
-  - 'k8s-clean/overlays/preview-gateway'
-  - '--server-side'
-  - '--timeout=600s'
+  - '-c'
+  - |
+    echo "4. Applying infrastructure resources..."
+    kubectl apply -f rendered.yaml \
+      --selector=app.kubernetes.io/component=infrastructure \
+      --wait=true --server-side --timeout=300s
+  env:
+  - 'CLOUDSDK_COMPUTE_REGION=europe-west1'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=webapp-cluster'
+
+# Step 5: Apply application resources
+- name: 'gcr.io/cloud-builders/kubectl'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    echo "5. Applying application deployment..."
+    kubectl apply -f rendered.yaml \
+      --selector=app.kubernetes.io/component=application \
+      --wait=true --server-side --timeout=600s
+    echo "=== Deployment completed successfully ==="
   env:
   - 'CLOUDSDK_COMPUTE_REGION=europe-west1'
   - 'CLOUDSDK_CONTAINER_CLUSTER=webapp-cluster'
@@ -64,7 +77,6 @@ steps:
 substitutions:
   _NAMESPACE: '${_NAMESPACE}'
   _CERT_NAME: '${_CERT_NAME}'
-  _IMAGE_TAG: '${_IMAGE_TAG}'
 
 options:
   substitution_option: 'ALLOW_LOOSE'

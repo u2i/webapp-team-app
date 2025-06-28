@@ -18,8 +18,8 @@ serialPipeline:
     strategy:
       standard:
         verify: false
-        predeploy:
-          actions: ["deploy-with-cloud-build"]
+        deploy:
+          actions: ["deploy-preview"]
 
 ---
 apiVersion: deploy.cloud.google.com/v1
