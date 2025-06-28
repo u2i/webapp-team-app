@@ -25,23 +25,38 @@ deploy:
       global: ["--request-timeout=600s"]
   statusCheckDeadlineSeconds: 1200
 profiles:
-# Single profile with all resources in dependency order
-- name: preview-all
+# Profile A: Certificate only
+- name: preview-cert
   manifests:
     kustomize:
       paths:
-      # 1. Config Connector resources first (namespace + cert)
       - k8s-clean/overlays/preview-gateway-cert
-      # 2. Infrastructure resources (service, network policy, routes)
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true", "--server-side", "--timeout=600s"]
+        global: ["--request-timeout=600s"]
+    # Wait for certificate to be ACTIVE
+    hooks:
+      after:
+      - host:
+          command: ["sh", "-c", "kubectl wait --for=jsonpath='{.status.state}'=ACTIVE --timeout=10m certificatemanagercertificates/${CERT_NAME} -n ${NAMESPACE}"]
+
+# Profile B: Infrastructure + Application
+- name: preview-infra-app
+  manifests:
+    kustomize:
+      paths:
       - k8s-clean/overlays/preview-gateway-infra
-      # 3. Application deployment
       - k8s-clean/overlays/preview-gateway
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
   deploy:
     kubectl:
       flags:
-        apply: ["--wait=true", "--server-side"]
+        apply: ["--wait=true", "--server-side", "--timeout=600s"]
         global: ["--request-timeout=600s"]
 
 # Legacy profiles kept for compatibility

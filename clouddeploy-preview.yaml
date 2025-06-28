@@ -1,5 +1,5 @@
 # Cloud Deploy Configuration for Preview Deployments
-# Supports dynamic domains like foo.webapp.u2i.dev
+# Two-stage deployment: cert → infra+app
 
 apiVersion: deploy.cloud.google.com/v1
 kind: DeliveryPipeline
@@ -9,64 +9,23 @@ metadata:
     compliance: iso27001-soc2-gdpr
     team: webapp-team
     purpose: preview
-description: "Preview deployment pipeline with parameterized domains"
+description: "Preview deployment pipeline with certificate verification"
 
 serialPipeline:
   stages:
-  # Stage 1: Create certificate and wait for it to be ready
+  # Stage 1: Deploy certificate and wait for it to be ACTIVE
   - targetId: preview-gke-cert
-    profiles: ["cert-only"]
+    profiles: ["preview-cert"]
     strategy:
       standard:
         verify: false
-    deployParameters:
-    - values:
-        DOMAIN: ""
-        PREVIEW_NAME: ""
-        NAMESPACE: ""
-        CERT_NAME: ""
-        CERT_ENTRY_NAME: ""
-        CERT_DESCRIPTION: ""
   
-  # Stage 2: Deploy infrastructure (service, configmap, routes)
-  - targetId: preview-gke-infra
-    profiles: ["infra-only"]
+  # Stage 2: Deploy infrastructure + application
+  - targetId: preview-gke-infra-app
+    profiles: ["preview-infra-app"]
     strategy:
       standard:
         verify: false
-    deployParameters:
-    - values:
-        DOMAIN: ""
-        PREVIEW_NAME: ""
-        NAMESPACE: ""
-        CERT_NAME: ""
-        CERT_ENTRY_NAME: ""
-        ROUTE_NAME: ""
-        API_URL: ""
-        ENV: ""
-        STAGE: ""
-        BOUNDARY: ""
-        TIER: ""
-        NAME_PREFIX: ""
-        SERVICE_NAME: ""
-  
-  # Stage 3: Deploy the application
-  - targetId: preview-gke-app
-    profiles: ["app-only"]
-    strategy:
-      standard:
-        verify: false
-    deployParameters:
-    - values:
-        DOMAIN: ""
-        PREVIEW_NAME: ""
-        NAMESPACE: ""
-        API_URL: ""
-        ENV: ""
-        STAGE: ""
-        BOUNDARY: ""
-        TIER: ""
-        NAME_PREFIX: ""
 
 ---
 apiVersion: deploy.cloud.google.com/v1
@@ -92,33 +51,13 @@ executionConfigs:
 apiVersion: deploy.cloud.google.com/v1
 kind: Target
 metadata:
-  name: preview-gke-infra
+  name: preview-gke-infra-app
   labels:
     compliance: iso27001-soc2-gdpr
     environment: preview
     data-residency: eu
-    stage: infrastructure
-description: "Infrastructure deployment stage"
-
-gke:
-  cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
-  
-executionConfigs:
-- usages: [RENDER, DEPLOY]
-  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
-  artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
-
----
-apiVersion: deploy.cloud.google.com/v1
-kind: Target
-metadata:
-  name: preview-gke-app
-  labels:
-    compliance: iso27001-soc2-gdpr
-    environment: preview
-    data-residency: eu
-    stage: application
-description: "Application deployment stage"
+    stage: infra-app
+description: "Infrastructure and application deployment stage"
 
 gke:
   cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
@@ -132,10 +71,10 @@ executionConfigs:
 apiVersion: deploy.cloud.google.com/v1
 kind: Automation
 metadata:
-  name: webapp-preview-pipeline/promote-cert-to-infra
+  name: webapp-preview-pipeline/promote-cert-to-infra-app
   labels:
     compliance: iso27001-soc2-gdpr
-description: "Auto-promote from cert to infra stage when cert is ready"
+description: "Auto-promote from cert to infra+app stage when cert is ready"
 suspended: false
 serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
 selector:
@@ -143,23 +82,6 @@ selector:
     id: preview-gke-cert
 rules:
 - promoteReleaseRule:
-    id: promote-to-infra
-    toTargetId: preview-gke-infra
-
----
-apiVersion: deploy.cloud.google.com/v1
-kind: Automation
-metadata:
-  name: webapp-preview-pipeline/promote-infra-to-app
-  labels:
-    compliance: iso27001-soc2-gdpr
-description: "Auto-promote from infra to app stage when infra is ready"
-suspended: false
-serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
-selector:
-- target:
-    id: preview-gke-infra
-rules:
-- promoteReleaseRule:
-    id: promote-to-app
-    toTargetId: preview-gke-app
+    id: promote-to-infra-app
+    toTargetId: preview-gke-infra-app
+    wait: 0s
