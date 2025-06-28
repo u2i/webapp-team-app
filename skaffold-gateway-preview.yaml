@@ -63,3 +63,33 @@ profiles:
       flags:
         apply: ["--wait=true"]
         global: ["--request-timeout=300s"]
+
+customActions:
+- name: cert-action
+  containers:
+  - name: run-cert
+    image: gcr.io/k8s-skaffold/skaffold:latest
+    command: ["/bin/sh"]
+    args:
+    - -c
+    - |
+      skaffold deploy -p cert-only \
+        --status-check=false \
+        --kube-context=$(kubectl config current-context)
+      # Wait for certificate to be ready if needed
+      # kubectl wait certificate/${CERT_NAME} \
+      #   --namespace=${NAMESPACE} \
+      #   --for=condition=Ready \
+      #   --timeout=300s || true
+
+- name: infra-action  
+  containers:
+  - name: run-infra
+    image: gcr.io/k8s-skaffold/skaffold:latest
+    command: ["/bin/sh"]
+    args:
+    - -c
+    - |
+      skaffold deploy -p infra-only \
+        --status-check=false \
+        --kube-context=$(kubectl config current-context)
