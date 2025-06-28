@@ -91,7 +91,5 @@ customActions:
         --server-side --timeout=300s
       
       echo "=== Predeploy completed successfully ==="
-  executionMode:
-    kubernetesCluster: {}
 profiles:
 - name: preview-all
