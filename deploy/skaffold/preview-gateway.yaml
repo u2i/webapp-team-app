@@ -1,0 +1,65 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-preview-deployment
+build:
+  artifacts:
+  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
+    docker:
+      dockerfile: Dockerfile
+  googleCloudBuild:
+    projectId: u2i-tenant-webapp
+    region: europe-west1
+  tagPolicy:
+    sha256: {}
+manifests:
+  kustomize:
+    paths:
+    - k8s/overlays/preview-gateway
+    buildArgs:
+    - --load-restrictor=LoadRestrictionsNone
+deploy:
+  kubectl:
+    flags:
+      apply: ["--wait=true"]
+      global: ["--request-timeout=600s"]
+  statusCheckDeadlineSeconds: 1200
+profiles:
+- name: cert-only
+  manifests:
+    kustomize:
+      paths:
+      - k8s/overlays/preview-gateway-cert
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true"]
+        global: ["--request-timeout=600s"]
+  
+- name: infra-only
+  manifests:
+    kustomize:
+      paths:
+      - k8s/overlays/preview-gateway-infra
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true"]
+        global: ["--request-timeout=60s"]
+
+- name: app-only
+  manifests:
+    kustomize:
+      paths:
+      - k8s/overlays/preview-gateway
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--wait=true"]
+        global: ["--request-timeout=300s"]
