@@ -37,7 +37,7 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/prod
+      - k8s-clean/overlays/production
   deploy:
     kubectl:
       defaultNamespace: webapp-prod
