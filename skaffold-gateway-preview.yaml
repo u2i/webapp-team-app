@@ -32,33 +32,53 @@ customActions:
     command: ["sh", "-c"]
     args:
     - |
-      echo "Creating certificate for ${DOMAIN}..."
-      gcloud certificate-manager certificates create ${CERT_NAME} \
+      # Check if certificate already exists and is ACTIVE
+      CERT_STATE=$(gcloud certificate-manager certificates describe ${CERT_NAME} \
         --project=u2i-tenant-webapp \
-        --description="${CERT_DESCRIPTION}" \
-        --domains="${DOMAIN}" \
-        --quiet || echo "Certificate already exists"
+        --format="value(managed.state)" 2>/dev/null || echo "NOT_FOUND")
       
-      echo "Waiting for certificate to become ACTIVE..."
-      while true; do
-        STATE=$(gcloud certificate-manager certificates describe ${CERT_NAME} \
-          --project=u2i-tenant-webapp \
-          --format="value(managed.state)" 2>/dev/null || echo "PROVISIONING")
-        echo "Certificate state: $STATE"
-        if [ "$STATE" = "ACTIVE" ]; then
-          echo "Certificate is ACTIVE!"
-          break
+      if [ "$CERT_STATE" = "ACTIVE" ]; then
+        echo "Certificate ${CERT_NAME} already exists and is ACTIVE"
+      else
+        if [ "$CERT_STATE" = "NOT_FOUND" ]; then
+          echo "Creating certificate for ${DOMAIN}..."
+          gcloud certificate-manager certificates create ${CERT_NAME} \
+            --project=u2i-tenant-webapp \
+            --description="${CERT_DESCRIPTION}" \
+            --domains="${DOMAIN}" \
+            --quiet
+        else
+          echo "Certificate exists but is in state: $CERT_STATE"
         fi
-        sleep 10
-      done
+        
+        echo "Waiting for certificate to become ACTIVE..."
+        while true; do
+          STATE=$(gcloud certificate-manager certificates describe ${CERT_NAME} \
+            --project=u2i-tenant-webapp \
+            --format="value(managed.state)")
+          echo "Certificate state: $STATE"
+          if [ "$STATE" = "ACTIVE" ]; then
+            echo "Certificate is ACTIVE!"
+            break
+          fi
+          sleep 10
+        done
+      fi
       
-      echo "Creating certificate map entry..."
-      gcloud certificate-manager maps entries create ${CERT_ENTRY_NAME} \
-        --map="webapp-cert-map" \
-        --project=u2i-tenant-webapp \
-        --certificates=${CERT_NAME} \
-        --hostname="${DOMAIN}" \
-        --quiet || echo "Certificate map entry already exists"
+      # Check if map entry exists
+      if gcloud certificate-manager maps entries describe ${CERT_ENTRY_NAME} \
+          --map="webapp-cert-map" \
+          --project=u2i-tenant-webapp >/dev/null 2>&1; then
+        echo "Certificate map entry already exists"
+      else
+        echo "Creating certificate map entry..."
+        gcloud certificate-manager maps entries create ${CERT_ENTRY_NAME} \
+          --map="webapp-cert-map" \
+          --project=u2i-tenant-webapp \
+          --certificates=${CERT_NAME} \
+          --hostname="${DOMAIN}" \
+          --quiet
+      fi
 profiles:
 # Single profile that creates cert via gcloud then deploys k8s resources
 - name: preview-all
