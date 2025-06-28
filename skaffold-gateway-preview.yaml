@@ -93,19 +93,3 @@ profiles:
       flags:
         apply: ["--wait=true"]
         global: ["--request-timeout=300s"]
-
-customActions:
-- name: deploy-config-connector
-  containers:
-  - name: config-connector-deploy
-    image: gcr.io/k8s-skaffold/skaffold:latest
-    command: ["/bin/sh"]
-    args:
-    - -c
-    - |
-      echo "Deploying Config Connector resources (namespace + cert)..."
-      # Specify the config file explicitly
-      skaffold deploy -p config-connector \
-        --filename=skaffold-gateway-preview.yaml \
-        --status-check=false
-      echo "Config Connector deployment complete"

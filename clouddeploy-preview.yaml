@@ -1,5 +1,5 @@
 # Cloud Deploy Configuration for Preview Deployments
-# Two-phase deployment: Config Connector → Infra/App
+# Two-stage deployment: Config Connector → Infra/App
 
 apiVersion: deploy.cloud.google.com/v1
 kind: DeliveryPipeline
@@ -9,33 +9,80 @@ metadata:
     compliance: iso27001-soc2-gdpr
     team: webapp-team
     purpose: preview
-description: "Preview deployment: Config Connector resources → Infra/App"
+description: "Preview deployment: Config Connector → Infra/App"
 
 serialPipeline:
   stages:
-  - targetId: preview-gke
-    profiles: ["infra-app"]  # Main deploy profile
+  # Stage 1: Config Connector resources (namespace + cert)
+  - targetId: preview-gke-config
+    profiles: ["config-connector"]
     strategy:
       standard:
         verify: false
-        predeploy:
-          actions: ["deploy-config-connector"]  # Config Connector resources first
+  
+  # Stage 2: Infrastructure + Application
+  - targetId: preview-gke-infra-app
+    profiles: ["infra-app"]
+    strategy:
+      standard:
+        verify: false
 
 ---
 apiVersion: deploy.cloud.google.com/v1
 kind: Target
 metadata:
-  name: preview-gke
+  name: preview-gke-config
   labels:
     compliance: iso27001-soc2-gdpr
     environment: preview
     data-residency: eu
-description: "Preview deployment target"
+    stage: config-connector
+description: "Config Connector deployment stage"
 
 gke:
   cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
   
 executionConfigs:
-- usages: [RENDER, DEPLOY, PREDEPLOY]
+- usages: [RENDER, DEPLOY]
   serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
   artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
+
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: preview-gke-infra-app
+  labels:
+    compliance: iso27001-soc2-gdpr
+    environment: preview
+    data-residency: eu
+    stage: infra-app
+description: "Infrastructure and application deployment stage"
+
+gke:
+  cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
+  
+executionConfigs:
+- usages: [RENDER, DEPLOY]
+  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
+  artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
+
+---
+# Automation to immediately promote from stage 1 to stage 2
+apiVersion: deploy.cloud.google.com/v1
+kind: Automation
+metadata:
+  name: webapp-preview-pipeline/promote-config-to-infra
+  labels:
+    compliance: iso27001-soc2-gdpr
+description: "Auto-promote from Config Connector to Infra/App stage"
+suspended: false
+serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
+selector:
+- target:
+    id: preview-gke-config
+rules:
+- promoteReleaseRule:
+    id: promote-to-infra-app
+    toTargetId: preview-gke-infra-app
+    wait: 0m
