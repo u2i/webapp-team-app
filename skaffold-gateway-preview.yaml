@@ -98,21 +98,13 @@ customActions:
 - name: deploy-config-connector
   containers:
   - name: config-connector-deploy
-    image: gcr.io/google.com/cloudsdktool/cloud-sdk:alpine
+    image: gcr.io/k8s-skaffold/skaffold:latest
     command: ["/bin/sh"]
     args:
     - -c
     - |
       echo "Deploying Config Connector resources (namespace + cert)..."
-      # Apply the pre-rendered config-connector manifests
-      kubectl apply -f <(skaffold render -p config-connector) \
-        --wait=true \
-        --server-side \
-        --timeout=600s
-      
-      # Wait for namespace to be ready
-      echo "Waiting for namespace to be ready..."
-      kubectl wait namespace/${NAMESPACE} --for=jsonpath='{.status.phase}'=Active --timeout=60s || true
-      
-      # Note: Certificate readiness is checked by Config Connector itself
+      # Let skaffold deploy handle rendering and applying with proper parameter substitution
+      skaffold deploy -p config-connector \
+        --status-check=false
       echo "Config Connector deployment complete"
