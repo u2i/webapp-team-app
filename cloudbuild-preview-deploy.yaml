@@ -75,8 +75,8 @@ steps:
   - 'CLOUDSDK_CONTAINER_CLUSTER=webapp-cluster'
 
 substitutions:
-  _NAMESPACE: '${_NAMESPACE}'
-  _CERT_NAME: '${_CERT_NAME}'
+  _NAMESPACE: '${NAMESPACE}'
+  _CERT_NAME: '${CERT_NAME}'
 
 options:
   substitution_option: 'ALLOW_LOOSE'

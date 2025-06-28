@@ -20,25 +20,5 @@ manifests:
     - --load-restrictor=LoadRestrictionsNone
 deploy:
   kubectl: {}
-customActions:
-- name: deploy-preview
-  containers:
-  - name: cloud-build-trigger
-    image: gcr.io/cloud-builders/gcloud
-    command: ["/bin/sh", "-c"]
-    args:
-    - |
-      set -ex
-      echo "=== Triggering Cloud Build for deployment ==="
-      
-      # Cloud Build will use rendered.yaml from the current directory
-      gcloud builds submit \
-        --config=cloudbuild-preview-deploy.yaml \
-        --project=u2i-tenant-webapp \
-        --region=europe-west1 \
-        --substitutions="_NAMESPACE=${NAMESPACE},_CERT_NAME=${CERT_NAME}" \
-        . 
-      
-      echo "=== Cloud Build completed successfully ==="
 profiles:
 - name: preview-all
