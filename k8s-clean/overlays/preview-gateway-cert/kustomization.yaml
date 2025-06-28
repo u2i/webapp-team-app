@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Stage 1: Certificate resources only
+# Certificate resources via Config Connector
 resources:
 - namespace.yaml
 - certificate-resources.yaml
