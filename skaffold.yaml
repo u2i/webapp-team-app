@@ -42,8 +42,8 @@ profiles:
     kubectl:
       defaultNamespace: webapp-prod
 
-# Pre-production profile (dev, qa)
-- name: preprod
+# Non-production profile (dev, qa)
+- name: nonprod
   build:
     tagPolicy:
       gitCommit:
@@ -51,7 +51,7 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/preprod
+      - k8s-clean/overlays/nonprod
   deploy:
     kubectl:
       defaultNamespace: webapp-${NAMESPACE}

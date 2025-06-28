@@ -5,7 +5,7 @@ namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
 
 resources:
 - ../../base
-- ../../profiles/dev  # Use dev profile resources for preprod envs
+- ../../profiles/dev  # Use dev profile resources for nonprod envs
 
 # Environment config
 configMapGenerator:
@@ -22,7 +22,7 @@ configMapGenerator:
 commonLabels:
   app: webapp
   environment: ${ENV} # from-param: ${ENV}
-  stage: preprod
+  stage: nonprod
   boundary: nonprod
   tier: standard
   team: webapp-team

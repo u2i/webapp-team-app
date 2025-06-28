@@ -14,7 +14,7 @@ description: "QA to Production pipeline with approval"
 serialPipeline:
   stages:
   - targetId: qa
-    profiles: ["preprod"]
+    profiles: ["nonprod"]
     strategy:
       standard:
         verify: true
@@ -38,7 +38,7 @@ description: "Pipeline for dev environment continuous deployment"
 serialPipeline:
   stages:
   - targetId: dev
-    profiles: ["preprod"]
+    profiles: ["nonprod"]
     strategy:
       standard:
         verify: false
