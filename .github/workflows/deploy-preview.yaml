@@ -29,6 +29,12 @@ jobs:
       with:
         install_components: 'gke-gcloud-auth-plugin'
     
+    - name: Apply Cloud Deploy Configuration
+      run: |
+        gcloud deploy apply --file=clouddeploy-preview.yaml \
+          --region=${{ env.GCP_REGION }} \
+          --project=${{ env.GCP_PROJECT }}
+    
     - name: Deploy Preview
       id: deploy
       run: |
