@@ -155,7 +155,7 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/nonprod  # Use nonprod overlay for app
+      - k8s-clean/overlays/dev  # Use dev overlay for app (same as dev-app)
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
   deploy:

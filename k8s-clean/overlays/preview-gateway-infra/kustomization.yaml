@@ -1,28 +1,34 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
+
 # Stage 2: Infrastructure resources (configmap, service, network policy, routes)
 resources:
-- ../preview-gateway/configmap.yaml
-- ../preview-gateway/httproute.yaml
 - ../../base/service.yaml
 - ../../base/network-policy.yaml
+- gateway-resources.yaml
 
-# Name prefix can be overridden via --name-prefix
-namePrefix: preview-
+namePrefix: ${NAME_PREFIX} # from-param: ${NAME_PREFIX}
 
 # Service patch to ensure ClusterIP
 patches:
-- path: ../preview-gateway/service-patch.yaml
+- path: service-patch.yaml
   target:
     kind: Service
     name: webapp-service
 
-# Common labels for preview deployments
+# Environment config
+configMapGenerator:
+- name: webapp-env-config
+  literals:
+    - BOUNDARY=${BOUNDARY} # from-param: ${BOUNDARY}
+    - STAGE=${STAGE} # from-param: ${STAGE}
+    - API_URL=${API_URL} # from-param: ${API_URL}
+    - ENV=${ENV} # from-param: ${ENV}
+
 commonLabels:
-  stage: preview
-  boundary: nonprod
-  tier: ephemeral
-  tenant: webapp-team
-  compliance: iso27001-soc2-gdpr
-  data-residency: eu
+  stage: ${STAGE} # from-param: ${STAGE}
+  boundary: ${BOUNDARY} # from-param: ${BOUNDARY}
+  tier: ${TIER} # from-param: ${TIER}
+  environment: ${ENV} # from-param: ${ENV}

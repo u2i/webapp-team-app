@@ -3,5 +3,5 @@ kind: Kustomization
 
 # Stage 1: Certificate resources only
 resources:
-- ../preview-gateway/namespace.yaml
-- ../preview-gateway/certificate-resources.yaml
+- namespace.yaml
+- certificate-resources.yaml

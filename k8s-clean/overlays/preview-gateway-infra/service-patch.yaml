@@ -1,0 +1,8 @@
+# Service patch for preview environments
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-service
+spec:
+  type: ClusterIP  # Force ClusterIP for Gateway API
+  sessionAffinity: None
