@@ -39,18 +39,44 @@ customActions:
       echo "Directory contents:"
       ls -la
       
-      # Download rendered manifest from Cloud Storage
-      # Cloud Deploy stores artifacts in: gs://ARTIFACT_STORAGE/PIPELINE/RELEASE/ROLLOUT/
-      echo "Downloading rendered manifest from Cloud Storage..."
-      gsutil cp gs://u2i-tenant-webapp-deploy-artifacts/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/${CLOUD_DEPLOY_ROLLOUT}/rendered.yaml . || {
-        echo "Failed to download from expected path, checking bucket contents..."
-        gsutil ls -r gs://u2i-tenant-webapp-deploy-artifacts/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/ | grep rendered.yaml || true
-      }
+      # Check Cloud Deploy environment variables
+      echo "Cloud Deploy environment variables:"
+      echo "CLOUD_DEPLOY_DELIVERY_PIPELINE: ${CLOUD_DEPLOY_DELIVERY_PIPELINE}"
+      echo "CLOUD_DEPLOY_RELEASE: ${CLOUD_DEPLOY_RELEASE}"
+      echo "CLOUD_DEPLOY_ROLLOUT: ${CLOUD_DEPLOY_ROLLOUT}"
+      echo "CLOUD_DEPLOY_PHASE: ${CLOUD_DEPLOY_PHASE}"
       
-      if [ -f "rendered.yaml" ]; then
-        echo "Successfully downloaded rendered.yaml"
-      else
-        echo "ERROR: Could not find rendered.yaml"
+      # Explore the artifact storage to find rendered manifest
+      echo "Exploring artifact storage structure..."
+      BUCKET_BASE="gs://u2i-tenant-webapp-deploy-artifacts"
+      
+      # List contents at different levels to understand structure
+      echo "Listing pipeline level:"
+      gsutil ls "${BUCKET_BASE}/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/" | head -10 || true
+      
+      echo "Listing release level:"
+      gsutil ls "${BUCKET_BASE}/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/" | head -10 || true
+      
+      echo "Listing rollout level:"
+      gsutil ls "${BUCKET_BASE}/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/${CLOUD_DEPLOY_ROLLOUT}/" | head -10 || true
+      
+      # Try to find any rendered files
+      echo "Searching for rendered files..."
+      gsutil ls -r "${BUCKET_BASE}/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/" | grep -E "(rendered|manifest)" | head -20 || true
+      
+      # Check if there's a manifest.yaml or other common names
+      for filename in rendered.yaml manifest.yaml manifests.yaml rendered-manifest.yaml; do
+        echo "Trying to download ${filename}..."
+        if gsutil cp "${BUCKET_BASE}/${CLOUD_DEPLOY_DELIVERY_PIPELINE}/${CLOUD_DEPLOY_RELEASE}/${CLOUD_DEPLOY_ROLLOUT}/${filename}" . 2>/dev/null; then
+          echo "Successfully downloaded ${filename}"
+          mv "${filename}" rendered.yaml
+          break
+        fi
+      done
+      
+      if [ ! -f "rendered.yaml" ]; then
+        echo "ERROR: Could not find rendered manifest in expected locations"
+        echo "Please check the bucket structure above"
         exit 1
       fi
       
