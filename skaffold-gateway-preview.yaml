@@ -94,36 +94,14 @@ customActions:
         kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f - --server-side
       }
       
-      echo "2. Applying certificate and infrastructure resources..."
-      # Apply HTTPRoute to trigger DNS creation
-      kubectl apply -f rendered.yaml \
-        --selector="kind=HTTPRoute" \
-        --server-side --timeout=300s || echo "No HTTPRoute found"
-      
+      echo "2. Applying certificate resources only..."
       # Apply certificate resources (will provision in background)
       kubectl apply -f rendered.yaml \
         --selector="app.kubernetes.io/component=certificate" \
         --server-side --timeout=300s || echo "No certificate resources found"
       
-      # Apply remaining infrastructure resources
-      echo "3. Applying all infrastructure resources..."
-      kubectl apply -f rendered.yaml \
-        --selector="app.kubernetes.io/component=infrastructure" \
-        --server-side --timeout=300s || {
-        echo "No infrastructure resources found with label, applying by kind..."
-        kubectl apply -f rendered.yaml \
-          --selector="kind=Service" \
-          --server-side --timeout=300s
-        kubectl apply -f rendered.yaml \
-          --selector="kind=ConfigMap" \
-          --server-side --timeout=300s
-        kubectl apply -f rendered.yaml \
-          --selector="kind=NetworkPolicy" \
-          --server-side --timeout=300s
-        kubectl apply -f rendered.yaml \
-          --selector="kind=HTTPRoute" \
-          --server-side --timeout=300s
-      }
+      # Skip HTTPRoute and NetworkPolicy - let main deployment handle them
+      # so they get proper Skaffold tracking labels
       
       echo "=== Predeploy completed successfully ==="
   executionMode:
