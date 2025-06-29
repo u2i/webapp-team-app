@@ -1,0 +1,98 @@
+# Cloud Deploy Configuration for single-stage deployments (dev, qa, prod)
+# Uses Skaffold modules for namespace creation
+
+apiVersion: deploy.cloud.google.com/v1
+kind: DeliveryPipeline
+metadata:
+  name: webapp-dev-pipeline
+  labels:
+    team: webapp-team
+    purpose: development
+description: "Dev pipeline with single-stage deployment"
+
+serialPipeline:
+  stages:
+  - targetId: dev-gke
+    profiles: ["dev"]
+    strategy:
+      standard:
+        verify: false
+
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: DeliveryPipeline
+metadata:
+  name: webapp-qa-prod-pipeline
+  labels:
+    team: webapp-team
+    purpose: production
+    compliance: iso27001-soc2-gdpr
+description: "QA to Production pipeline with single-stage deployment and approval"
+
+serialPipeline:
+  stages:
+  # QA stage
+  - targetId: qa-gke
+    profiles: ["qa"]
+    strategy:
+      standard:
+        verify: true
+        
+  # Production stage
+  - targetId: prod-gke
+    profiles: ["prod"]
+    strategy:
+      standard:
+        verify: true
+
+---
+# Dev Target
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: dev-gke
+  labels:
+    environment: dev
+requireApproval: false
+gke:
+  cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
+executionConfigs:
+- usages: [RENDER, DEPLOY]
+  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
+  artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
+
+---
+# QA Target
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: qa-gke
+  labels:
+    environment: qa
+    compliance: iso27001-soc2-gdpr
+    data-residency: eu
+requireApproval: false
+gke:
+  cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
+executionConfigs:
+- usages: [RENDER, DEPLOY, VERIFY]
+  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
+  artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
+
+---
+# Production Target
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: prod-gke
+  labels:
+    environment: prod
+    compliance: iso27001-soc2-gdpr
+    data-residency: eu
+requireApproval: true
+gke:
+  cluster: projects/u2i-tenant-webapp-prod/locations/europe-west1/clusters/webapp-cluster-prod
+executionConfigs:
+- usages: [RENDER, DEPLOY, VERIFY]
+  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-prod.iam.gserviceaccount.com
+  artifactStorage: gs://u2i-tenant-webapp-prod-deploy-artifacts

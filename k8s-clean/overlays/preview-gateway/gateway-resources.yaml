@@ -1,0 +1,28 @@
+# Gateway API resources for preview environment
+# Uses HTTPRoute with Gateway API for traffic routing
+
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: preview-webapp-route # from-param: ${NAME_PREFIX}webapp-route
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
+  labels:
+    app: webapp
+    stage: ${STAGE} # from-param: ${STAGE}
+    boundary: ${BOUNDARY} # from-param: ${BOUNDARY}
+    tier: ${TIER} # from-param: ${TIER}
+    environment: ${ENV} # from-param: ${ENV}
+  annotations:
+    # External DNS will pick this up and create the DNS record
+    external-dns.alpha.kubernetes.io/hostname: "${DOMAIN}" # from-param: ${DOMAIN}
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  hostnames: 
+  - "${DOMAIN}" # from-param: ${DOMAIN}
+  parentRefs:
+  - name: webapp-gateway
+    namespace: infra-gw
+  rules:
+  - backendRefs:
+    - name: webapp-service # from-param: ${NAME_PREFIX}webapp-service
+      port: 80

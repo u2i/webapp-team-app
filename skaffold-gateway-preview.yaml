@@ -1,6 +1,19 @@
 apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
+  name: webapp-namespace
+# Namespace module - just renders and deploys namespace
+manifests:
+  rawYaml:
+  - k8s-clean/namespace/namespace.yaml
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+---
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
   name: webapp-preview-deployment
 build:
   artifacts:
@@ -15,8 +28,6 @@ build:
 manifests:
   kustomize:
     paths:
-    - k8s-clean/overlays/preview-gateway-cert
-    - k8s-clean/overlays/preview-gateway-infra
     - k8s-clean/overlays/preview-gateway
     buildArgs:
     - --load-restrictor=LoadRestrictionsNone
@@ -24,110 +35,5 @@ deploy:
   kubectl:
     flags:
       apply: ["--server-side", "--force-conflicts"]
-customActions:
-- name: setup-cert-and-infra
-  containers:
-  - name: kubectl-setup
-    image: gcr.io/google.com/cloudsdktool/cloud-sdk:latest
-    command: ["/bin/bash"]
-    args:
-    - "-c"
-    - |
-      set -ex
-      echo "=== Starting predeploy for certificate and infrastructure ==="
-      
-      # Check current directory and contents
-      echo "Current directory: $(pwd)"
-      echo "Directory contents:"
-      ls -la
-      
-      # Check Cloud Deploy environment variables
-      echo "Cloud Deploy environment variables:"
-      echo "CLOUD_DEPLOY_DELIVERY_PIPELINE: ${CLOUD_DEPLOY_DELIVERY_PIPELINE}"
-      echo "CLOUD_DEPLOY_RELEASE: ${CLOUD_DEPLOY_RELEASE}"
-      echo "CLOUD_DEPLOY_ROLLOUT: ${CLOUD_DEPLOY_ROLLOUT}"
-      echo "CLOUD_DEPLOY_PHASE: ${CLOUD_DEPLOY_PHASE}"
-      
-      # Download the rendered manifest from the correct path
-      echo "Downloading rendered manifest..."
-      BUCKET="gs://u2i-tenant-webapp-deploy-artifacts"
-      
-      # The pipeline name in the bucket already includes the hash
-      PIPELINE_WITH_HASH="webapp-preview-pipeline-a0f698d2aeb6418abfb81846b21d3b53"
-      
-      # Extract just the release name from the full path
-      RELEASE_NAME=$(echo "${CLOUD_DEPLOY_RELEASE}" | awk -F'/' '{print $NF}')
-      echo "Release name: ${RELEASE_NAME}"
-      
-      # The target is preview-gke
-      TARGET_NAME="preview-gke"
-      
-      # Construct the full path
-      MANIFEST_PATH="${BUCKET}/${PIPELINE_WITH_HASH}/${RELEASE_NAME}/${TARGET_NAME}/stable/manifest.yaml"
-      
-      echo "Downloading from: ${MANIFEST_PATH}"
-      if gsutil cp "${MANIFEST_PATH}" rendered.yaml; then
-        echo "Successfully downloaded rendered manifest"
-      else
-        echo "Failed to download manifest"
-        exit 1
-      fi
-      
-      # Get cluster credentials
-      gcloud container clusters get-credentials webapp-cluster \
-        --region=europe-west1 \
-        --project=u2i-tenant-webapp
-      
-      # First, let's see what's in the manifest
-      echo "Checking manifest contents..."
-      echo "=== First 50 lines of manifest ==="
-      head -50 rendered.yaml
-      echo "=== Manifest summary ==="
-      grep -E "^kind:|^  name:|app.kubernetes.io/component:" rendered.yaml | head -20
-      
-      echo "1. Creating namespace..."
-      # Create namespace first as all resources depend on it
-      kubectl apply -f rendered.yaml \
-        --selector="kind=Namespace" \
-        --server-side || {
-        echo "Failed to apply namespace, trying direct creation..."
-        kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f - --server-side
-      }
-      
-      echo "2. Applying certificate and infrastructure resources..."
-      # Apply HTTPRoute to trigger DNS creation
-      kubectl apply -f rendered.yaml \
-        --selector="kind=HTTPRoute" \
-        --server-side --timeout=300s || echo "No HTTPRoute found"
-      
-      # Apply certificate resources (will provision in background)
-      kubectl apply -f rendered.yaml \
-        --selector="app.kubernetes.io/component=certificate" \
-        --server-side --timeout=300s || echo "No certificate resources found"
-      
-      # Apply remaining infrastructure resources
-      echo "3. Applying all infrastructure resources..."
-      kubectl apply -f rendered.yaml \
-        --selector="app.kubernetes.io/component=infrastructure" \
-        --server-side --timeout=300s || {
-        echo "No infrastructure resources found with label, applying by kind..."
-        kubectl apply -f rendered.yaml \
-          --selector="kind=Service" \
-          --server-side --timeout=300s
-        kubectl apply -f rendered.yaml \
-          --selector="kind=ConfigMap" \
-          --server-side --timeout=300s
-        kubectl apply -f rendered.yaml \
-          --selector="kind=NetworkPolicy" \
-          --server-side --timeout=300s
-        kubectl apply -f rendered.yaml \
-          --selector="kind=HTTPRoute" \
-          --server-side --timeout=300s
-      }
-      
-      echo "=== Predeploy completed successfully ==="
-  executionMode:
-    local:
-      useLocalImages: true
 profiles:
 - name: preview-all
