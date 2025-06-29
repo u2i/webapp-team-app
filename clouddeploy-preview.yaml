@@ -19,7 +19,7 @@ serialPipeline:
       standard:
         verify: false
         predeploy:
-          actions: ["setup-cert-and-infra"]
+          actions: ["setup-namespace"]
 
 ---
 apiVersion: deploy.cloud.google.com/v1
