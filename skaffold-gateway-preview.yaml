@@ -126,8 +126,5 @@ customActions:
       }
       
       echo "=== Predeploy completed successfully ==="
-  executionMode:
-    local:
-      useLocalImages: true
 profiles:
 - name: preview-all
