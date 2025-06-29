@@ -15,9 +15,6 @@ resources:
 - ../../base/deployment.yaml
 - ../../base/service.yaml
 
-# Dev profile
-- ../../profiles/dev
-
 # Common labels for all resources - Skaffold will merge with skaffold.dev/run-id
 commonLabels:
   app.kubernetes.io/component: webapp
