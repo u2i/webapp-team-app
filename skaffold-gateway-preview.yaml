@@ -64,8 +64,8 @@ customActions:
         hostnames: 
         - "${DOMAIN}"
         parentRefs:
-        - name: external-gateway
-          namespace: asm-gateway
+        - name: webapp-gateway
+          namespace: infra-gw
         rules:
         - backendRefs:
           - name: webapp-service
