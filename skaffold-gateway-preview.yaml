@@ -94,14 +94,9 @@ customActions:
         kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f - --server-side
       }
       
-      echo "2. Applying certificate resources only..."
-      # Apply certificate resources (will provision in background)
-      kubectl apply -f rendered.yaml \
-        --selector="app.kubernetes.io/component=certificate" \
-        --server-side --timeout=300s || echo "No certificate resources found"
-      
-      # Skip HTTPRoute and NetworkPolicy - let main deployment handle them
+      # Skip certificate, HTTPRoute and NetworkPolicy - let main deployment handle them
       # so they get proper Skaffold tracking labels
+      echo "2. Skipping resource creation - main deployment will handle all resources"
       
       echo "=== Predeploy completed successfully ==="
   executionMode:
