@@ -31,7 +31,9 @@ jobs:
     
     - name: Deploy to QA
       run: |
-        gcloud deploy releases create "${GITHUB_REF_NAME}" \
+        # Convert tag name to valid release ID (replace dots with hyphens)
+        RELEASE_ID=$(echo "${GITHUB_REF_NAME}" | sed 's/\./-/g')
+        gcloud deploy releases create "${RELEASE_ID}" \
           --delivery-pipeline=webapp-qa-prod-pipeline \
           --region=${{ env.GCP_REGION }} \
           --project=${{ env.GCP_PROJECT }} \
