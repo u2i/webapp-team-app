@@ -22,6 +22,10 @@ resources:
 # Dev profile
 - ../../profiles/dev
 
+# Common labels for all resources - Skaffold will merge with skaffold.dev/run-id
+commonLabels:
+  app.kubernetes.io/component: webapp
+
 # Service patch to ensure ClusterIP
 patches:
 - path: service-patch.yaml
