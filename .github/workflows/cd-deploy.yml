@@ -27,7 +27,7 @@ on:
         type: string
 
 env:
-  PROJECT_ID: u2i-tenant-webapp
+  PROJECT_ID: u2i-tenant-webapp-nonprod
   REGION: europe-west1
   PIPELINE: webapp-delivery-pipeline
 
@@ -52,7 +52,7 @@ jobs:
       uses: google-github-actions/auth@v1
       with:
         workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
-        service_account: 'cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com'
+        service_account: 'cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com'
     
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
@@ -105,7 +105,7 @@ jobs:
           --region=$REGION \
           --delivery-pipeline=$PIPELINE \
           --source=. \
-          --gcs-source-staging-dir=gs://u2i-tenant-webapp-deploy-artifacts/source \
+          --gcs-source-staging-dir=gs://u2i-tenant-webapp-nonprod-deploy-artifacts/source \
           --labels="environment=nonproduction,compliance=iso27001-soc2-gdpr,deployed-by=github-actions"
         
         echo "✅ Created release: $RELEASE_NAME"
@@ -238,7 +238,7 @@ jobs:
             \`\`\`bash
             # After approval, run:
             gcloud deploy releases promote \\
-              --project=u2i-tenant-webapp \\
+              --project=u2i-tenant-webapp-nonprod \\
               --region=europe-west1 \\
               --delivery-pipeline=webapp-delivery-pipeline \\
               --release=${{ needs.deploy-nonprod.outputs.release-name }} \\
@@ -273,7 +273,7 @@ jobs:
       uses: google-github-actions/auth@v1
       with:
         workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
-        service_account: 'cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com'
+        service_account: 'cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com'
     
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
@@ -288,7 +288,7 @@ jobs:
         # Verify non-prod is healthy
         gcloud container clusters get-credentials webapp-cluster \
           --location=$REGION \
-          --project=u2i-tenant-webapp
+          --project=u2i-tenant-webapp-nonprod
         
         if ! kubectl get pods -l app=webapp -n webapp-team --field-selector=status.phase=Running | grep -q webapp; then
           echo "❌ Non-production environment is not healthy"

@@ -18,7 +18,7 @@ echo ""
 gcloud deploy releases create "${RELEASE_NAME}" \
   --delivery-pipeline=webapp-preview-pipeline \
   --region=europe-west1 \
-  --project=u2i-tenant-webapp \
+  --project=u2i-tenant-webapp-nonprod \
   --skaffold-file=skaffold-gateway-preview.yaml \
   --to-target=preview-gke-cert \
   --deploy-parameters="DOMAIN=${DOMAIN},PREVIEW_NAME=${PREVIEW_NAME},NAMESPACE=${NAMESPACE},CERT_NAME=webapp-preview-cert-${PREVIEW_NAME},CERT_ENTRY_NAME=webapp-preview-entry-${PREVIEW_NAME},ROUTE_NAME=webapp-preview-route-${PREVIEW_NAME},CERT_DESCRIPTION=Certificate for ${DOMAIN},API_URL=https://api-${DOMAIN}"

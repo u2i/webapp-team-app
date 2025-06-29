@@ -5,7 +5,7 @@
 set -euo pipefail
 
 # Configuration
-PROJECT_ID="u2i-tenant-webapp"
+PROJECT_ID="u2i-tenant-webapp-nonprod"
 REPO="u2i/webapp-team-app"  # Update this to your actual repo
 SERVICE_ACCOUNT_NAME="github-actions-sa"
 WORKLOAD_IDENTITY_POOL="github-actions-pool"

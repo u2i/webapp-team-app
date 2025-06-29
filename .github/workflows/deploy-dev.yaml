@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  GCP_PROJECT: u2i-tenant-webapp
+  GCP_PROJECT: u2i-tenant-webapp-nonprod
   GCP_REGION: europe-west1
   PIPELINE: webapp-dev-pipeline
 

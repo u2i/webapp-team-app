@@ -92,11 +92,11 @@ metadata:
     stage: certificate
 requireApproval: false
 gke:
-  cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
+  cluster: projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-cluster
 executionConfigs:
 - usages: [RENDER, DEPLOY]
-  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
-  artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
+  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com
+  artifactStorage: gs://u2i-tenant-webapp-nonprod-deploy-artifacts
 
 ---
 apiVersion: deploy.cloud.google.com/v1
@@ -108,11 +108,11 @@ metadata:
     stage: infrastructure
 requireApproval: false
 gke:
-  cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
+  cluster: projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-cluster
 executionConfigs:
 - usages: [RENDER, DEPLOY]
-  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
-  artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
+  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com
+  artifactStorage: gs://u2i-tenant-webapp-nonprod-deploy-artifacts
 
 ---
 apiVersion: deploy.cloud.google.com/v1
@@ -124,11 +124,11 @@ metadata:
     stage: application
 requireApproval: false
 gke:
-  cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
+  cluster: projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-cluster
 executionConfigs:
 - usages: [RENDER, DEPLOY]
-  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
-  artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
+  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com
+  artifactStorage: gs://u2i-tenant-webapp-nonprod-deploy-artifacts
 
 ---
 # QA Targets
@@ -143,11 +143,11 @@ metadata:
     data-residency: eu
 requireApproval: false
 gke:
-  cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
+  cluster: projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-cluster
 executionConfigs:
 - usages: [RENDER, DEPLOY]
-  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
-  artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
+  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com
+  artifactStorage: gs://u2i-tenant-webapp-nonprod-deploy-artifacts
 
 ---
 apiVersion: deploy.cloud.google.com/v1
@@ -161,11 +161,11 @@ metadata:
     data-residency: eu
 requireApproval: false
 gke:
-  cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
+  cluster: projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-cluster
 executionConfigs:
 - usages: [RENDER, DEPLOY]
-  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
-  artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
+  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com
+  artifactStorage: gs://u2i-tenant-webapp-nonprod-deploy-artifacts
 
 ---
 apiVersion: deploy.cloud.google.com/v1
@@ -179,11 +179,11 @@ metadata:
     data-residency: eu
 requireApproval: false
 gke:
-  cluster: projects/u2i-tenant-webapp/locations/europe-west1/clusters/webapp-cluster
+  cluster: projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-cluster
 executionConfigs:
 - usages: [RENDER, DEPLOY, VERIFY]
-  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
-  artifactStorage: gs://u2i-tenant-webapp-deploy-artifacts
+  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com
+  artifactStorage: gs://u2i-tenant-webapp-nonprod-deploy-artifacts
 
 ---
 # Production Targets
@@ -250,7 +250,7 @@ metadata:
     compliance: iso27001-soc2-gdpr
 description: "Auto-promote from cert to infra stage"
 suspended: false
-serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
+serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com
 selector:
 - target:
     id: dev-cert
@@ -269,7 +269,7 @@ metadata:
     compliance: iso27001-soc2-gdpr
 description: "Auto-promote from infra to app stage"
 suspended: false
-serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
+serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com
 selector:
 - target:
     id: dev-infra
@@ -289,7 +289,7 @@ metadata:
     compliance: iso27001-soc2-gdpr
 description: "Auto-promote from QA cert to infra stage"
 suspended: false
-serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
+serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com
 selector:
 - target:
     id: qa-cert
@@ -308,7 +308,7 @@ metadata:
     compliance: iso27001-soc2-gdpr
 description: "Auto-promote from QA infra to app stage"
 suspended: false
-serviceAccount: cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com
+serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com
 selector:
 - target:
     id: qa-infra

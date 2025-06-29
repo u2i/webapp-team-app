@@ -68,7 +68,7 @@ This includes:
 ## 🔧 Getting Started
 
 ### Prerequisites
-- Access to `u2i-tenant-webapp` GCP project
+- Access to `u2i-tenant-webapp-nonprod` GCP project
 - Membership in `webapp-team@u2i.com` Google Group
 - GitHub repository access with proper branch protection
 
@@ -80,7 +80,7 @@ docker run -p 8080:8080 webapp
 
 # Deploy to non-production  
 gcloud deploy releases create dev-$(date +%Y%m%d-%H%M%S) \
-  --project=u2i-tenant-webapp \
+  --project=u2i-tenant-webapp-nonprod \
   --region=europe-west1 \
   --delivery-pipeline=webapp-delivery-pipeline \
   --source=.
@@ -90,7 +90,7 @@ gcloud deploy releases create dev-$(date +%Y%m%d-%H%M%S) \
 ```bash
 # Promote to production (requires approval)
 gcloud deploy releases promote \
-  --project=u2i-tenant-webapp \
+  --project=u2i-tenant-webapp-nonprod \
   --region=europe-west1 \
   --delivery-pipeline=webapp-delivery-pipeline \
   --release=RELEASE_NAME \

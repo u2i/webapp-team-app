@@ -11,7 +11,7 @@ on:
       - 'Dockerfile'
 
 env:
-  PROJECT_ID: u2i-tenant-webapp
+  PROJECT_ID: u2i-tenant-webapp-nonprod
   REGION: europe-west1
 
 jobs:

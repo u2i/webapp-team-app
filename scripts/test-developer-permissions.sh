@@ -3,7 +3,7 @@
 
 set -e
 
-PROJECT_ID="u2i-tenant-webapp"
+PROJECT_ID="u2i-tenant-webapp-nonprod"
 REGION="europe-west1"
 PIPELINE="webapp-pipeline"
 TIMESTAMP=$(date +%Y%m%d%H%M%S)
@@ -70,7 +70,7 @@ CREATE_OUTPUT=$(gcloud deploy releases create $TEST_RELEASE \
     --region=$REGION \
     --delivery-pipeline=$PIPELINE \
     --skaffold-file=skaffold-unified.yaml \
-    --images=webapp=europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp:v5 2>&1)
+    --images=webapp=europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp:v5 2>&1)
 CREATE_RESULT=$?
 check_result $CREATE_RESULT "Can create releases" "$CREATE_OUTPUT"
 
@@ -167,7 +167,7 @@ check_result $VIEW_RESULT "Can view all rollouts" "$VIEW_OUTPUT"
 # Test 9: Check artifact upload permissions
 echo "9️⃣ Testing artifact upload permissions..."
 echo "test-content" > /tmp/test-artifact.txt
-UPLOAD_OUTPUT=$(gsutil cp /tmp/test-artifact.txt gs://u2i-tenant-webapp-deploy-artifacts/test/test-${TIMESTAMP}.txt 2>&1)
+UPLOAD_OUTPUT=$(gsutil cp /tmp/test-artifact.txt gs://u2i-tenant-webapp-nonprod-deploy-artifacts/test/test-${TIMESTAMP}.txt 2>&1)
 UPLOAD_RESULT=$?
 check_result $UPLOAD_RESULT "Can upload to deployment artifacts bucket" "$UPLOAD_OUTPUT"
 rm -f /tmp/test-artifact.txt
@@ -175,7 +175,7 @@ rm -f /tmp/test-artifact.txt
 # Test 10: Check Artifact Registry access
 echo "🔟 Testing Artifact Registry access..."
 AR_OUTPUT=$(gcloud artifacts docker images list \
-    europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images \
+    europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images \
     --project=$PROJECT_ID \
     --limit=1 2>&1)
 AR_RESULT=$?
