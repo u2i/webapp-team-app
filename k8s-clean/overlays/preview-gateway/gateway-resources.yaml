@@ -21,11 +21,11 @@ metadata:
     external-dns.alpha.kubernetes.io/ttl: "300"
 spec:
   hostnames: 
-  - "example.webapp.u2i.dev" # from-param: ${DOMAIN}
+  - "${DOMAIN}" # from-param: ${DOMAIN}
   parentRefs:
   - name: external-gateway
     namespace: asm-gateway
   rules:
   - backendRefs:
-    - name: preview-webapp-service # from-param: ${SERVICE_NAME}
+    - name: webapp-service # from-param: ${SERVICE_NAME}
       port: 80
