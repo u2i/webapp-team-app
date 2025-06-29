@@ -18,7 +18,7 @@ on:
         type: boolean
 
 env:
-  PROJECT_ID: u2i-tenant-webapp
+  PROJECT_ID: u2i-tenant-webapp-nonprod
   REGION: europe-west1
   PIPELINE: webapp-pipeline
 
@@ -107,7 +107,7 @@ jobs:
       uses: google-github-actions/auth@v1
       with:
         workload_identity_provider: 'projects/310843575960/locations/global/workloadIdentityPools/webapp-github-pool/providers/github'
-        service_account: 'cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com'
+        service_account: 'cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com'
     
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
@@ -136,7 +136,7 @@ jobs:
         # Get non-prod cluster credentials
         gcloud container clusters get-credentials webapp-cluster \
           --location=$REGION \
-          --project=u2i-tenant-webapp
+          --project=u2i-tenant-webapp-nonprod
         
         # Check if pods are healthy
         if ! kubectl get pods -l app=webapp -n webapp-team --field-selector=status.phase=Running | grep -q webapp; then
@@ -196,7 +196,7 @@ jobs:
       uses: google-github-actions/auth@v1
       with:
         workload_identity_provider: 'projects/310843575960/locations/global/workloadIdentityPools/webapp-github-pool/providers/github'
-        service_account: 'cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com'
+        service_account: 'cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com'
     
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v1

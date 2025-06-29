@@ -13,7 +13,7 @@ fi
 
 PREVIEW_NAME="pr-${PR_NUMBER}"
 NAMESPACE="webapp-preview-${PREVIEW_NAME}"
-PROJECT="u2i-tenant-webapp"
+PROJECT="u2i-tenant-webapp-nonprod"
 
 echo "🧹 Cleaning up preview environment for PR #${PR_NUMBER}"
 echo ""

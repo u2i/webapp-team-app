@@ -25,7 +25,7 @@ on:
         type: string
 
 env:
-  PROJECT_ID: u2i-tenant-webapp
+  PROJECT_ID: u2i-tenant-webapp-nonprod
   REGION: europe-west1
   PIPELINE: webapp-pipeline
 
@@ -64,7 +64,7 @@ jobs:
       uses: google-github-actions/auth@v1
       with:
         workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
-        service_account: 'cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com'
+        service_account: 'cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com'
     
     - name: Set up Cloud SDK
       if: steps.validate.outputs.valid == 'true'
@@ -118,7 +118,7 @@ jobs:
       uses: google-github-actions/auth@v1
       with:
         workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
-        service_account: 'cloud-deploy-sa@u2i-tenant-webapp.iam.gserviceaccount.com'
+        service_account: 'cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com'
     
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v1

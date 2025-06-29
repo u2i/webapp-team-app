@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script to set up Cloud Deploy approval permissions
 
-PROJECT_ID="u2i-tenant-webapp"
+PROJECT_ID="u2i-tenant-webapp-nonprod"
 REGION="europe-west1"
 PIPELINE="webapp-pipeline"
 

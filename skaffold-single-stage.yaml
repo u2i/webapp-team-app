@@ -17,11 +17,11 @@ metadata:
   name: webapp-deployment
 build:
   artifacts:
-  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
+  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
     docker:
       dockerfile: Dockerfile
   googleCloudBuild:
-    projectId: u2i-tenant-webapp
+    projectId: u2i-tenant-webapp-nonprod
     region: europe-west1
   tagPolicy:
     gitCommit:

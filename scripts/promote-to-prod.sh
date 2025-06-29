@@ -26,7 +26,7 @@ gcloud deploy releases promote \
     --release="${RELEASE_NAME}" \
     --delivery-pipeline=webapp-qa-prod-pipeline \
     --region=europe-west1 \
-    --project=u2i-tenant-webapp \
+    --project=u2i-tenant-webapp-prod \
     --to-target=prod
 
 echo ""
