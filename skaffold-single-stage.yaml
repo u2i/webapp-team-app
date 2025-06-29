@@ -1,0 +1,80 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-namespace
+# Namespace module - creates namespace for all environments
+manifests:
+  rawYaml:
+  - k8s-clean/namespace/namespace.yaml
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+---
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-deployment
+build:
+  artifacts:
+  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
+    docker:
+      dockerfile: Dockerfile
+  googleCloudBuild:
+    projectId: u2i-tenant-webapp
+    region: europe-west1
+  tagPolicy:
+    gitCommit:
+      variant: AbbrevCommitSha
+manifests:
+  kustomize:
+    paths:
+    - k8s-clean/overlays/dev
+    buildArgs:
+    - --load-restrictor=LoadRestrictionsNone
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+
+profiles:
+# Dev profile
+- name: dev
+  build:
+    tagPolicy:
+      gitCommit:
+        variant: AbbrevCommitSha
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/dev-gateway
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+
+# QA profile
+- name: qa
+  build:
+    tagPolicy:
+      gitCommit:
+        variant: AbbrevCommitSha
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/qa-gateway
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+
+# Production profile
+- name: prod
+  build:
+    googleCloudBuild:
+      projectId: u2i-tenant-webapp-prod
+    tagPolicy:
+      gitCommit:
+        variant: Tags
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/production-gateway
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
