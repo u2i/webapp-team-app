@@ -7,10 +7,10 @@ metadata:
   name: webapp-preview-cert-preview # from-param: ${CERT_NAME}
   namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
   annotations:
-    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp-nonprod
 spec:
   projectRef:
-    external: u2i-tenant-webapp
+    external: u2i-tenant-webapp-nonprod
   location: global
   description: Certificate for preview.webapp.u2i.dev # from-param: ${CERT_DESCRIPTION}
   managed:
@@ -25,13 +25,13 @@ metadata:
   name: webapp-preview-entry-preview # from-param: ${CERT_ENTRY_NAME}
   namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
   annotations:
-    cnrm.cloud.google.com/project-id: u2i-tenant-webapp
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp-nonprod
 spec:
   projectRef:
-    external: u2i-tenant-webapp
+    external: u2i-tenant-webapp-nonprod
   mapRef:
     name: webapp-cert-map
-    namespace: infra-gw
+    namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
   certificatesRefs:
   - name: webapp-preview-cert-preview # from-param: ${CERT_NAME}
   hostname: preview.webapp.u2i.dev # from-param: ${DOMAIN}
