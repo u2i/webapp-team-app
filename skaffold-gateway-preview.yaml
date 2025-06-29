@@ -15,8 +15,6 @@ apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
   name: webapp-preview-deployment
-requires:
-- configs: ["webapp-namespace"]
 build:
   artifacts:
   - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
