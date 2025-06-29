@@ -58,7 +58,7 @@ jobs:
           --region=${{ env.GCP_REGION }} \
           --project=${{ env.GCP_PROJECT }} \
           --skaffold-file=skaffold-gateway-preview.yaml \
-          --images=webapp=europe-west1-docker.pkg.dev/${{ env.GCP_PROJECT }}/webapp-images/webapp:${IMAGE_TAG} \
+          --images=europe-west1-docker.pkg.dev/${{ env.GCP_PROJECT }}/webapp-images/webapp=europe-west1-docker.pkg.dev/${{ env.GCP_PROJECT }}/webapp-images/webapp:${IMAGE_TAG} \
           --to-target=preview-gke \
           --deploy-parameters="DOMAIN=${DOMAIN},PREVIEW_NAME=${PREVIEW_NAME},NAMESPACE=${NAMESPACE},CERT_NAME=webapp-preview-cert-${PREVIEW_NAME},CERT_ENTRY_NAME=webapp-preview-entry-${PREVIEW_NAME},ROUTE_NAME=webapp-preview-route-${PREVIEW_NAME},CERT_DESCRIPTION=Certificate for ${DOMAIN},API_URL=https://api-${DOMAIN},ENV=preview,STAGE=preview,BOUNDARY=nonprod,TIER=preview,NAME_PREFIX=preview-,SERVICE_NAME=preview-webapp-service"
         
