@@ -37,13 +37,6 @@ serialPipeline:
     strategy:
       standard:
         verify: true
-        
-  # Production stage
-  - targetId: prod-gke
-    profiles: ["prod"]
-    strategy:
-      standard:
-        verify: true
 
 ---
 # Dev Target
