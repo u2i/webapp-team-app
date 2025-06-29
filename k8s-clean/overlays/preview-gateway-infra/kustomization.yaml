@@ -18,4 +18,8 @@ patches:
 
 # ConfigMap removed - not needed by the app
 
-# Labels removed - labels are applied directly in manifests
+# Labels for infrastructure resources
+labels:
+- pairs:
+    app.kubernetes.io/component: infrastructure
+  includeSelectors: false
