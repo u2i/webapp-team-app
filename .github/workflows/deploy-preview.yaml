@@ -29,6 +29,21 @@ jobs:
       with:
         install_components: 'gke-gcloud-auth-plugin'
     
+    - name: Build and push Docker image
+      run: |
+        # Configure Docker to use gcloud for authentication
+        gcloud auth configure-docker europe-west1-docker.pkg.dev
+        
+        # Build with PR-specific tag
+        PR_NUMBER=${{ github.event.pull_request.number }}
+        IMAGE_TAG="pr-${PR_NUMBER}-${GITHUB_SHA:0:7}"
+        IMAGE_BASE="europe-west1-docker.pkg.dev/${{ env.GCP_PROJECT }}/webapp-images/webapp"
+        
+        docker build -t "${IMAGE_BASE}:${IMAGE_TAG}" .
+        docker push "${IMAGE_BASE}:${IMAGE_TAG}"
+        
+        echo "✅ Docker image pushed: ${IMAGE_BASE}:${IMAGE_TAG}"
+    
     - name: Deploy Preview
       id: deploy
       run: |
@@ -36,12 +51,14 @@ jobs:
         PREVIEW_NAME="pr-${PR_NUMBER}"
         DOMAIN="${PREVIEW_NAME}.webapp.u2i.dev"
         NAMESPACE="webapp-preview-${PREVIEW_NAME}"
+        IMAGE_TAG="pr-${PR_NUMBER}-${GITHUB_SHA:0:7}"
         
         gcloud deploy releases create "${PREVIEW_NAME}-${GITHUB_SHA:0:7}" \
           --delivery-pipeline=${{ env.PIPELINE }} \
           --region=${{ env.GCP_REGION }} \
           --project=${{ env.GCP_PROJECT }} \
           --skaffold-file=skaffold-gateway-preview.yaml \
+          --images=europe-west1-docker.pkg.dev/${{ env.GCP_PROJECT }}/webapp-images/webapp:${IMAGE_TAG} \
           --to-target=preview-gke \
           --deploy-parameters="DOMAIN=${DOMAIN},PREVIEW_NAME=${PREVIEW_NAME},NAMESPACE=${NAMESPACE},CERT_NAME=webapp-preview-cert-${PREVIEW_NAME},CERT_ENTRY_NAME=webapp-preview-entry-${PREVIEW_NAME},ROUTE_NAME=webapp-preview-route-${PREVIEW_NAME},CERT_DESCRIPTION=Certificate for ${DOMAIN},API_URL=https://api-${DOMAIN},ENV=preview,STAGE=preview,BOUNDARY=nonprod,TIER=preview,NAME_PREFIX=preview-,SERVICE_NAME=preview-webapp-service"
         
