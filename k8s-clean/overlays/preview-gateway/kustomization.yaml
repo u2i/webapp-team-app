@@ -1,15 +1,30 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Stage 3: Application deployment
+# Single overlay for preview deployments
+# Combines all resources needed for preview environment
+
 resources:
+# Namespace
+- namespace.yaml
+
+# Certificate resources
+- certificate-resources.yaml
+
+# Base resources
 - ../../base/deployment.yaml
-- ../../profiles/dev  # Use dev profile for preview resources
+- ../../base/service.yaml
+- ../../base/network-policy.yaml
 
-# namePrefix removed - names are handled directly in manifests
+# Gateway routing
+- gateway-resources.yaml
 
-# Labels for application resources
-labels:
-- pairs:
-    app.kubernetes.io/component: application
-  includeSelectors: false
+# Dev profile
+- ../../profiles/dev
+
+# Service patch to ensure ClusterIP
+patches:
+- path: service-patch.yaml
+  target:
+    kind: Service
+    name: webapp-service
