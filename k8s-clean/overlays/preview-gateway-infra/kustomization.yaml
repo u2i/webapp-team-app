@@ -16,14 +16,7 @@ patches:
     kind: Service
     name: webapp-service
 
-# Environment config
-configMapGenerator:
-- name: webapp-env-config
-  literals:
-    - BOUNDARY=${BOUNDARY} # from-param: ${BOUNDARY}
-    - STAGE=${STAGE} # from-param: ${STAGE}
-    - API_URL=${API_URL} # from-param: ${API_URL}
-    - ENV=${ENV} # from-param: ${ENV}
+# ConfigMap removed - not needed by the app
 
 # Labels removed - labels are applied directly in manifests
 

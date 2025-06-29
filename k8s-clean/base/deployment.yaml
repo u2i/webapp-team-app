@@ -58,11 +58,7 @@ spec:
         - name: BOUNDARY
           value: "nonprod"
         - name: STAGE
-          valueFrom:
-            configMapKeyRef:
-              name: webapp-env-config
-              key: STAGE
-              optional: true
+          value: "${STAGE}" # from-param: ${STAGE}
         - name: REGION
           value: "europe-west1"
         - name: COMPLIANCE_MODE
