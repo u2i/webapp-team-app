@@ -43,6 +43,7 @@ jobs:
         docker push "${IMAGE_BASE}:${IMAGE_TAG}"
         
         echo "✅ Docker image pushed: ${IMAGE_BASE}:${IMAGE_TAG}"
+        echo "Image tag: ${IMAGE_TAG}"
     
     - name: Deploy Preview
       id: deploy
