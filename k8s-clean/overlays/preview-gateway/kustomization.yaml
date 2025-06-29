@@ -14,10 +14,6 @@ resources:
 # Base resources
 - ../../base/deployment.yaml
 - ../../base/service.yaml
-- ../../base/network-policy.yaml
-
-# Gateway routing
-- gateway-resources.yaml
 
 # Dev profile
 - ../../profiles/dev
