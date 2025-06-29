@@ -43,42 +43,39 @@ customActions:
       echo "Creating namespace ${NAMESPACE}..."
       kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f - --server-side
       
-      # Download the rendered manifest
-      echo "Downloading rendered manifest..."
-      BUCKET="gs://u2i-tenant-webapp-deploy-artifacts"
+      # Apply HTTPRoute and NetworkPolicy directly
+      echo "Applying HTTPRoute..."
+      cat <<EOF | kubectl apply -f - --server-side
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: ${NAME_PREFIX:-preview-}webapp-route
+  namespace: ${NAMESPACE}
+  labels:
+    app: webapp
+    stage: ${STAGE}
+    boundary: ${BOUNDARY}
+    tier: ${TIER}
+    environment: ${ENV}
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: "${DOMAIN}"
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  hostnames: 
+  - "${DOMAIN}"
+  parentRefs:
+  - name: external-gateway
+    namespace: asm-gateway
+  rules:
+  - backendRefs:
+    - name: webapp-service
+      port: 80
+EOF
       
-      # The pipeline name in the bucket includes hash
-      PIPELINE_WITH_HASH="webapp-preview-pipeline-a0f698d2aeb6418abfb81846b21d3b53"
-      
-      # Extract just the release name from the full path
-      RELEASE_NAME=$(echo "${CLOUD_DEPLOY_RELEASE}" | awk -F'/' '{print $NF}')
-      echo "Release name: ${RELEASE_NAME}"
-      
-      # The target is preview-gke
-      TARGET_NAME="preview-gke"
-      
-      # Construct the full path
-      MANIFEST_PATH="${BUCKET}/${PIPELINE_WITH_HASH}/${RELEASE_NAME}/${TARGET_NAME}/stable/manifest.yaml"
-      
-      echo "Downloading from: ${MANIFEST_PATH}"
-      if gsutil cp "${MANIFEST_PATH}" rendered.yaml; then
-        echo "Successfully downloaded rendered manifest"
-        
-        # Apply HTTPRoute and NetworkPolicy from rendered manifest
-        echo "Applying HTTPRoute..."
-        kubectl apply -f rendered.yaml \
-          --selector="kind=HTTPRoute" \
-          --namespace=${NAMESPACE} \
-          --server-side || echo "No HTTPRoute found"
-        
-        echo "Applying NetworkPolicy..."
-        kubectl apply -f rendered.yaml \
-          --selector="kind=NetworkPolicy" \
-          --namespace=${NAMESPACE} \
-          --server-side || echo "No NetworkPolicy found"
-      else
-        echo "Failed to download manifest, skipping network resources"
-      fi
+      echo "Applying NetworkPolicy..."
+      kubectl apply -f /workspace/k8s-clean/base/network-policy.yaml \
+        --namespace=${NAMESPACE} \
+        --server-side
       
       echo "=== Predeploy completed successfully ==="
   executionMode:
