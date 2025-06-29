@@ -1,7 +1,22 @@
 apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
+  name: webapp-namespace
+# Namespace module - just renders and deploys namespace
+manifests:
+  rawYaml:
+  - k8s-clean/namespace/namespace.yaml
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+---
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
   name: webapp-preview-deployment
+requires:
+- configs: ["webapp-namespace"]
 build:
   artifacts:
   - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp/webapp-images/webapp
@@ -22,30 +37,5 @@ deploy:
   kubectl:
     flags:
       apply: ["--server-side", "--force-conflicts"]
-customActions:
-- name: setup-namespace
-  containers:
-  - name: kubectl-setup
-    image: gcr.io/google.com/cloudsdktool/cloud-sdk:latest
-    command: ["/bin/bash"]
-    args:
-    - "-c"
-    - |
-      set -ex
-      echo "=== Creating namespace ==="
-      
-      # Get cluster credentials
-      gcloud container clusters get-credentials webapp-cluster \
-        --region=europe-west1 \
-        --project=u2i-tenant-webapp
-      
-      # Create namespace if it doesn't exist
-      echo "Creating namespace ${NAMESPACE}..."
-      kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f - --server-side
-      
-      echo "=== Namespace created successfully ==="
-  executionMode:
-    local:
-      useLocalImages: true
 profiles:
 - name: preview-all
