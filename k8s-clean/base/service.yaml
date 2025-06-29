@@ -10,7 +10,7 @@ metadata:
     tier: ${TIER} # from-param: ${TIER}
     environment: ${ENV} # from-param: ${ENV}
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: webapp
   ports:

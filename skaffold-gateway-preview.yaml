@@ -68,7 +68,7 @@ customActions:
           namespace: infra-gw
         rules:
         - backendRefs:
-          - name: webapp-service
+          - name: ${NAME_PREFIX}webapp-service
             port: 80
       EOF
       
