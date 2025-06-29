@@ -22,8 +22,8 @@ jobs:
     
     - uses: google-github-actions/auth@v2
       with:
-        workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-        service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+        workload_identity_provider: 'projects/495368984538/locations/global/workloadIdentityPools/webapp-github-wif/providers/github'
+        service_account: 'cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com'
     
     - uses: google-github-actions/setup-gcloud@v2
       with:
