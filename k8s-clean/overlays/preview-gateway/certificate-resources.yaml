@@ -31,7 +31,7 @@ spec:
     external: u2i-tenant-webapp-nonprod
   mapRef:
     name: webapp-cert-map
-    namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
+    namespace: infra-gw
   certificatesRefs:
   - name: webapp-preview-cert-preview # from-param: ${CERT_NAME}
   hostname: preview.webapp.u2i.dev # from-param: ${DOMAIN}
