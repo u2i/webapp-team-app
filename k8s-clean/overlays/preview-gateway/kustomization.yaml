@@ -8,8 +8,8 @@ resources:
 
 # namePrefix removed - names are handled directly in manifests
 
-# Labels removed - labels are applied directly in manifests
-
-# Common labels for all application resources
-commonLabels:
-  app.kubernetes.io/component: application
+# Labels for application resources
+labels:
+- pairs:
+    app.kubernetes.io/component: application
+  includeSelectors: false
