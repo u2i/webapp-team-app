@@ -3,14 +3,14 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
-    '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp/dev:${COMMIT_SHA}',
-    '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp/dev:latest',
+    '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:dev-${COMMIT_SHA}',
+    '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:dev-latest',
     '.'
   ]
 
 # Push the Docker image
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp/dev']
+  args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp']
 
 # Deploy using Cloud Deploy
 - name: 'google/cloud-sdk:alpine'
@@ -23,7 +23,7 @@ steps:
       --delivery-pipeline=webapp-dev-pipeline \
       --region=${_REGION} \
       --project=${_PROJECT_ID} \
-      --images="webapp=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp/dev:${COMMIT_SHA}" \
+      --images="webapp=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:dev-${COMMIT_SHA}" \
       --to-target=dev-gke \
       --skaffold-file=skaffold-single-stage.yaml \
       --deploy-parameters="NAMESPACE=webapp-dev,ENV=dev,API_URL=https://api-dev.webapp.u2i.dev,STAGE=dev,BOUNDARY=nonprod,TIER=standard,NAME_PREFIX=dev-,DOMAIN=dev.webapp.u2i.dev,ROUTE_NAME=webapp-dev-route,SERVICE_NAME=webapp-service,CERT_NAME=webapp-dev-cert,CERT_ENTRY_NAME=webapp-dev-entry,CERT_DESCRIPTION=Certificate for dev.webapp.u2i.dev"
