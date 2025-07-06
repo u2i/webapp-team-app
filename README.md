@@ -118,3 +118,4 @@ Before each deployment, ensure:
 
 Last deployment triggered after workload identity fix.
 Preview deployment test: 2025-06-29 - Testing with Config Connector CRDs installed
+Cloud Build preview trigger test: 2025-07-06 - Testing new Cloud Build trigger for PR previews
