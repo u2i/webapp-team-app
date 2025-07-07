@@ -1,22 +1,11 @@
 apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
-  name: webapp-namespace
-# Namespace module - just renders and deploys namespace
+  name: webapp-preview
+# Single configuration for preview deployments
 manifests:
   rawYaml:
   - k8s-clean/namespace/namespace.yaml
-deploy:
-  kubectl:
-    flags:
-      apply: ["--server-side", "--force-conflicts"]
----
-apiVersion: skaffold/v4beta13
-kind: Config
-metadata:
-  name: webapp-preview-deployment
-# No build section - image will be provided by Cloud Deploy
-manifests:
   kustomize:
     paths:
     - k8s-clean/overlays/preview-gateway
@@ -26,11 +15,3 @@ deploy:
   kubectl:
     flags:
       apply: ["--server-side", "--force-conflicts"]
-profiles:
-- name: preview-all
-  requires:
-  - config: webapp-namespace
-  - config: webapp-preview-deployment
-    # Activate all modules together
-    activation:
-    - kubeContext: {}
