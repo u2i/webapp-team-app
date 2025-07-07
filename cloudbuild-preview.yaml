@@ -52,15 +52,15 @@ steps:
       echo "$$SHORT_SHA" > /workspace/pr_number.txt
     fi
     
-    PR_ID=`cat /workspace/pr_number.txt`
-    if [ -z "$PR_ID" ]; then
+    # Read PR identifier without using a variable name that could be misinterpreted
+    if [ -z "`cat /workspace/pr_number.txt`" ]; then
       echo "ERROR: PR ID is empty!"
-      PR_ID="$$SHORT_SHA"
+      echo "$$SHORT_SHA" > /workspace/pr_number.txt
     fi
     
-    echo "Using PR identifier: $PR_ID"
+    echo "Using PR identifier: `cat /workspace/pr_number.txt`"
     
-    gcloud deploy releases create "preview-pr$PR_ID-$$SHORT_SHA" \
+    gcloud deploy releases create "preview-pr`cat /workspace/pr_number.txt`-$$SHORT_SHA" \
       --delivery-pipeline=webapp-preview-pipeline \
       --region=${_REGION} \
       --project=${_PROJECT_ID} \
