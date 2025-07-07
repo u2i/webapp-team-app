@@ -15,8 +15,6 @@ apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
   name: webapp-preview-deployment
-requires:
-- config: webapp-namespace
 # No build section - image will be provided by Cloud Deploy
 manifests:
   kustomize:
