@@ -24,7 +24,7 @@ steps:
     
     # Method 3: From commit message
     if [ ! -f /workspace/pr_number.txt ]; then
-      PR_FROM_COMMIT=$(git log -1 --pretty=%B | grep -oE '#[0-9]+' | head -1 | tr -d '#')
+      PR_FROM_COMMIT=`git log -1 --pretty=%B | grep -oE '#[0-9]+' | head -1 | tr -d '#'`
       if [ -n "$PR_FROM_COMMIT" ]; then
         echo "$PR_FROM_COMMIT" > /workspace/pr_number.txt
         echo "Extracted PR number from commit message: $PR_FROM_COMMIT"
@@ -37,7 +37,7 @@ steps:
       echo "WARNING: Could not determine PR number, using commit SHA: $SHORT_SHA"
     fi
     
-    echo "Final PR identifier: $(cat /workspace/pr_number.txt)"
+    echo "Final PR identifier: `cat /workspace/pr_number.txt`"
 
 # Build the Docker image
 - name: 'gcr.io/cloud-builders/docker'
@@ -45,7 +45,7 @@ steps:
   args:
   - '-c'
   - |
-    PR_ID=$(cat /workspace/pr_number.txt)
+    PR_ID=`cat /workspace/pr_number.txt`
     docker build \
       -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-$COMMIT_SHA \
       -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-pr$PR_ID \
@@ -61,7 +61,7 @@ steps:
   args:
   - '-c'
   - |
-    PR_ID=$(cat /workspace/pr_number.txt)
+    PR_ID=`cat /workspace/pr_number.txt`
     PREVIEW_NAME="pr-$PR_ID"
     DOMAIN="$PREVIEW_NAME.webapp.u2i.dev"
     NAMESPACE="webapp-preview-$PREVIEW_NAME"
@@ -84,13 +84,13 @@ steps:
   args:
   - '-c'
   - |
-    PR_ID=$(cat /workspace/pr_number.txt)
+    PR_ID=`cat /workspace/pr_number.txt`
     PREVIEW_NAME="pr-$PR_ID"
     PREVIEW_URL="https://$PREVIEW_NAME.webapp.u2i.dev"
     BUILD_URL="https://console.cloud.google.com/cloud-build/builds;region=${_REGION}/$BUILD_ID?project=${_PROJECT_ID}"
     
     # Get GitHub OAuth token
-    GITHUB_TOKEN=$(gcloud secrets versions access latest --secret=u2i-github-github-oauthtoken-3517b7 --project=u2i-bootstrap)
+    GITHUB_TOKEN=`gcloud secrets versions access latest --secret=u2i-github-github-oauthtoken-3517b7 --project=u2i-bootstrap`
     
     if [ -n "$GITHUB_TOKEN" ]; then
       # Only post comment if we have a numeric PR number
