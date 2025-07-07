@@ -30,4 +30,4 @@ deploy:
     flags:
       apply: ["--server-side", "--force-conflicts"]
 profiles:
-- name: dev-all
+- name: dev
