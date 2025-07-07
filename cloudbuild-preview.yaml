@@ -34,6 +34,9 @@ steps:
   id: 'deploy-preview'
   entrypoint: 'bash'
   args: ['scripts/deploy-preview.sh']
+  env:
+  - 'PROJECT_ID=${_PROJECT_ID}'
+  - 'REGION=${_REGION}'
 
 # Post comment on PR
 - name: 'google/cloud-sdk:alpine'

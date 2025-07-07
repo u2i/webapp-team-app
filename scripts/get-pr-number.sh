@@ -18,8 +18,7 @@ echo "================================"
 # First check if the GitHub token is available
 if [ -z "$GITHUB_TOKEN" ]; then
   echo "ERROR: GITHUB_TOKEN is not set"
-  echo "$SHORT_SHA" > /workspace/pr_number.txt
-  exit 0
+  exit 1
 fi
 
 # Method 1: Get PR number from GitHub API using commit SHA
@@ -43,19 +42,13 @@ if [ "$HTTP_STATUS" = "200" ]; then
     echo "$PR_NUMBER" > /workspace/pr_number.txt
     echo "Found PR #$PR_NUMBER from GitHub API"
   else
-    echo "No PR found in API response"
-    echo "$SHORT_SHA" > /workspace/pr_number.txt
+    echo "ERROR: No PR found in API response"
+    exit 1
   fi
 else
-  echo "GitHub API request failed with status $HTTP_STATUS"
+  echo "ERROR: GitHub API request failed with status $HTTP_STATUS"
   echo "Response: $RESPONSE_BODY"
-  echo "$SHORT_SHA" > /workspace/pr_number.txt
-fi
-
-# Ensure we always have a value
-if [ ! -f /workspace/pr_number.txt ] || [ ! -s /workspace/pr_number.txt ]; then
-  echo "$SHORT_SHA" > /workspace/pr_number.txt
-  echo "Using fallback: $SHORT_SHA"
+  exit 1
 fi
 
 echo "Final PR identifier: $(cat /workspace/pr_number.txt)"
