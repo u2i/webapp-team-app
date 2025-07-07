@@ -8,79 +8,42 @@ steps:
 # Extract PR number from the pull request
 - name: 'gcr.io/cloud-builders/gcloud'
   id: 'get-pr-number'
-  secretEnv: ['GITHUB_TOKEN']  # Mount the secret
+  secretEnv: ['GITHUB_TOKEN']
   entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    # Debug current context
-    echo "Current directory: $(pwd)"
-    ls -la
-    echo "Looking for scripts directory..."
-    ls -la scripts/ || echo "Scripts directory not found"
-    
-    # Run the script
-    bash scripts/get-pr-number.sh
+  args: ['scripts/get-pr-number.sh']
 
 # Build the Docker image
 - name: 'gcr.io/cloud-builders/docker'
+  id: 'build-image'
   entrypoint: 'bash'
   args:
   - '-c'
   - |
-    set -e  # Exit on error
     docker build \
-      -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-$$COMMIT_SHA \
-      -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-pr`cat /workspace/pr_number.txt` \
+      -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-$COMMIT_SHA \
+      -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-pr$(cat /workspace/pr_number.txt) \
       .
 
 # Push the Docker image
 - name: 'gcr.io/cloud-builders/docker'
+  id: 'push-image'
   args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp']
 
 # Deploy using Cloud Deploy
 - name: 'google/cloud-sdk:alpine'
+  id: 'deploy-preview'
   entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    set -e  # Exit on error
-    
-    # Ensure we have a valid PR identifier
-    if [ ! -f /workspace/pr_number.txt ]; then
-      echo "ERROR: pr_number.txt not found!"
-      echo "$$SHORT_SHA" > /workspace/pr_number.txt
-    fi
-    
-    # Read PR identifier without using a variable name that could be misinterpreted
-    if [ -z "`cat /workspace/pr_number.txt`" ]; then
-      echo "ERROR: PR ID is empty!"
-      echo "$$SHORT_SHA" > /workspace/pr_number.txt
-    fi
-    
-    echo "Using PR identifier: `cat /workspace/pr_number.txt`"
-    
-    gcloud deploy releases create "preview-pr`cat /workspace/pr_number.txt`-$$SHORT_SHA" \
-      --delivery-pipeline=webapp-preview-pipeline \
-      --region=${_REGION} \
-      --project=${_PROJECT_ID} \
-      --images="${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-$$COMMIT_SHA" \
-      --to-target=preview-gke \
-      --skaffold-file=skaffold-preview-deploy.yaml \
-      --deploy-parameters="NAMESPACE=webapp-preview-pr`cat /workspace/pr_number.txt`,ENV=preview,API_URL=https://api-pr`cat /workspace/pr_number.txt`.webapp.u2i.dev,STAGE=preview,BOUNDARY=nonprod,TIER=preview,NAME_PREFIX=preview-,DOMAIN=pr`cat /workspace/pr_number.txt`.webapp.u2i.dev,ROUTE_NAME=webapp-preview-route-pr`cat /workspace/pr_number.txt`,SERVICE_NAME=webapp-service,CERT_NAME=webapp-preview-cert-pr`cat /workspace/pr_number.txt`,CERT_ENTRY_NAME=webapp-preview-entry-pr`cat /workspace/pr_number.txt`,CERT_DESCRIPTION=Certificate for pr`cat /workspace/pr_number.txt`.webapp.u2i.dev" \
-      --impersonate-service-account=cloud-deploy-sa@${_PROJECT_ID}.iam.gserviceaccount.com
-    
-    echo "✅ Preview deployment initiated: https://pr`cat /workspace/pr_number.txt`.webapp.u2i.dev"
+  args: ['scripts/deploy-preview.sh']
 
 # Post comment on PR
 - name: 'google/cloud-sdk:alpine'
-  secretEnv: ['GITHUB_TOKEN']  # Mount the secret
+  id: 'post-comment'
+  secretEnv: ['GITHUB_TOKEN']
   entrypoint: 'bash'
   args: ['scripts/post-pr-comment.sh']
 
 options:
   logging: CLOUD_LOGGING_ONLY
-  dynamicSubstitutions: true
   
 substitutions:
   _PROJECT_ID: u2i-tenant-webapp-nonprod
