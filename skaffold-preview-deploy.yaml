@@ -26,3 +26,5 @@ deploy:
   kubectl:
     flags:
       apply: ["--server-side", "--force-conflicts"]
+profiles:
+- name: preview-all
