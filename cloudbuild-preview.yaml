@@ -1,0 +1,61 @@
+# No secrets needed here - GitHub App auth handled in script
+
+steps:
+# Extract PR number from the pull request
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: 'get-pr-number'
+  entrypoint: 'bash'
+  args: ['scripts/get-pr-number.sh']
+  env:
+  - '_PR_NUMBER=${_PR_NUMBER}'
+  - '_HEAD_BRANCH=${_HEAD_BRANCH}'
+  - '_BASE_BRANCH=${_BASE_BRANCH}'
+
+# Build the Docker image
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'build-image'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    docker build \
+      -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-$COMMIT_SHA \
+      -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-pr$(cat /workspace/pr_number.txt) \
+      .
+
+# Push the Docker image
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'push-image'
+  args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp']
+
+# Deploy using Cloud Deploy
+- name: 'google/cloud-sdk:alpine'
+  id: 'deploy-preview'
+  entrypoint: 'bash'
+  args: ['scripts/deploy-preview.sh']
+  env:
+  - 'PROJECT_ID=${_PROJECT_ID}'
+  - 'REGION=${_REGION}'
+  - 'COMMIT_SHA=$COMMIT_SHA'
+  - 'SHORT_SHA=$SHORT_SHA'
+
+# Post comment on PR using GitHub App
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
+  id: 'post-comment'
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    apk add --no-cache openssl jq
+    bash scripts/post-pr-comment-app.sh
+  env:
+  - 'PROJECT_ID=${_PROJECT_ID}'
+  - 'REGION=${_REGION}'
+  - 'BUILD_ID=$BUILD_ID'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  
+substitutions:
+  _PROJECT_ID: u2i-tenant-webapp-nonprod
+  _REGION: europe-west1
