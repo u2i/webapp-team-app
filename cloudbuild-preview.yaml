@@ -6,6 +6,7 @@ steps:
   args:
   - '-c'
   - |
+    set -e  # Exit on error
     # Try different methods to get PR number
     # Method 1: Direct from Cloud Build (if available)
     if [ -n "${_PR_NUMBER:-}" ]; then
@@ -45,6 +46,7 @@ steps:
   args:
   - '-c'
   - |
+    set -e  # Exit on error
     docker build \
       -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-$COMMIT_SHA \
       -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-pr`cat /workspace/pr_number.txt` \
@@ -60,6 +62,7 @@ steps:
   args:
   - '-c'
   - |
+    set -e  # Exit on error
     gcloud deploy releases create "preview-pr`cat /workspace/pr_number.txt`-$SHORT_SHA" \
       --delivery-pipeline=webapp-preview-pipeline \
       --region=${_REGION} \
@@ -77,6 +80,7 @@ steps:
   args:
   - '-c'
   - |
+    set -e  # Exit on error
     # Get GitHub OAuth token
     gcloud secrets versions access latest --secret=u2i-github-github-oauthtoken-3517b7 --project=u2i-bootstrap > /tmp/github_token
     
