@@ -14,7 +14,7 @@ description: "Dev deployment pipeline with single stage"
 serialPipeline:
   stages:
   - targetId: dev-gke
-    profiles: ["dev-all"]
+    profiles: ["dev"]
     strategy:
       standard:
         verify: false
