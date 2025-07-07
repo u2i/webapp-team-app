@@ -10,37 +10,7 @@ steps:
   id: 'get-pr-number'
   secretEnv: ['GITHUB_TOKEN']  # Mount the secret
   entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    set -e  # Exit on error
-    
-    # Debug: Print all available substitutions
-    echo "=== Cloud Build Substitutions ==="
-    echo "COMMIT_SHA: $$COMMIT_SHA"
-    echo "SHORT_SHA: $$SHORT_SHA"
-    echo "_PR_NUMBER: $${_PR_NUMBER:-not set}"
-    echo "_HEAD_BRANCH: $${_HEAD_BRANCH:-not set}"
-    echo "_BASE_BRANCH: $${_BASE_BRANCH:-not set}"
-    echo "BRANCH_NAME: $${BRANCH_NAME:-not set}"
-    echo "================================"
-    
-    # Method 1: Get PR number from GitHub API using commit SHA
-    echo "Checking GitHub API for PR associated with commit $$COMMIT_SHA..."
-    PR_NUMBER=$$(curl -s -H "Authorization: token $$GITHUB_TOKEN" \
-      "https://api.github.com/repos/u2i/webapp-team-app/commits/$$COMMIT_SHA/pulls" | \
-      jq -r '.[0].number // empty' || true)
-    
-    if [ -n "$$PR_NUMBER" ] && [ "$$PR_NUMBER" != "null" ]; then
-      echo "$$PR_NUMBER" > /workspace/pr_number.txt
-      echo "Found PR #$$PR_NUMBER from GitHub API"
-    else
-      # Fallback to commit SHA
-      echo "$$SHORT_SHA" > /workspace/pr_number.txt
-      echo "WARNING: Could not determine PR number, using commit SHA: $$SHORT_SHA"
-    fi
-    
-    echo "Final PR identifier: $$(cat /workspace/pr_number.txt)"
+  args: ['scripts/get-pr-number.sh']
 
 # Build the Docker image
 - name: 'gcr.io/cloud-builders/docker'
@@ -81,29 +51,7 @@ steps:
 - name: 'google/cloud-sdk:alpine'
   secretEnv: ['GITHUB_TOKEN']  # Mount the secret
   entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    set -e  # Exit on error
-    PR_ID=$$(cat /workspace/pr_number.txt)
-    
-    # Only post comment if we have a numeric PR number
-    if [[ "$$PR_ID" =~ ^[0-9]+$$ ]]; then
-      PREVIEW_URL="https://pr$${PR_ID}.webapp.u2i.dev"
-      BUILD_URL="https://console.cloud.google.com/cloud-build/builds;region=${_REGION}/$$BUILD_ID?project=${_PROJECT_ID}"
-      
-      curl -X POST \
-        -H "Authorization: token $$GITHUB_TOKEN" \
-        -H "Accept: application/vnd.github.v3+json" \
-        https://api.github.com/repos/u2i/webapp-team-app/issues/$${PR_ID}/comments \
-        -d "{
-          \"body\": \"🚀 **Preview deployment started!**\\n\\nYour preview will be available at: $${PREVIEW_URL}\\n\\nDeployment usually takes 5-10 minutes to complete.\\n\\n[View Build]($${BUILD_URL})\"
-        }"
-      
-      echo "Posted comment to PR #$${PR_ID}"
-    else
-      echo "Skipping PR comment - not a numeric PR number: $$PR_ID"
-    fi
+  args: ['scripts/post-pr-comment.sh']
 
 options:
   logging: CLOUD_LOGGING_ONLY
