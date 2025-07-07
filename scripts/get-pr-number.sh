@@ -11,19 +11,47 @@ echo "_BASE_BRANCH: ${_BASE_BRANCH:-not set}"
 echo "BRANCH_NAME: ${BRANCH_NAME:-not set}"
 echo "================================"
 
+# First check if the GitHub token is available
+if [ -z "$GITHUB_TOKEN" ]; then
+  echo "ERROR: GITHUB_TOKEN is not set"
+  echo "$SHORT_SHA" > /workspace/pr_number.txt
+  exit 0
+fi
+
 # Method 1: Get PR number from GitHub API using commit SHA
 echo "Checking GitHub API for PR associated with commit $COMMIT_SHA..."
-PR_NUMBER=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-  "https://api.github.com/repos/u2i/webapp-team-app/commits/$COMMIT_SHA/pulls" | \
-  jq -r '.[0].number // empty' || true)
 
-if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
-  echo "$PR_NUMBER" > /workspace/pr_number.txt
-  echo "Found PR #$PR_NUMBER from GitHub API"
+# Make the API call and capture the response
+API_RESPONSE=$(curl -s -w "\n%{http_code}" -H "Authorization: token $GITHUB_TOKEN" \
+  "https://api.github.com/repos/u2i/webapp-team-app/commits/$COMMIT_SHA/pulls")
+
+# Extract HTTP status code and response body
+HTTP_STATUS=$(echo "$API_RESPONSE" | tail -n 1)
+RESPONSE_BODY=$(echo "$API_RESPONSE" | sed '$d')
+
+echo "GitHub API HTTP Status: $HTTP_STATUS"
+
+if [ "$HTTP_STATUS" = "200" ]; then
+  # Parse PR number from response
+  PR_NUMBER=$(echo "$RESPONSE_BODY" | jq -r '.[0].number // empty' 2>/dev/null || echo "")
+  
+  if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ] && [ "$PR_NUMBER" != "" ]; then
+    echo "$PR_NUMBER" > /workspace/pr_number.txt
+    echo "Found PR #$PR_NUMBER from GitHub API"
+  else
+    echo "No PR found in API response"
+    echo "$SHORT_SHA" > /workspace/pr_number.txt
+  fi
 else
-  # Fallback to commit SHA
+  echo "GitHub API request failed with status $HTTP_STATUS"
+  echo "Response: $RESPONSE_BODY"
   echo "$SHORT_SHA" > /workspace/pr_number.txt
-  echo "WARNING: Could not determine PR number, using commit SHA: $SHORT_SHA"
+fi
+
+# Ensure we always have a value
+if [ ! -f /workspace/pr_number.txt ] || [ ! -s /workspace/pr_number.txt ]; then
+  echo "$SHORT_SHA" > /workspace/pr_number.txt
+  echo "Using fallback: $SHORT_SHA"
 fi
 
 echo "Final PR identifier: $(cat /workspace/pr_number.txt)"
