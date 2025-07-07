@@ -17,30 +17,30 @@ steps:
     
     # Debug: Print all available substitutions
     echo "=== Cloud Build Substitutions ==="
-    echo "COMMIT_SHA: $COMMIT_SHA"
-    echo "SHORT_SHA: $SHORT_SHA"
-    echo "_PR_NUMBER: ${_PR_NUMBER:-not set}"
-    echo "_HEAD_BRANCH: ${_HEAD_BRANCH:-not set}"
-    echo "_BASE_BRANCH: ${_BASE_BRANCH:-not set}"
-    echo "BRANCH_NAME: ${BRANCH_NAME:-not set}"
+    echo "COMMIT_SHA: $$COMMIT_SHA"
+    echo "SHORT_SHA: $$SHORT_SHA"
+    echo "_PR_NUMBER: $${_PR_NUMBER:-not set}"
+    echo "_HEAD_BRANCH: $${_HEAD_BRANCH:-not set}"
+    echo "_BASE_BRANCH: $${_BASE_BRANCH:-not set}"
+    echo "BRANCH_NAME: $${BRANCH_NAME:-not set}"
     echo "================================"
     
     # Method 1: Get PR number from GitHub API using commit SHA
-    echo "Checking GitHub API for PR associated with commit $COMMIT_SHA..."
-    PR_NUMBER=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-      "https://api.github.com/repos/u2i/webapp-team-app/commits/$COMMIT_SHA/pulls" | \
+    echo "Checking GitHub API for PR associated with commit $$COMMIT_SHA..."
+    PR_NUMBER=$$(curl -s -H "Authorization: token $$GITHUB_TOKEN" \
+      "https://api.github.com/repos/u2i/webapp-team-app/commits/$$COMMIT_SHA/pulls" | \
       jq -r '.[0].number // empty' || true)
     
-    if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
-      echo "$PR_NUMBER" > /workspace/pr_number.txt
-      echo "Found PR #$PR_NUMBER from GitHub API"
+    if [ -n "$$PR_NUMBER" ] && [ "$$PR_NUMBER" != "null" ]; then
+      echo "$$PR_NUMBER" > /workspace/pr_number.txt
+      echo "Found PR #$$PR_NUMBER from GitHub API"
     else
       # Fallback to commit SHA
-      echo "$SHORT_SHA" > /workspace/pr_number.txt
-      echo "WARNING: Could not determine PR number, using commit SHA: $SHORT_SHA"
+      echo "$$SHORT_SHA" > /workspace/pr_number.txt
+      echo "WARNING: Could not determine PR number, using commit SHA: $$SHORT_SHA"
     fi
     
-    echo "Final PR identifier: $(cat /workspace/pr_number.txt)"
+    echo "Final PR identifier: $$(cat /workspace/pr_number.txt)"
 
 # Build the Docker image
 - name: 'gcr.io/cloud-builders/docker'
@@ -50,7 +50,7 @@ steps:
   - |
     set -e  # Exit on error
     docker build \
-      -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-$COMMIT_SHA \
+      -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-$$COMMIT_SHA \
       -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-pr`cat /workspace/pr_number.txt` \
       .
 
@@ -65,11 +65,11 @@ steps:
   - '-c'
   - |
     set -e  # Exit on error
-    gcloud deploy releases create "preview-pr`cat /workspace/pr_number.txt`-$SHORT_SHA" \
+    gcloud deploy releases create "preview-pr`cat /workspace/pr_number.txt`-$$SHORT_SHA" \
       --delivery-pipeline=webapp-preview-pipeline \
       --region=${_REGION} \
       --project=${_PROJECT_ID} \
-      --images="${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-$COMMIT_SHA" \
+      --images="${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-$$COMMIT_SHA" \
       --to-target=preview-gke \
       --skaffold-file=skaffold-preview-deploy.yaml \
       --deploy-parameters="NAMESPACE=webapp-preview-pr`cat /workspace/pr_number.txt`,ENV=preview,API_URL=https://api-pr`cat /workspace/pr_number.txt`.webapp.u2i.dev,STAGE=preview,BOUNDARY=nonprod,TIER=preview,NAME_PREFIX=preview-,DOMAIN=pr`cat /workspace/pr_number.txt`.webapp.u2i.dev,ROUTE_NAME=webapp-preview-route-pr`cat /workspace/pr_number.txt`,SERVICE_NAME=webapp-service,CERT_NAME=webapp-preview-cert-pr`cat /workspace/pr_number.txt`,CERT_ENTRY_NAME=webapp-preview-entry-pr`cat /workspace/pr_number.txt`,CERT_DESCRIPTION=Certificate for pr`cat /workspace/pr_number.txt`.webapp.u2i.dev" \
@@ -85,24 +85,24 @@ steps:
   - '-c'
   - |
     set -e  # Exit on error
-    PR_ID=$(cat /workspace/pr_number.txt)
+    PR_ID=$$(cat /workspace/pr_number.txt)
     
     # Only post comment if we have a numeric PR number
-    if [[ "$PR_ID" =~ ^[0-9]+$ ]]; then
-      PREVIEW_URL="https://pr${PR_ID}.webapp.u2i.dev"
-      BUILD_URL="https://console.cloud.google.com/cloud-build/builds;region=${_REGION}/$BUILD_ID?project=${_PROJECT_ID}"
+    if [[ "$$PR_ID" =~ ^[0-9]+$$ ]]; then
+      PREVIEW_URL="https://pr$${PR_ID}.webapp.u2i.dev"
+      BUILD_URL="https://console.cloud.google.com/cloud-build/builds;region=${_REGION}/$$BUILD_ID?project=${_PROJECT_ID}"
       
       curl -X POST \
-        -H "Authorization: token $GITHUB_TOKEN" \
+        -H "Authorization: token $$GITHUB_TOKEN" \
         -H "Accept: application/vnd.github.v3+json" \
-        https://api.github.com/repos/u2i/webapp-team-app/issues/${PR_ID}/comments \
+        https://api.github.com/repos/u2i/webapp-team-app/issues/$${PR_ID}/comments \
         -d "{
-          \"body\": \"🚀 **Preview deployment started!**\\n\\nYour preview will be available at: ${PREVIEW_URL}\\n\\nDeployment usually takes 5-10 minutes to complete.\\n\\n[View Build](${BUILD_URL})\"
+          \"body\": \"🚀 **Preview deployment started!**\\n\\nYour preview will be available at: $${PREVIEW_URL}\\n\\nDeployment usually takes 5-10 minutes to complete.\\n\\n[View Build]($${BUILD_URL})\"
         }"
       
-      echo "Posted comment to PR #${PR_ID}"
+      echo "Posted comment to PR #$${PR_ID}"
     else
-      echo "Skipping PR comment - not a numeric PR number: $PR_ID"
+      echo "Skipping PR comment - not a numeric PR number: $$PR_ID"
     fi
 
 options:
