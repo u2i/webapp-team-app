@@ -6,7 +6,7 @@ PR_ID=$(cat /workspace/pr_number.txt)
 # Only post comment if we have a numeric PR number
 if [[ "$PR_ID" =~ ^[0-9]+$ ]]; then
   PREVIEW_URL="https://pr${PR_ID}.webapp.u2i.dev"
-  BUILD_URL="https://console.cloud.google.com/cloud-build/builds;region=${_REGION}/$BUILD_ID?project=${_PROJECT_ID}"
+  BUILD_URL="https://console.cloud.google.com/cloud-build/builds;region=${REGION}/$BUILD_ID?project=${PROJECT_ID}"
   
   curl -X POST \
     -H "Authorization: token $GITHUB_TOKEN" \

@@ -11,6 +11,9 @@ steps:
   secretEnv: ['GITHUB_TOKEN']
   entrypoint: 'bash'
   args: ['scripts/get-pr-number.sh']
+  env:
+  - 'COMMIT_SHA=$COMMIT_SHA'
+  - 'SHORT_SHA=$SHORT_SHA'
 
 # Build the Docker image
 - name: 'gcr.io/cloud-builders/docker'
@@ -44,6 +47,10 @@ steps:
   secretEnv: ['GITHUB_TOKEN']
   entrypoint: 'bash'
   args: ['scripts/post-pr-comment.sh']
+  env:
+  - 'PROJECT_ID=${_PROJECT_ID}'
+  - 'REGION=${_REGION}'
+  - 'BUILD_ID=$BUILD_ID'
 
 options:
   logging: CLOUD_LOGGING_ONLY
