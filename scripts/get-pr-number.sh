@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
+echo "=== Starting get-pr-number.sh ==="
+echo "Current directory: $(pwd)"
+echo "Script location: $0"
+
 # Debug: Print all available substitutions
 echo "=== Cloud Build Substitutions ==="
 echo "COMMIT_SHA: $COMMIT_SHA"

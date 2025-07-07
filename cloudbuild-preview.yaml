@@ -10,7 +10,17 @@ steps:
   id: 'get-pr-number'
   secretEnv: ['GITHUB_TOKEN']  # Mount the secret
   entrypoint: 'bash'
-  args: ['scripts/get-pr-number.sh']
+  args:
+  - '-c'
+  - |
+    # Debug current context
+    echo "Current directory: $(pwd)"
+    ls -la
+    echo "Looking for scripts directory..."
+    ls -la scripts/ || echo "Scripts directory not found"
+    
+    # Run the script
+    bash scripts/get-pr-number.sh
 
 # Build the Docker image
 - name: 'gcr.io/cloud-builders/docker'
@@ -35,7 +45,22 @@ steps:
   - '-c'
   - |
     set -e  # Exit on error
-    gcloud deploy releases create "preview-pr`cat /workspace/pr_number.txt`-$$SHORT_SHA" \
+    
+    # Ensure we have a valid PR identifier
+    if [ ! -f /workspace/pr_number.txt ]; then
+      echo "ERROR: pr_number.txt not found!"
+      echo "$$SHORT_SHA" > /workspace/pr_number.txt
+    fi
+    
+    PR_ID=`cat /workspace/pr_number.txt`
+    if [ -z "$PR_ID" ]; then
+      echo "ERROR: PR ID is empty!"
+      PR_ID="$$SHORT_SHA"
+    fi
+    
+    echo "Using PR identifier: $PR_ID"
+    
+    gcloud deploy releases create "preview-pr$PR_ID-$$SHORT_SHA" \
       --delivery-pipeline=webapp-preview-pipeline \
       --region=${_REGION} \
       --project=${_PROJECT_ID} \
