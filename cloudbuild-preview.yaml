@@ -69,7 +69,7 @@ steps:
       --project=${_PROJECT_ID} \
       --images="webapp=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-$COMMIT_SHA" \
       --to-target=preview-gke \
-      --skaffold-file=skaffold-gateway-preview.yaml \
+      --skaffold-file=skaffold-preview-deploy.yaml \
       --deploy-parameters="NAMESPACE=webapp-preview-pr`cat /workspace/pr_number.txt`,ENV=preview,API_URL=https://api-pr`cat /workspace/pr_number.txt`.webapp.u2i.dev,STAGE=preview,BOUNDARY=nonprod,TIER=preview,NAME_PREFIX=preview-,DOMAIN=pr`cat /workspace/pr_number.txt`.webapp.u2i.dev,ROUTE_NAME=webapp-preview-route-pr`cat /workspace/pr_number.txt`,SERVICE_NAME=webapp-service,CERT_NAME=webapp-preview-cert-pr`cat /workspace/pr_number.txt`,CERT_ENTRY_NAME=webapp-preview-entry-pr`cat /workspace/pr_number.txt`,CERT_DESCRIPTION=Certificate for pr`cat /workspace/pr_number.txt`.webapp.u2i.dev" \
       --impersonate-service-account=cloud-deploy-sa@${_PROJECT_ID}.iam.gserviceaccount.com
     
