@@ -1,12 +1,40 @@
 steps:
+# Extract PR number from branch name or commit message
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: 'get-pr-number'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    # For PR triggers, the branch name is usually in format: pr-NUMBER or NUMBER
+    if [[ "${BRANCH_NAME}" =~ ^[0-9]+$ ]]; then
+      PR_NUMBER="${BRANCH_NAME}"
+    elif [[ "${BRANCH_NAME}" =~ pr-([0-9]+) ]]; then
+      PR_NUMBER="${BASH_REMATCH[1]}"
+    else
+      # Fallback: try to extract from the commit message
+      PR_NUMBER=$(git log -1 --pretty=%B | grep -oE '#[0-9]+' | head -1 | tr -d '#')
+    fi
+    
+    if [ -z "$PR_NUMBER" ]; then
+      echo "ERROR: Could not determine PR number"
+      exit 1
+    fi
+    
+    echo "PR_NUMBER=${PR_NUMBER}" > /workspace/pr_env
+    echo "Detected PR number: ${PR_NUMBER}"
+
 # Build the Docker image
 - name: 'gcr.io/cloud-builders/docker'
-  args: [
-    'build',
-    '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-${COMMIT_SHA}',
-    '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-pr${_PR_NUMBER}',
-    '.'
-  ]
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    source /workspace/pr_env
+    docker build \
+      -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-${COMMIT_SHA} \
+      -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-pr${PR_NUMBER} \
+      .
 
 # Push the Docker image
 - name: 'gcr.io/cloud-builders/docker'
@@ -18,8 +46,9 @@ steps:
   args:
   - '-c'
   - |
-    # Extract PR number from the pull request
-    PR_NUMBER=${_PR_NUMBER}
+    source /workspace/pr_env
+    # Use the extracted PR number
+    PR_NUMBER=${PR_NUMBER}
     PREVIEW_NAME="pr-${PR_NUMBER}"
     DOMAIN="${PREVIEW_NAME}.webapp.u2i.dev"
     NAMESPACE="webapp-preview-${PREVIEW_NAME}"
@@ -42,7 +71,8 @@ steps:
   args:
   - '-c'
   - |
-    PR_NUMBER=${_PR_NUMBER}
+    source /workspace/pr_env
+    PR_NUMBER=${PR_NUMBER}
     PREVIEW_NAME="pr-${PR_NUMBER}"
     PREVIEW_URL="https://${PREVIEW_NAME}.webapp.u2i.dev"
     BUILD_URL="https://console.cloud.google.com/cloud-build/builds;region=${_REGION}/${BUILD_ID}?project=${_PROJECT_ID}"
