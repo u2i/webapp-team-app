@@ -24,10 +24,10 @@ steps:
     
     # Method 3: From commit message
     if [ ! -f /workspace/pr_number.txt ]; then
-      PR_FROM_COMMIT=`git log -1 --pretty=%B | grep -oE '#[0-9]+' | head -1 | tr -d '#'`
-      if [ -n "$PR_FROM_COMMIT" ]; then
-        echo "$PR_FROM_COMMIT" > /workspace/pr_number.txt
-        echo "Extracted PR number from commit message: $PR_FROM_COMMIT"
+      git log -1 --pretty=%B | grep -oE '#[0-9]+' | head -1 | tr -d '#' > /tmp/pr_from_commit
+      if [ -s /tmp/pr_from_commit ]; then
+        cat /tmp/pr_from_commit > /workspace/pr_number.txt
+        echo "Extracted PR number from commit message: `cat /tmp/pr_from_commit`"
       fi
     fi
     
@@ -45,10 +45,9 @@ steps:
   args:
   - '-c'
   - |
-    PR_ID=`cat /workspace/pr_number.txt`
     docker build \
       -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-$COMMIT_SHA \
-      -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-pr$PR_ID \
+      -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-pr`cat /workspace/pr_number.txt` \
       .
 
 # Push the Docker image
@@ -61,22 +60,16 @@ steps:
   args:
   - '-c'
   - |
-    PR_ID=`cat /workspace/pr_number.txt`
-    PREVIEW_NAME="pr-$PR_ID"
-    DOMAIN="$PREVIEW_NAME.webapp.u2i.dev"
-    NAMESPACE="webapp-preview-$PREVIEW_NAME"
-    
-    # Create Cloud Deploy release for preview
-    gcloud deploy releases create "preview-$PREVIEW_NAME-$SHORT_SHA" \
+    gcloud deploy releases create "preview-pr`cat /workspace/pr_number.txt`-$SHORT_SHA" \
       --delivery-pipeline=webapp-preview-pipeline \
       --region=${_REGION} \
       --project=${_PROJECT_ID} \
       --images="webapp=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-$COMMIT_SHA" \
       --to-target=preview-gke \
       --skaffold-file=skaffold-gateway-preview.yaml \
-      --deploy-parameters="NAMESPACE=$NAMESPACE,ENV=preview,API_URL=https://api-$DOMAIN,STAGE=preview,BOUNDARY=nonprod,TIER=preview,NAME_PREFIX=preview-,DOMAIN=$DOMAIN,ROUTE_NAME=webapp-preview-route-$PREVIEW_NAME,SERVICE_NAME=webapp-service,CERT_NAME=webapp-preview-cert-$PREVIEW_NAME,CERT_ENTRY_NAME=webapp-preview-entry-$PREVIEW_NAME,CERT_DESCRIPTION=Certificate for $DOMAIN"
+      --deploy-parameters="NAMESPACE=webapp-preview-pr`cat /workspace/pr_number.txt`,ENV=preview,API_URL=https://api-pr`cat /workspace/pr_number.txt`.webapp.u2i.dev,STAGE=preview,BOUNDARY=nonprod,TIER=preview,NAME_PREFIX=preview-,DOMAIN=pr`cat /workspace/pr_number.txt`.webapp.u2i.dev,ROUTE_NAME=webapp-preview-route-pr`cat /workspace/pr_number.txt`,SERVICE_NAME=webapp-service,CERT_NAME=webapp-preview-cert-pr`cat /workspace/pr_number.txt`,CERT_ENTRY_NAME=webapp-preview-entry-pr`cat /workspace/pr_number.txt`,CERT_DESCRIPTION=Certificate for pr`cat /workspace/pr_number.txt`.webapp.u2i.dev"
     
-    echo "✅ Preview deployment initiated: https://$DOMAIN"
+    echo "✅ Preview deployment initiated: https://pr`cat /workspace/pr_number.txt`.webapp.u2i.dev"
 
 # Post comment on PR
 - name: 'google/cloud-sdk:alpine'
@@ -84,26 +77,21 @@ steps:
   args:
   - '-c'
   - |
-    PR_ID=`cat /workspace/pr_number.txt`
-    PREVIEW_NAME="pr-$PR_ID"
-    PREVIEW_URL="https://$PREVIEW_NAME.webapp.u2i.dev"
-    BUILD_URL="https://console.cloud.google.com/cloud-build/builds;region=${_REGION}/$BUILD_ID?project=${_PROJECT_ID}"
-    
     # Get GitHub OAuth token
-    GITHUB_TOKEN=`gcloud secrets versions access latest --secret=u2i-github-github-oauthtoken-3517b7 --project=u2i-bootstrap`
+    gcloud secrets versions access latest --secret=u2i-github-github-oauthtoken-3517b7 --project=u2i-bootstrap > /tmp/github_token
     
-    if [ -n "$GITHUB_TOKEN" ]; then
+    if [ -s /tmp/github_token ]; then
       # Only post comment if we have a numeric PR number
-      if [[ "$PR_ID" =~ ^[0-9]+$ ]]; then
+      if [[ "`cat /workspace/pr_number.txt`" =~ ^[0-9]+$ ]]; then
         curl -X POST \
-          -H "Authorization: token $GITHUB_TOKEN" \
+          -H "Authorization: token `cat /tmp/github_token`" \
           -H "Accept: application/vnd.github.v3+json" \
-          https://api.github.com/repos/u2i/webapp-team-app/issues/$PR_ID/comments \
+          https://api.github.com/repos/u2i/webapp-team-app/issues/`cat /workspace/pr_number.txt`/comments \
           -d "{
-            \"body\": \"🚀 **Preview deployment started!**\\n\\nYour preview will be available at: $PREVIEW_URL\\n\\nDeployment usually takes 5-10 minutes to complete.\\n\\n[View Build]($BUILD_URL)\"
+            \"body\": \"🚀 **Preview deployment started!**\\n\\nYour preview will be available at: https://pr`cat /workspace/pr_number.txt`.webapp.u2i.dev\\n\\nDeployment usually takes 5-10 minutes to complete.\\n\\n[View Build](https://console.cloud.google.com/cloud-build/builds;region=${_REGION}/$BUILD_ID?project=${_PROJECT_ID})\"
           }"
       else
-        echo "Skipping PR comment - not a numeric PR number: $PR_ID"
+        echo "Skipping PR comment - not a numeric PR number: `cat /workspace/pr_number.txt`"
       fi
     fi
 
