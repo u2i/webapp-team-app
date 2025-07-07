@@ -15,7 +15,10 @@ apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
   name: webapp-preview-deployment
-# No build section - image will be provided by Cloud Deploy
+# Build section required for image substitution, but build is skipped when image is provided
+build:
+  artifacts:
+  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
 manifests:
   kustomize:
     paths:
