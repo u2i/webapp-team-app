@@ -1,24 +1,25 @@
 steps:
-# Extract PR number from branch name or commit message
+# Extract PR number from the pull request
 - name: 'gcr.io/cloud-builders/gcloud'
   id: 'get-pr-number'
   entrypoint: 'bash'
   args:
   - '-c'
   - |
-    # For PR triggers, the branch name is usually in format: pr-NUMBER or NUMBER
-    if [[ "${BRANCH_NAME}" =~ ^[0-9]+$ ]]; then
-      PR_NUMBER="${BRANCH_NAME}"
-    elif [[ "${BRANCH_NAME}" =~ pr-([0-9]+) ]]; then
+    # Cloud Build v2 provides _HEAD_BRANCH for PR builds
+    # Extract PR number from PR head branch or use a default
+    if [[ "$_HEAD_BRANCH" =~ ^[0-9]+$ ]]; then
+      PR_NUMBER="$_HEAD_BRANCH"
+    elif [[ "$_HEAD_BRANCH" =~ pr-([0-9]+) ]]; then
       PR_NUMBER="${BASH_REMATCH[1]}"
     else
-      # Fallback: try to extract from the commit message
+      # Try to get from git log
       PR_NUMBER=$(git log -1 --pretty=%B | grep -oE '#[0-9]+' | head -1 | tr -d '#')
     fi
     
     if [ -z "$PR_NUMBER" ]; then
-      echo "ERROR: Could not determine PR number"
-      exit 1
+      echo "WARNING: Could not determine PR number, using commit SHA"
+      PR_NUMBER="$SHORT_SHA"
     fi
     
     echo "PR_NUMBER=${PR_NUMBER}" > /workspace/pr_env
@@ -32,7 +33,7 @@ steps:
   - |
     source /workspace/pr_env
     docker build \
-      -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-${COMMIT_SHA} \
+      -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-$COMMIT_SHA \
       -t ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-pr${PR_NUMBER} \
       .
 
@@ -47,18 +48,16 @@ steps:
   - '-c'
   - |
     source /workspace/pr_env
-    # Use the extracted PR number
-    PR_NUMBER=${PR_NUMBER}
     PREVIEW_NAME="pr-${PR_NUMBER}"
     DOMAIN="${PREVIEW_NAME}.webapp.u2i.dev"
     NAMESPACE="webapp-preview-${PREVIEW_NAME}"
     
     # Create Cloud Deploy release for preview
-    gcloud deploy releases create "preview-${PREVIEW_NAME}-${SHORT_SHA}" \
+    gcloud deploy releases create "preview-${PREVIEW_NAME}-$SHORT_SHA" \
       --delivery-pipeline=webapp-preview-pipeline \
       --region=${_REGION} \
       --project=${_PROJECT_ID} \
-      --images="webapp=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-${COMMIT_SHA}" \
+      --images="webapp=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-$COMMIT_SHA" \
       --to-target=preview-gke \
       --skaffold-file=skaffold-gateway-preview.yaml \
       --deploy-parameters="NAMESPACE=${NAMESPACE},ENV=preview,API_URL=https://api-${DOMAIN},STAGE=preview,BOUNDARY=nonprod,TIER=preview,NAME_PREFIX=preview-,DOMAIN=${DOMAIN},ROUTE_NAME=webapp-preview-route-${PREVIEW_NAME},SERVICE_NAME=webapp-service,CERT_NAME=webapp-preview-cert-${PREVIEW_NAME},CERT_ENTRY_NAME=webapp-preview-entry-${PREVIEW_NAME},CERT_DESCRIPTION=Certificate for ${DOMAIN}"
@@ -72,10 +71,9 @@ steps:
   - '-c'
   - |
     source /workspace/pr_env
-    PR_NUMBER=${PR_NUMBER}
     PREVIEW_NAME="pr-${PR_NUMBER}"
     PREVIEW_URL="https://${PREVIEW_NAME}.webapp.u2i.dev"
-    BUILD_URL="https://console.cloud.google.com/cloud-build/builds;region=${_REGION}/${BUILD_ID}?project=${_PROJECT_ID}"
+    BUILD_URL="https://console.cloud.google.com/cloud-build/builds;region=${_REGION}/$BUILD_ID?project=${_PROJECT_ID}"
     
     # Get GitHub OAuth token
     GITHUB_TOKEN=$(gcloud secrets versions access latest --secret=u2i-github-github-oauthtoken-3517b7 --project=u2i-bootstrap)
