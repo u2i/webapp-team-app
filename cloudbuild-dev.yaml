@@ -1,6 +1,7 @@
 steps:
 # Build the Docker image
 - name: 'gcr.io/cloud-builders/docker'
+  id: 'build-image'
   args: [
     'build',
     '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:dev-${COMMIT_SHA}',
@@ -10,100 +11,34 @@ steps:
 
 # Push the Docker image
 - name: 'gcr.io/cloud-builders/docker'
+  id: 'push-image'
   args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp']
 
 # Deploy using Cloud Deploy
 - name: 'google/cloud-sdk:alpine'
+  id: 'deploy-dev'
   entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    # Create Cloud Deploy release for dev
-    gcloud deploy releases create "dev-${SHORT_SHA}" \
-      --delivery-pipeline=webapp-dev-pipeline \
-      --region=${_REGION} \
-      --project=${_PROJECT_ID} \
-      --images="webapp=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:dev-${COMMIT_SHA}" \
-      --to-target=dev-gke \
-      --skaffold-file=skaffold-single-stage.yaml \
-      --deploy-parameters="NAMESPACE=webapp-dev,ENV=dev,API_URL=https://api-dev.webapp.u2i.dev,STAGE=dev,BOUNDARY=nonprod,TIER=standard,NAME_PREFIX=dev-,DOMAIN=dev.webapp.u2i.dev,ROUTE_NAME=webapp-dev-route,SERVICE_NAME=webapp-service,CERT_NAME=webapp-dev-cert,CERT_ENTRY_NAME=webapp-dev-entry,CERT_DESCRIPTION=Certificate for dev.webapp.u2i.dev"
-    
-    echo "✅ Dev deployment initiated: https://dev.webapp.u2i.dev"
+  args: ['scripts/deploy-dev.sh']
+  env:
+  - 'PROJECT_ID=${_PROJECT_ID}'
+  - 'REGION=${_REGION}'
+  - 'COMMIT_SHA=$COMMIT_SHA'
+  - 'SHORT_SHA=$SHORT_SHA'
 
 # Send Slack notification
-- name: 'google/cloud-sdk:alpine'
-  entrypoint: 'bash'
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
+  id: 'slack-notification'
+  entrypoint: 'sh'
   args:
   - '-c'
   - |
-    COMMIT_SHA=${COMMIT_SHA:0:7}
-    COMMIT_MESSAGE=$(git log -1 --pretty=%s)
-    AUTHOR=$(git log -1 --pretty=%an)
-    DEV_URL="https://dev.webapp.u2i.dev"
-    BUILD_URL="https://console.cloud.google.com/cloud-build/builds;region=${_REGION}/${BUILD_ID}?project=${_PROJECT_ID}"
-    
-    # Get Slack token
-    SLACK_TOKEN=$(gcloud secrets versions access latest --secret=slack-bot-token --project=u2i-security)
-    
-    if [ -n "${SLACK_TOKEN}" ]; then
-      curl -X POST https://slack.com/api/chat.postMessage \
-        -H "Authorization: Bearer ${SLACK_TOKEN}" \
-        -H "Content-Type: application/json" \
-        -d '{
-          "channel": "#webapp-deployments",
-          "blocks": [
-            {
-              "type": "header",
-              "text": {
-                "type": "plain_text",
-                "text": "🚀 Dev Deployment Complete"
-              }
-            },
-            {
-              "type": "section",
-              "fields": [
-                {
-                  "type": "mrkdwn",
-                  "text": "*Environment:*\nDev"
-                },
-                {
-                  "type": "mrkdwn",
-                  "text": "*Commit:*\n`'${COMMIT_SHA}'`"
-                },
-                {
-                  "type": "mrkdwn",
-                  "text": "*Author:*\n'${AUTHOR}'"
-                },
-                {
-                  "type": "mrkdwn",
-                  "text": "*Message:*\n'${COMMIT_MESSAGE}'"
-                }
-              ]
-            },
-            {
-              "type": "actions",
-              "elements": [
-                {
-                  "type": "button",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "View Application"
-                  },
-                  "url": "'${DEV_URL}'"
-                },
-                {
-                  "type": "button",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "View Build"
-                  },
-                  "url": "'${BUILD_URL}'"
-                }
-              ]
-            }
-          ]
-        }'
-    fi
+    apk add --no-cache jq
+    bash scripts/slack-notification.sh
+  env:
+  - 'PROJECT_ID=${_PROJECT_ID}'
+  - 'REGION=${_REGION}'
+  - 'COMMIT_SHA=$COMMIT_SHA'
+  - 'BUILD_ID=$BUILD_ID'
 
 options:
   logging: CLOUD_LOGGING_ONLY
