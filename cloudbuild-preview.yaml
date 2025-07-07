@@ -6,15 +6,22 @@ steps:
   args:
   - '-c'
   - |
-    # Cloud Build v2 provides _HEAD_BRANCH for PR builds
-    # Extract PR number from PR head branch or use a default
-    if [[ "$_HEAD_BRANCH" =~ ^[0-9]+$ ]]; then
+    # Check if _PR_NUMBER is available (Cloud Build v2 PR trigger)
+    if [ -n "${_PR_NUMBER}" ]; then
+      PR_NUMBER="${_PR_NUMBER}"
+      echo "Using _PR_NUMBER from Cloud Build: ${PR_NUMBER}"
+    elif [[ "$_HEAD_BRANCH" =~ ^[0-9]+$ ]]; then
       PR_NUMBER="$_HEAD_BRANCH"
+      echo "Extracted PR number from head branch: ${PR_NUMBER}"
     elif [[ "$_HEAD_BRANCH" =~ pr-([0-9]+) ]]; then
       PR_NUMBER="${BASH_REMATCH[1]}"
+      echo "Extracted PR number from head branch pattern: ${PR_NUMBER}"
     else
       # Try to get from git log
       PR_NUMBER=$(git log -1 --pretty=%B | grep -oE '#[0-9]+' | head -1 | tr -d '#')
+      if [ -n "$PR_NUMBER" ]; then
+        echo "Extracted PR number from commit message: ${PR_NUMBER}"
+      fi
     fi
     
     if [ -z "$PR_NUMBER" ]; then
@@ -90,6 +97,7 @@ steps:
 
 options:
   logging: CLOUD_LOGGING_ONLY
+  dynamicSubstitutions: true
   
 substitutions:
   _PROJECT_ID: u2i-tenant-webapp-nonprod
