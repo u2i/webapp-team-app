@@ -4,8 +4,8 @@ steps:
   id: 'build-image'
   args: [
     'build',
-    '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:dev-${COMMIT_SHA}',
-    '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:dev-latest',
+    '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:qa-${COMMIT_SHA}',
+    '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:qa-latest',
     '.'
   ]
 
@@ -16,9 +16,9 @@ steps:
 
 # Deploy using Cloud Deploy
 - name: 'google/cloud-sdk:alpine'
-  id: 'deploy-dev'
+  id: 'deploy-qa'
   entrypoint: 'bash'
-  args: ['scripts/deploy-dev.sh']
+  args: ['scripts/deploy-qa.sh']
   env:
   - 'PROJECT_ID=${_PROJECT_ID}'
   - 'REGION=${_REGION}'
@@ -32,9 +32,9 @@ steps:
   args:
   - '-c'
   - |
-    # Use the generic notification script with Dev environment
-    export ENVIRONMENT="Dev"
-    export ENVIRONMENT_URL="https://dev.webapp.u2i.dev"
+    # Update the notification script to handle QA environment
+    export ENVIRONMENT="QA"
+    export ENVIRONMENT_URL="https://qa.webapp.u2i.dev"
     apk add --no-cache jq
     bash scripts/slack-notification-env.sh
   env:
