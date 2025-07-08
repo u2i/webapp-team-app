@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: webapp-pdb
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: webapp
+      app.kubernetes.io/component: webapp
+  # Allow disruption during maintenance windows
+  unhealthyPodEvictionPolicy: AlwaysAllow
