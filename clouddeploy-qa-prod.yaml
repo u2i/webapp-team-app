@@ -62,6 +62,6 @@ executionConfigs:
   - usages:
       - RENDER
       - DEPLOY
-    serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-prod.iam.gserviceaccount.com
+    serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com
     artifactStorage: gs://u2i-tenant-webapp-prod-deploy-artifacts
     executionTimeout: 3600s
