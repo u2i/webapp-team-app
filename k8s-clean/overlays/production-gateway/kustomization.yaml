@@ -26,8 +26,5 @@ commonLabels:
   compliance: iso27001-soc2-gdpr
   data-residency: eu
 
-# Note: Replica count is set via patches since base uses parameterized names
-
-# Patches
-patchesStrategicMerge:
-- replicas-patch.yaml
+# Note: Production uses the default replica count from base (2)
+# This can be adjusted post-deployment if needed
