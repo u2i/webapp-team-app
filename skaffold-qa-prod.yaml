@@ -1,0 +1,81 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-qa-prod-deployment
+# Build section required for image substitution, but build is skipped when image is provided
+build:
+  artifacts:
+  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
+    # This image is used across both QA and Prod deployments
+manifests:
+  kustomize:
+    paths:
+    - k8s-clean/overlays/qa-gateway  # Default to QA
+    buildArgs:
+    - --load-restrictor=LoadRestrictionsNone
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+profiles:
+# QA Profile
+- name: qa
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/qa-gateway
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  # For QA, we deploy the namespace from the same project
+  requires:
+  - configs:
+    - webapp-namespace-qa
+
+# Production Profile
+- name: prod
+  build:
+    artifacts:
+    - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-prod/webapp-images/webapp
+      # For prod, we use the prod artifact registry
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/production-gateway
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  # For prod, we deploy the namespace from the same project
+  requires:
+  - configs:
+    - webapp-namespace-prod
+---
+# QA Namespace Configuration
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-namespace-qa
+manifests:
+  rawYaml:
+  - k8s-clean/namespace/namespace.yaml
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+profiles:
+- name: qa
+  # QA namespace configuration
+---
+# Production Namespace Configuration
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-namespace-prod
+manifests:
+  rawYaml:
+  - k8s-clean/namespace/namespace.yaml
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+profiles:
+- name: prod
+  # Production namespace configuration
