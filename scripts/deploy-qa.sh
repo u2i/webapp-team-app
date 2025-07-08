@@ -68,7 +68,7 @@ gcloud deploy releases create "qa-${SHORT_SHA}" \
   --project=${PROJECT_ID} \
   --images="${REGION}-docker.pkg.dev/${PROJECT_ID}/webapp-images/webapp=${REGION}-docker.pkg.dev/${PROJECT_ID}/webapp-images/webapp:qa-${COMMIT_SHA}" \
   --to-target=qa-gke \
-  --skaffold-file=skaffold-qa-deploy.yaml \
+  --skaffold-file=skaffold-qa-prod.yaml \
   --deploy-parameters="NAMESPACE=${NAMESPACE},ENV=${ENV},API_URL=${API_URL},STAGE=${STAGE},BOUNDARY=${BOUNDARY},TIER=${TIER},NAME_PREFIX=${NAME_PREFIX},DOMAIN=${DOMAIN},ROUTE_NAME=${ROUTE_NAME},SERVICE_NAME=${SERVICE_NAME},CERT_NAME=${CERT_NAME},CERT_ENTRY_NAME=${CERT_ENTRY_NAME},CERT_DESCRIPTION=${CERT_DESCRIPTION}"
 
 echo "✅ QA deployment initiated: https://${DOMAIN}"
