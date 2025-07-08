@@ -48,9 +48,10 @@ CERT_DESCRIPTION="Certificate for qa.webapp.u2i.dev"
 
 # Create Cloud Deploy release for QA
 echo "Creating Cloud Deploy release for QA environment..."
-# Note: Do NOT impersonate any service account here. The Cloud Build job runs as webapp-ci
-# which already has the necessary permissions to create releases for the QA/Prod pipeline.
-# The pipeline itself specifies which service accounts to use for each stage.
+# For the QA/Prod pipeline that spans multiple projects, we need to impersonate
+# cloud-deploy-sa@prod which has permissions across both projects.
+# This avoids the ACTAS_PERMISSION_DENIED error when Cloud Deploy validates
+# permissions for all stages in the pipeline.
 gcloud deploy releases create "qa-${SHORT_SHA}" \
   --delivery-pipeline=webapp-qa-prod-pipeline \
   --region=${REGION} \
@@ -58,7 +59,8 @@ gcloud deploy releases create "qa-${SHORT_SHA}" \
   --images="${REGION}-docker.pkg.dev/${PROJECT_ID}/webapp-images/webapp=${REGION}-docker.pkg.dev/${PROJECT_ID}/webapp-images/webapp:qa-${COMMIT_SHA}" \
   --to-target=qa-gke \
   --skaffold-file=skaffold-qa-deploy.yaml \
-  --deploy-parameters="NAMESPACE=${NAMESPACE},ENV=${ENV},API_URL=${API_URL},STAGE=${STAGE},BOUNDARY=${BOUNDARY},TIER=${TIER},NAME_PREFIX=${NAME_PREFIX},DOMAIN=${DOMAIN},ROUTE_NAME=${ROUTE_NAME},SERVICE_NAME=${SERVICE_NAME},CERT_NAME=${CERT_NAME},CERT_ENTRY_NAME=${CERT_ENTRY_NAME},CERT_DESCRIPTION=${CERT_DESCRIPTION}"
+  --deploy-parameters="NAMESPACE=${NAMESPACE},ENV=${ENV},API_URL=${API_URL},STAGE=${STAGE},BOUNDARY=${BOUNDARY},TIER=${TIER},NAME_PREFIX=${NAME_PREFIX},DOMAIN=${DOMAIN},ROUTE_NAME=${ROUTE_NAME},SERVICE_NAME=${SERVICE_NAME},CERT_NAME=${CERT_NAME},CERT_ENTRY_NAME=${CERT_ENTRY_NAME},CERT_DESCRIPTION=${CERT_DESCRIPTION}" \
+  --impersonate-service-account=cloud-deploy-sa@u2i-tenant-webapp-prod.iam.gserviceaccount.com
 
 echo "✅ QA deployment initiated: https://${DOMAIN}"
 echo "ℹ️  After QA validation, the release can be promoted to production with approval"
