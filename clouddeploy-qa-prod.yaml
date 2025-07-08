@@ -14,44 +14,44 @@ serialPipeline:
   stages:
   - targetId: qa-gke
     profiles:
-    - qa
+      - qa
     strategy:
       standard: {}
     deployParameters:
-    - values:
-        NAMESPACE: "webapp-qa"
-        ENV: "qa"
-        API_URL: "https://api-qa.webapp.u2i.dev"
-        STAGE: "qa"
-        BOUNDARY: "nonprod"
-        TIER: "standard"
-        NAME_PREFIX: "qa-"
-        DOMAIN: "qa.webapp.u2i.dev"
-        ROUTE_NAME: "webapp-qa-route"
-        SERVICE_NAME: "qa-webapp-service"
-        CERT_NAME: "webapp-qa-cert"
-        CERT_ENTRY_NAME: "webapp-qa-entry"
-        CERT_DESCRIPTION: "Certificate for qa.webapp.u2i.dev"
+      - values:
+          NAMESPACE: "webapp-qa"
+          ENV: "qa"
+          API_URL: "https://api-qa.webapp.u2i.dev"
+          STAGE: "qa"
+          BOUNDARY: "nonprod"
+          TIER: "standard"
+          NAME_PREFIX: "qa-"
+          DOMAIN: "qa.webapp.u2i.dev"
+          ROUTE_NAME: "webapp-qa-route"
+          SERVICE_NAME: "qa-webapp-service"
+          CERT_NAME: "webapp-qa-cert"
+          CERT_ENTRY_NAME: "webapp-qa-entry"
+          CERT_DESCRIPTION: "Certificate for qa.webapp.u2i.dev"
   - targetId: prod-gke
     profiles:
-    - prod
+      - prod
     strategy:
       standard: {}
     deployParameters:
-    - values:
-        NAMESPACE: "webapp-prod"
-        ENV: "prod"
-        API_URL: "https://api.webapp.u2i.com"
-        STAGE: "prod"
-        BOUNDARY: "prod"
-        TIER: "standard"
-        NAME_PREFIX: ""  # No prefix for production
-        DOMAIN: "webapp.u2i.com"
-        ROUTE_NAME: "webapp-route"
-        SERVICE_NAME: "webapp-service"
-        CERT_NAME: "webapp-prod-cert"
-        CERT_ENTRY_NAME: "webapp-prod-entry"
-        CERT_DESCRIPTION: "Certificate for webapp.u2i.com"
+      - values:
+          NAMESPACE: "webapp-prod"
+          ENV: "prod"
+          API_URL: "https://api.webapp.u2i.com"
+          STAGE: "prod"
+          BOUNDARY: "prod"
+          TIER: "standard"
+          NAME_PREFIX: "prod-"
+          DOMAIN: "webapp.u2i.com"
+          ROUTE_NAME: "webapp-route"
+          SERVICE_NAME: "webapp-service"
+          CERT_NAME: "webapp-prod-cert"
+          CERT_ENTRY_NAME: "webapp-prod-entry"
+          CERT_DESCRIPTION: "Certificate for webapp.u2i.com"
 
 ---
 # QA Target
