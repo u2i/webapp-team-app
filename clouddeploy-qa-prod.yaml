@@ -87,7 +87,7 @@ metadata:
 description: Production deployment target
 requireApproval: true
 gke:
-  cluster: projects/u2i-tenant-webapp-prod/locations/europe-west1/clusters/webapp-cluster-prod
+  cluster: projects/u2i-tenant-webapp-prod/locations/europe-west1/clusters/webapp-cluster
 executionConfigs:
   - usages:
       - RENDER
