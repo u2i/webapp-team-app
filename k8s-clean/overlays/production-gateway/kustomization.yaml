@@ -26,7 +26,8 @@ commonLabels:
   compliance: iso27001-soc2-gdpr
   data-residency: eu
 
-# Production replicas
-replicas:
-- name: webapp
-  count: 3
+# Note: Replica count is set via patches since base uses parameterized names
+
+# Patches
+patchesStrategicMerge:
+- replicas-patch.yaml
