@@ -48,12 +48,12 @@ CERT_DESCRIPTION="Certificate for qa.webapp.u2i.dev"
 
 # Create Cloud Deploy release for QA
 echo "Creating Cloud Deploy release for QA environment..."
-# The Cloud Build trigger runs as cloud-deploy-sa@nonprod, need to explicitly impersonate it
+# The Cloud Build trigger now runs as cloud-deploy-sa@nonprod directly
+echo "Current service account: $(gcloud config list --format='value(core.account)')"
 gcloud deploy releases create "qa-${SHORT_SHA}" \
   --delivery-pipeline=webapp-qa-prod-pipeline \
   --region=${REGION} \
   --project=${PROJECT_ID} \
-  --impersonate-service-account=cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com \
   --images="${REGION}-docker.pkg.dev/${PROJECT_ID}/webapp-images/webapp=${REGION}-docker.pkg.dev/${PROJECT_ID}/webapp-images/webapp:qa-${COMMIT_SHA}" \
   --to-target=qa-gke \
   --skaffold-file=skaffold-qa-deploy.yaml \
