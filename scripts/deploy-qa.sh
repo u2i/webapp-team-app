@@ -50,6 +50,18 @@ CERT_DESCRIPTION="Certificate for qa.webapp.u2i.dev"
 echo "Creating Cloud Deploy release for QA environment..."
 # The Cloud Build trigger now runs as cloud-deploy-sa@nonprod directly
 echo "Current service account: $(gcloud config list --format='value(core.account)')"
+
+# Test if we can impersonate the prod service account
+echo "Testing impersonation of prod service account..."
+if gcloud auth print-access-token --impersonate-service-account=cloud-deploy-sa@u2i-tenant-webapp-prod.iam.gserviceaccount.com > /dev/null 2>&1; then
+  echo "✓ Successfully able to impersonate cloud-deploy-sa@u2i-tenant-webapp-prod.iam.gserviceaccount.com"
+else
+  echo "✗ Failed to impersonate cloud-deploy-sa@u2i-tenant-webapp-prod.iam.gserviceaccount.com"
+  echo "Error details:"
+  gcloud auth print-access-token --impersonate-service-account=cloud-deploy-sa@u2i-tenant-webapp-prod.iam.gserviceaccount.com
+  exit 1
+fi
+
 gcloud deploy releases create "qa-${SHORT_SHA}" \
   --delivery-pipeline=webapp-qa-prod-pipeline \
   --region=${REGION} \
