@@ -9,23 +9,19 @@ metadata:
     compliance: iso27001-soc2-gdpr
     team: webapp-team
     purpose: production
-description: "QA to Production pipeline with approval gate"
-
+description: QA to Production pipeline with approval gate
 serialPipeline:
   stages:
-  # QA stage - automatic deployment
   - targetId: qa-gke
-    profiles: ["qa"]
+    profiles:
+    - qa
     strategy:
-      standard:
-        verify: false
-        
-  # Production stage - requires approval
+      standard: {}
   - targetId: prod-gke
-    profiles: ["prod"]
+    profiles:
+    - prod
     strategy:
-      standard:
-        verify: false
+      standard: {}
 
 ---
 # QA Target
@@ -37,13 +33,18 @@ metadata:
     compliance: iso27001-soc2-gdpr
     environment: qa
     data-residency: eu
-description: "QA deployment target"
-spec:
-  requireApproval: false
-  gke:
-    cluster: projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-cluster
-  executionConfigs:
-  - usages: [RENDER, DEPLOY]
+description: QA deployment target
+targetId: qa-gke
+gke:
+  cluster: projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-cluster
+executionConfigs:
+- usages:
+  - RENDER
+  - DEPLOY
+  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com
+  artifactStorage: gs://u2i-tenant-webapp-nonprod-deploy-artifacts
+  executionTimeout: 3600s
+  defaultPool:
     serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com
     artifactStorage: gs://u2i-tenant-webapp-nonprod-deploy-artifacts
 
@@ -57,12 +58,18 @@ metadata:
     compliance: iso27001-soc2-gdpr
     environment: prod
     data-residency: eu
-description: "Production deployment target"
-spec:
-  requireApproval: true
-  gke:
-    cluster: projects/u2i-tenant-webapp-prod/locations/europe-west1/clusters/webapp-cluster-prod
-  executionConfigs:
-  - usages: [RENDER, DEPLOY]
+description: Production deployment target
+targetId: prod-gke
+requireApproval: true
+gke:
+  cluster: projects/u2i-tenant-webapp-prod/locations/europe-west1/clusters/webapp-cluster-prod
+executionConfigs:
+- usages:
+  - RENDER
+  - DEPLOY
+  serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-prod.iam.gserviceaccount.com
+  artifactStorage: gs://u2i-tenant-webapp-prod-deploy-artifacts
+  executionTimeout: 3600s
+  defaultPool:
     serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-prod.iam.gserviceaccount.com
     artifactStorage: gs://u2i-tenant-webapp-prod-deploy-artifacts
