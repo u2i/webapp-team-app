@@ -5,7 +5,7 @@ metadata:
 # Namespace module - creates namespace for dev environment
 manifests:
   rawYaml:
-  - k8s-clean/namespace/namespace.yaml
+  - k8s-clean/namespace/namespace-nonprod.yaml
 deploy:
   kubectl:
     flags:

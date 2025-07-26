@@ -1,8 +1,10 @@
-# Namespace for webapp deployments
+# Namespace for webapp deployments in nonprod
 apiVersion: v1
 kind: Namespace
 metadata:
   name: ${NAMESPACE} # from-param: ${NAMESPACE}
+  annotations:
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp-nonprod
   labels:
     app: webapp
     stage: ${STAGE} # from-param: ${STAGE}
