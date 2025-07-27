@@ -22,5 +22,5 @@ spec:
     namespace: infra-gw
   rules:
   - backendRefs:
-    - name: ${SERVICE_NAME} # from-param: ${SERVICE_NAME}
+    - name: webapp-service # from-param: ${SERVICE_NAME}
       port: 80
