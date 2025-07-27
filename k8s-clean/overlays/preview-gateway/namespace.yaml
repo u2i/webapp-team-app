@@ -5,5 +5,8 @@ metadata:
   annotations:
     cnrm.cloud.google.com/project-id: u2i-tenant-webapp-nonprod
   labels:
-    purpose: preview
-    preview-name: ${PREVIEW_NAME} # from-param: ${PREVIEW_NAME}
+    app: webapp
+    stage: ${STAGE} # from-param: ${STAGE}
+    boundary: ${BOUNDARY} # from-param: ${BOUNDARY}
+    tier: ${TIER} # from-param: ${TIER}
+    environment: ${ENV} # from-param: ${ENV}

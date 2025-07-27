@@ -56,7 +56,7 @@ spec:
         - name: PORT
           value: "8080"
         - name: BOUNDARY
-          value: "nonprod"
+          value: "${BOUNDARY}" # from-param: ${BOUNDARY}
         - name: STAGE
           value: "${STAGE}" # from-param: ${STAGE}
         - name: REGION

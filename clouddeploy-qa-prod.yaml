@@ -48,7 +48,7 @@ serialPipeline:
           NAME_PREFIX: "prod-"
           DOMAIN: "webapp.u2i.com"
           ROUTE_NAME: "webapp-route"
-          SERVICE_NAME: "webapp-service"
+          SERVICE_NAME: "prod-webapp-service"
           CERT_NAME: "webapp-prod-cert"
           CERT_ENTRY_NAME: "webapp-prod-entry"
           CERT_DESCRIPTION: "Certificate for webapp.u2i.com"
