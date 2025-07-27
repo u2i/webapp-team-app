@@ -16,15 +16,9 @@ resources:
 # Gateway routing
 - gateway-resources.yaml
 
-# Production-specific resources
-- ../../base/pod-disruption-budget.yaml
-
 # Common labels for all resources
 commonLabels:
   app.kubernetes.io/component: webapp
   environment: prod
   compliance: iso27001-soc2-gdpr
   data-residency: eu
-
-# Note: Production uses the default replica count from base (2)
-# This can be adjusted post-deployment if needed
