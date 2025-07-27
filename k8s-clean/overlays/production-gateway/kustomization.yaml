@@ -16,6 +16,9 @@ resources:
 # Gateway routing
 - gateway-resources.yaml
 
+# Production-specific resources
+- ../../base/pod-disruption-budget.yaml
+
 # Common labels for all resources
 commonLabels:
   app.kubernetes.io/component: webapp
