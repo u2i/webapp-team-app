@@ -5,16 +5,19 @@ metadata:
 # Namespace module - creates namespace for both QA and Production environments
 manifests:
   rawYaml:
-  - k8s-clean/namespace/namespace.yaml
+  - k8s-clean/namespace/namespace-nonprod.yaml
 deploy:
   kubectl:
     flags:
       apply: ["--server-side", "--force-conflicts"]
 profiles:
 - name: qa
-  # QA namespace configuration
+  # QA namespace configuration - uses nonprod project
 - name: prod
-  # Production namespace configuration
+  # Production namespace configuration - uses prod project
+  manifests:
+    rawYaml:
+    - k8s-clean/namespace/namespace-prod.yaml
 ---
 apiVersion: skaffold/v4beta13
 kind: Config

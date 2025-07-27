@@ -5,7 +5,7 @@ metadata:
 # Namespace module - just renders and deploys namespace
 manifests:
   rawYaml:
-  - k8s-clean/namespace/namespace.yaml
+  - k8s-clean/namespace/namespace-nonprod.yaml
 deploy:
   kubectl:
     flags:
