@@ -8,6 +8,9 @@ metadata:
   name: webapp-main
 requires:
   # Import split configurations based on the active profile
+  - configs: ["webapp-namespace", "webapp-dev-app", "webapp-dev-kcc"]
+    activeProfiles:
+      - name: dev
   - configs: ["webapp-namespace", "webapp-qa-app", "webapp-qa-kcc"]
     activeProfiles:
       - name: qa
@@ -18,6 +21,7 @@ requires:
     activeProfiles:
       - name: preview
 profiles:
+  - name: dev
   - name: qa
   - name: prod
   - name: preview
