@@ -4,16 +4,12 @@ kind: Config
 metadata:
   name: webapp-preview-namespace
 manifests:
-  kustomize:
-    paths:
-    - k8s-clean/overlays/preview-namespace
-    buildArgs:
-    - --load-restrictor=LoadRestrictionsNone
+  rawYaml:
+  - k8s-clean/overlays/preview-gateway/namespace.yaml
 deploy:
   kubectl:
     flags:
       apply: ["--server-side", "--force-conflicts"]
-  statusCheck: false  # Disable status checking for namespace
 ---
 apiVersion: skaffold/v4beta13
 kind: Config

@@ -4,16 +4,12 @@ metadata:
   name: webapp-namespace
 # Namespace module - creates namespace for production environment
 manifests:
-  kustomize:
-    paths:
-    - k8s-clean/overlays/prod-namespace
-    buildArgs:
-    - --load-restrictor=LoadRestrictionsNone
+  rawYaml:
+  - k8s-clean/namespace/namespace-prod.yaml
 deploy:
   kubectl:
     flags:
       apply: ["--server-side", "--force-conflicts"]
-  statusCheck: false  # Disable status checking for namespace
 ---
 apiVersion: skaffold/v4beta13
 kind: Config

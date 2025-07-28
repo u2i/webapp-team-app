@@ -1,0 +1,14 @@
+# Template for preview namespaces - DO NOT USE DIRECTLY
+# This shows the structure but needs concrete values
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ${NAMESPACE} # from-param: ${NAMESPACE}
+  annotations:
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp-nonprod
+  labels:
+    app: webapp
+    stage: ${STAGE} # from-param: ${STAGE}
+    boundary: ${BOUNDARY} # from-param: ${BOUNDARY}
+    tier: ${TIER} # from-param: ${TIER}
+    environment: ${ENV} # from-param: ${ENV}
