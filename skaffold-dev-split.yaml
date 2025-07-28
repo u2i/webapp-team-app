@@ -10,6 +10,8 @@ deploy:
   kubectl:
     flags:
       apply: ["--server-side", "--force-conflicts"]
+profiles:
+- name: dev
 ---
 apiVersion: skaffold/v4beta13
 kind: Config
@@ -29,6 +31,8 @@ deploy:
     flags:
       apply: ["--server-side", "--force-conflicts"]
   statusCheck: true  # Enable status checking for app resources
+profiles:
+- name: dev
 ---
 apiVersion: skaffold/v4beta13
 kind: Config
@@ -45,3 +49,5 @@ deploy:
     flags:
       apply: ["--server-side", "--force-conflicts"]
   statusCheck: false  # Disable status checking for KCC resources
+profiles:
+- name: dev
