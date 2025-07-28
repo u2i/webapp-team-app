@@ -1,0 +1,53 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-namespace
+# Namespace module - creates namespace for production environment
+manifests:
+  rawYaml:
+  - k8s-clean/namespace/namespace-prod.yaml
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+---
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-prod-app
+# Application module - deployments, services, PDB with status checking enabled
+build:
+  artifacts:
+  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-prod/webapp-images/webapp
+manifests:
+  kustomize:
+    paths:
+    - k8s-clean/overlays/production-gateway
+    buildArgs:
+    - --load-restrictor=LoadRestrictionsNone
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+  statusCheck: true  # Enable status checking for app resources
+profiles:
+- name: prod
+---
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-prod-kcc
+# KCC module - Config Connector resources with status checking disabled
+manifests:
+  kustomize:
+    paths:
+    - k8s-clean/kcc/overlays/production-gateway
+    buildArgs:
+    - --load-restrictor=LoadRestrictionsNone
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+  statusCheck: false  # Disable status checking for KCC resources to avoid bug #7207
+profiles:
+- name: prod

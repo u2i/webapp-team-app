@@ -1,0 +1,98 @@
+# Cloud Deploy Configuration for QA to Production Pipeline
+# QA deploys automatically, Production requires approval
+# Uses split Skaffold configurations to avoid Config Connector status checking bug
+
+apiVersion: deploy.cloud.google.com/v1
+kind: DeliveryPipeline
+metadata:
+  name: webapp-qa-prod-pipeline
+  labels:
+    compliance: iso27001-soc2-gdpr
+    team: webapp-team
+    purpose: production
+description: QA to Production pipeline with approval gate
+serialPipeline:
+  stages:
+  - targetId: qa-gke
+    profiles:
+      - qa
+    strategy:
+      standard: {}
+    deployParameters:
+      - values:
+          NAMESPACE: "webapp-qa"
+          ENV: "qa"
+          API_URL: "https://api-qa.webapp.u2i.dev"
+          STAGE: "qa"
+          BOUNDARY: "nonprod"
+          TIER: "standard"
+          NAME_PREFIX: "qa-"
+          DOMAIN: "qa.webapp.u2i.dev"
+          ROUTE_NAME: "webapp-qa-route"
+          SERVICE_NAME: "qa-webapp-service"
+          CERT_NAME: "webapp-qa-cert"
+          CERT_ENTRY_NAME: "webapp-qa-entry"
+          CERT_DESCRIPTION: "Certificate for qa.webapp.u2i.dev"
+  - targetId: prod-gke
+    profiles:
+      - prod
+    strategy:
+      standard: {}
+    deployParameters:
+      - values:
+          NAMESPACE: "webapp-prod"
+          ENV: "prod"
+          API_URL: "https://api.webapp.u2i.com"
+          STAGE: "prod"
+          BOUNDARY: "prod"
+          TIER: "standard"
+          NAME_PREFIX: "prod-"
+          DOMAIN: "webapp.u2i.com"
+          ROUTE_NAME: "webapp-route"
+          SERVICE_NAME: "prod-webapp-service"
+          CERT_NAME: "webapp-prod-cert"
+          CERT_ENTRY_NAME: "webapp-prod-entry"
+          CERT_DESCRIPTION: "Certificate for webapp.u2i.com"
+
+---
+# QA Target
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: qa-gke
+  labels:
+    compliance: iso27001-soc2-gdpr
+    environment: qa
+    data-residency: eu
+description: QA deployment target
+gke:
+  cluster: projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-cluster
+executionConfigs:
+  - usages:
+      - RENDER
+      - DEPLOY
+    serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com
+    artifactStorage: gs://u2i-tenant-webapp-nonprod-deploy-artifacts
+    executionTimeout: 3600s
+
+---
+# Production Target
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: prod-gke
+  labels:
+    compliance: iso27001-soc2-gdpr
+    environment: prod
+    data-residency: eu
+description: Production deployment target
+requireApproval: true
+gke:
+  cluster: projects/u2i-tenant-webapp-prod/locations/europe-west1/clusters/webapp-cluster
+executionConfigs:
+  - usages:
+      - RENDER
+      - DEPLOY
+    serviceAccount: cloud-deploy-sa@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com
+    artifactStorage: gs://u2i-tenant-webapp-prod-deploy-artifacts
+    executionTimeout: 3600s

@@ -1,0 +1,23 @@
+# Main Skaffold configuration that imports split modules
+# This configuration splits app and KCC resources to avoid Skaffold bug #7207
+# where Config Connector status checking fails when using dual tracking mode
+
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-main
+requires:
+  # Import split configurations based on the active profile
+  - configs: ["webapp-namespace", "webapp-qa-app", "webapp-qa-kcc"]
+    activeProfiles:
+      - name: qa
+  - configs: ["webapp-namespace", "webapp-prod-app", "webapp-prod-kcc"]
+    activeProfiles:
+      - name: prod
+  - configs: ["webapp-namespace", "webapp-preview-app", "webapp-preview-kcc"]
+    activeProfiles:
+      - name: preview
+profiles:
+  - name: qa
+  - name: prod
+  - name: preview
