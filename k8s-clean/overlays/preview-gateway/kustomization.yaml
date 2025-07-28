@@ -5,9 +5,6 @@ kind: Kustomization
 # Combines all resources needed for preview environment
 
 resources:
-# Certificate resources
-- certificate-resources.yaml
-
 # Base resources
 - ../../base/deployment.yaml
 - ../../base/service.yaml

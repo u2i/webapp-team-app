@@ -5,9 +5,6 @@ kind: Kustomization
 # Single stage deployment
 
 resources:
-# Certificate resources
-- certificate-resources.yaml
-
 # Base resources
 - ../../base/deployment.yaml
 - ../../base/service.yaml
@@ -15,6 +12,9 @@ resources:
 
 # Gateway routing
 - gateway-resources.yaml
+
+# Production-specific resources
+- ../../base/pod-disruption-budget.yaml
 
 # Common labels for all resources
 commonLabels:
