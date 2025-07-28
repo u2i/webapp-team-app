@@ -12,6 +12,7 @@ deploy:
     flags:
       apply: ["--server-side", "--force-conflicts"]
 profiles:
+- name: qa
 - name: prod
   manifests:
     rawYaml:
