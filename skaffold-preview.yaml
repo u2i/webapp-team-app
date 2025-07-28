@@ -3,8 +3,6 @@ apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
   name: webapp-preview-namespace
-profiles:
-- name: preview-all
 manifests:
   rawYaml:
   - k8s-clean/overlays/preview-gateway/namespace.yaml
@@ -12,13 +10,13 @@ deploy:
   kubectl:
     flags:
       apply: ["--server-side", "--force-conflicts"]
+profiles:
+- name: preview-all
 ---
 apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
   name: webapp-preview-app
-profiles:
-- name: preview-all
 build:
   artifacts:
   - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
@@ -33,13 +31,13 @@ deploy:
     flags:
       apply: ["--server-side", "--force-conflicts"]
   statusCheck: true  # Enable status checking for app resources
+profiles:
+- name: preview-all
 ---
 apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
   name: webapp-preview-kcc
-profiles:
-- name: preview-all
 manifests:
   kustomize:
     paths:
@@ -51,3 +49,5 @@ deploy:
     flags:
       apply: ["--server-side", "--force-conflicts"]
   statusCheck: false  # Disable status checking for KCC resources
+profiles:
+- name: preview-all
