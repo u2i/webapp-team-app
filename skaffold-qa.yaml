@@ -4,12 +4,16 @@ metadata:
   name: webapp-namespace
 # Namespace module - creates namespace for QA environment
 manifests:
-  rawYaml:
-  - k8s-clean/namespace/namespace-nonprod.yaml
+  kustomize:
+    paths:
+    - k8s-clean/overlays/qa-namespace
+    buildArgs:
+    - --load-restrictor=LoadRestrictionsNone
 deploy:
   kubectl:
     flags:
       apply: ["--server-side", "--force-conflicts"]
+  statusCheck: false  # Disable status checking for namespace
 ---
 apiVersion: skaffold/v4beta13
 kind: Config

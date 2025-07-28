@@ -4,12 +4,16 @@ kind: Config
 metadata:
   name: webapp-namespace
 manifests:
-  rawYaml:
-  - k8s-clean/namespace/namespace-nonprod.yaml
+  kustomize:
+    paths:
+    - k8s-clean/overlays/dev-namespace
+    buildArgs:
+    - --load-restrictor=LoadRestrictionsNone
 deploy:
   kubectl:
     flags:
       apply: ["--server-side", "--force-conflicts"]
+  statusCheck: false  # Disable status checking for namespace
 ---
 apiVersion: skaffold/v4beta13
 kind: Config
