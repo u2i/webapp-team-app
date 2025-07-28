@@ -5,6 +5,9 @@ kind: Kustomization
 # Combines all resources needed for preview environment
 
 resources:
+# Namespace (for standalone kustomize builds)
+- namespace.yaml
+
 # Base resources
 - ../../base/deployment.yaml
 - ../../base/service.yaml

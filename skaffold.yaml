@@ -56,17 +56,8 @@ metadata:
   name: webapp-namespace-preview
 # Namespace module for preview - creates namespace dynamically
 manifests:
-  kustomize:
-    paths:
-    - k8s-clean/overlays/preview-gateway
-    buildArgs:
-    - --load-restrictor=LoadRestrictionsNone
-patches:
-- op: select
-  path: metadata.name
-  value: webapp-*
-  target:
-    kind: Namespace
+  rawYaml:
+  - k8s-clean/overlays/preview-gateway/namespace.yaml
 deploy:
   kubectl:
     flags:
