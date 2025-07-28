@@ -68,7 +68,8 @@ gcloud deploy releases create "qa-${SHORT_SHA}" \
   --project=${PROJECT_ID} \
   --images="${REGION}-docker.pkg.dev/${PROJECT_ID}/webapp-images/webapp=${REGION}-docker.pkg.dev/${PROJECT_ID}/webapp-images/webapp:qa-${COMMIT_SHA}" \
   --to-target=qa-gke \
-  --skaffold-file=skaffold.yaml
+  --skaffold-file=skaffold.yaml \
+  --module=webapp-namespace,webapp-qa-app,webapp-qa-kcc
 
 echo "✅ QA deployment initiated: https://${DOMAIN}"
 echo "ℹ️  After QA validation, the release can be promoted to production with approval"

@@ -55,6 +55,7 @@ gcloud deploy releases create "dev-${SHORT_SHA}" \
   --images="${REGION}-docker.pkg.dev/${PROJECT_ID}/webapp-images/webapp=${REGION}-docker.pkg.dev/${PROJECT_ID}/webapp-images/webapp:dev-${COMMIT_SHA}" \
   --to-target=dev-gke \
   --skaffold-file=skaffold.yaml \
+  --module=webapp-namespace,webapp-dev-app,webapp-dev-kcc \
   --deploy-parameters="NAMESPACE=${NAMESPACE},ENV=${ENV},API_URL=${API_URL},STAGE=${STAGE},BOUNDARY=${BOUNDARY},TIER=${TIER},NAME_PREFIX=${NAME_PREFIX},DOMAIN=${DOMAIN},ROUTE_NAME=${ROUTE_NAME},SERVICE_NAME=${SERVICE_NAME},CERT_NAME=${CERT_NAME},CERT_ENTRY_NAME=${CERT_ENTRY_NAME},CERT_DESCRIPTION=${CERT_DESCRIPTION}" \
   --impersonate-service-account=cloud-deploy-sa@${PROJECT_ID}.iam.gserviceaccount.com
 
