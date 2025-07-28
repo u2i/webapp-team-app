@@ -3,6 +3,8 @@ apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
   name: webapp-preview-namespace
+profiles:
+- name: preview-all
 manifests:
   rawYaml:
   - k8s-clean/overlays/preview-gateway/namespace.yaml
@@ -15,6 +17,8 @@ apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
   name: webapp-preview-app
+profiles:
+- name: preview-all
 build:
   artifacts:
   - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
@@ -34,6 +38,8 @@ apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
   name: webapp-preview-kcc
+profiles:
+- name: preview-all
 manifests:
   kustomize:
     paths:
