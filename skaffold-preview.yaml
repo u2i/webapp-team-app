@@ -1,0 +1,47 @@
+# Preview deployment with split app and KCC modules
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-preview-namespace
+manifests:
+  rawYaml:
+  - k8s-clean/overlays/preview-gateway/namespace.yaml
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+---
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-preview-app
+build:
+  artifacts:
+  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
+manifests:
+  kustomize:
+    paths:
+    - k8s-clean/overlays/preview-gateway
+    buildArgs:
+    - --load-restrictor=LoadRestrictionsNone
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+  statusCheck: true  # Enable status checking for app resources
+---
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-preview-kcc
+manifests:
+  kustomize:
+    paths:
+    - k8s-clean/kcc/overlays/preview-gateway
+    buildArgs:
+    - --load-restrictor=LoadRestrictionsNone
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+  statusCheck: false  # Disable status checking for KCC resources

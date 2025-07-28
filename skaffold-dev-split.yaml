@@ -1,0 +1,47 @@
+# Dev deployment with split app and KCC modules
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-namespace
+manifests:
+  rawYaml:
+  - k8s-clean/namespace/namespace-nonprod.yaml
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+---
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-dev-app
+build:
+  artifacts:
+  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
+manifests:
+  kustomize:
+    paths:
+    - k8s-clean/overlays/dev-gateway
+    buildArgs:
+    - --load-restrictor=LoadRestrictionsNone
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+  statusCheck: true  # Enable status checking for app resources
+---
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-dev-kcc
+manifests:
+  kustomize:
+    paths:
+    - k8s-clean/kcc/overlays/dev-gateway
+    buildArgs:
+    - --load-restrictor=LoadRestrictionsNone
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+  statusCheck: false  # Disable status checking for KCC resources
