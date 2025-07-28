@@ -1,0 +1,48 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-namespace
+# Namespace module - creates namespace for QA environment
+manifests:
+  rawYaml:
+  - k8s-clean/namespace/namespace-nonprod.yaml
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+---
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-qa-app
+# Build section required for image substitution, but build is skipped when image is provided
+build:
+  artifacts:
+  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
+manifests:
+  kustomize:
+    paths:
+    - k8s-clean/overlays/qa-gateway
+    buildArgs:
+    - --load-restrictor=LoadRestrictionsNone
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+  statusCheck: true  # Enable status checking for app resources
+---
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-qa-kcc
+manifests:
+  kustomize:
+    paths:
+    - k8s-clean/kcc/overlays/qa-gateway
+    buildArgs:
+    - --load-restrictor=LoadRestrictionsNone
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+  statusCheck: false  # Disable status checking for KCC resources
