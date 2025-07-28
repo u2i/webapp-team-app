@@ -1,0 +1,37 @@
+# Certificate resources for production environment
+---
+# Google-managed certificate for the production domain
+apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
+kind: CertificateManagerCertificate
+metadata:
+  name: webapp-prod-cert # from-param: ${CERT_NAME}
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
+  annotations:
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp-prod
+spec:
+  projectRef:
+    external: u2i-tenant-webapp-prod
+  location: global
+  description: Certificate for webapp.u2i.com # from-param: ${CERT_DESCRIPTION}
+  managed:
+    domains:
+    - webapp.u2i.com # from-param: ${DOMAIN}
+
+---
+# Certificate map entry to associate certificate with the map
+apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
+kind: CertificateManagerCertificateMapEntry  
+metadata:
+  name: webapp-prod-entry # from-param: ${CERT_ENTRY_NAME}
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
+  annotations:
+    cnrm.cloud.google.com/project-id: u2i-tenant-webapp-prod
+spec:
+  projectRef:
+    external: u2i-tenant-webapp-prod
+  mapRef:
+    name: webapp-cert-map
+    namespace: infra-gw
+  certificatesRefs:
+  - name: webapp-prod-cert # from-param: ${CERT_NAME}
+  hostname: webapp.u2i.com # from-param: ${DOMAIN}
