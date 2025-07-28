@@ -1,11 +1,11 @@
+# Preview deployment with split app and KCC modules
 apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
-  name: webapp-namespace
-# Namespace module - creates namespace for QA environment
+  name: webapp-preview-namespace
 manifests:
   rawYaml:
-  - k8s-clean/namespace/namespace-nonprod.yaml
+  - k8s-clean/overlays/preview-gateway/namespace.yaml
 deploy:
   kubectl:
     flags:
@@ -14,15 +14,14 @@ deploy:
 apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
-  name: webapp-qa-app
-# Application module - deployments, services with status checking enabled
+  name: webapp-preview-app
 build:
   artifacts:
   - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
 manifests:
   kustomize:
     paths:
-    - k8s-clean/overlays/qa-gateway
+    - k8s-clean/overlays/preview-gateway
     buildArgs:
     - --load-restrictor=LoadRestrictionsNone
 deploy:
@@ -30,24 +29,19 @@ deploy:
     flags:
       apply: ["--server-side", "--force-conflicts"]
   statusCheck: true  # Enable status checking for app resources
-profiles:
-- name: qa
 ---
 apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
-  name: webapp-qa-kcc
-# KCC module - Config Connector resources with status checking disabled
+  name: webapp-preview-kcc
 manifests:
   kustomize:
     paths:
-    - k8s-clean/kcc/overlays/qa-gateway
+    - k8s-clean/kcc/overlays/preview-gateway
     buildArgs:
     - --load-restrictor=LoadRestrictionsNone
 deploy:
   kubectl:
     flags:
       apply: ["--server-side", "--force-conflicts"]
-  statusCheck: false  # Disable status checking for KCC resources to avoid bug #7207
-profiles:
-- name: qa
+  statusCheck: false  # Disable status checking for KCC resources
