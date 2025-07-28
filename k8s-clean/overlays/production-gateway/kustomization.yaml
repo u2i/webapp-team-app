@@ -14,6 +14,7 @@ resources:
 - gateway-resources.yaml
 
 # Production-specific resources
+# Re-enabled PodDisruptionBudget with split Skaffold configuration
 - ../../base/pod-disruption-budget.yaml
 
 # Common labels for all resources

@@ -13,8 +13,6 @@ description: QA to Production pipeline with approval gate
 serialPipeline:
   stages:
   - targetId: qa-gke
-    profiles:
-      - qa
     strategy:
       standard: {}
     deployParameters:
@@ -33,8 +31,6 @@ serialPipeline:
           CERT_ENTRY_NAME: "webapp-qa-entry"
           CERT_DESCRIPTION: "Certificate for qa.webapp.u2i.dev"
   - targetId: prod-gke
-    profiles:
-      - prod
     strategy:
       standard: {}
     deployParameters:
