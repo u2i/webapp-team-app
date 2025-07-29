@@ -1,6 +1,0 @@
-# Config Connector resources for production environment
-# Note: Most production infrastructure (certificates, IPs, gateways) should be
-# managed in u2i-infrastructure repository for better separation of concerns.
-# This file can be used for application-specific Config Connector resources if needed.
-
-# Currently empty - production certificates and networking are managed in u2i-infrastructure

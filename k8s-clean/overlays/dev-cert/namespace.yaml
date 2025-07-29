@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: ${NAMESPACE} # from-param: ${NAMESPACE}
-  labels:
-    name: ${NAMESPACE} # from-param: ${NAMESPACE}
-    environment: ${ENV} # from-param: ${ENV}
-    stage: ${STAGE} # from-param: ${STAGE}
-    boundary: ${BOUNDARY} # from-param: ${BOUNDARY}
