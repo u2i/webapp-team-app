@@ -23,7 +23,7 @@ build:
 manifests:
   kustomize:
     paths:
-    - k8s-clean/overlays/dev-gateway
+    - k8s-clean/overlays/dev
     buildArgs:
     - --load-restrictor=LoadRestrictionsNone
 deploy:
@@ -41,7 +41,7 @@ metadata:
 manifests:
   kustomize:
     paths:
-    - k8s-clean/kcc/overlays/dev-gateway
+    - k8s-clean/kcc/overlays/dev
     buildArgs:
     - --load-restrictor=LoadRestrictionsNone
 deploy:

@@ -25,7 +25,7 @@ build:
 manifests:
   kustomize:
     paths:
-    - k8s-clean/overlays/preview-gateway
+    - k8s-clean/overlays/preview
     buildArgs:
     - --load-restrictor=LoadRestrictionsNone
 deploy:
@@ -43,7 +43,7 @@ metadata:
 manifests:
   kustomize:
     paths:
-    - k8s-clean/kcc/overlays/preview-gateway
+    - k8s-clean/kcc/overlays/preview
     buildArgs:
     - --load-restrictor=LoadRestrictionsNone
 deploy:
