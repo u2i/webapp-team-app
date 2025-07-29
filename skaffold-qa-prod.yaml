@@ -29,7 +29,7 @@ build:
 manifests:
   kustomize:
     paths:
-    - k8s-clean/overlays/qa-gateway  # Default to QA
+    - k8s-clean/overlays/qa  # Default to QA
     buildArgs:
     - --load-restrictor=LoadRestrictionsNone
 deploy:
@@ -42,7 +42,7 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/qa-gateway
+      - k8s-clean/overlays/qa
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
 - name: prod
@@ -52,7 +52,7 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/production-gateway
+      - k8s-clean/overlays/production
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
 ---
