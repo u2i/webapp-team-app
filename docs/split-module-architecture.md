@@ -25,7 +25,7 @@ Split deployments into three separate Skaffold modules:
 ### File Structure
 
 ```
-skaffold-<env>-split.yaml    # Split configuration for each environment
+skaffold-<env>.yaml          # Split configuration for each environment
 k8s-clean/
   overlays/
     <env>-gateway/           # App resources (deployment, service, etc.)
@@ -98,10 +98,10 @@ profiles:
 
 | Environment | Skaffold File | Profile | Status |
 |------------|---------------|---------|--------|
-| Preview | skaffold-preview-split.yaml | preview-all | ✅ Tested |
-| Dev | skaffold-dev-split.yaml | dev | ✅ Ready |
-| QA | skaffold-qa-prod-split.yaml | qa | ✅ Ready |
-| Production | skaffold-qa-prod-split.yaml | prod | ✅ Ready |
+| Preview | skaffold-preview.yaml | preview-all | ✅ Tested |
+| Dev | skaffold-dev.yaml | dev | ✅ Ready |
+| QA | skaffold-qa-prod.yaml | qa | ✅ Ready |
+| Production | skaffold-qa-prod.yaml | prod | ✅ Ready |
 
 ## Benefits
 

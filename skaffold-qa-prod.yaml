@@ -1,8 +1,9 @@
+# QA/Production deployment with split app and KCC modules
+# Namespace configurations
 apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
   name: webapp-namespace
-# Namespace module - creates namespace for both QA and Production environments
 manifests:
   rawYaml:
   - k8s-clean/namespace/namespace-nonprod.yaml
@@ -12,18 +13,16 @@ deploy:
       apply: ["--server-side", "--force-conflicts"]
 profiles:
 - name: qa
-  # QA namespace configuration - uses nonprod project
 - name: prod
-  # Production namespace configuration - uses prod project
   manifests:
     rawYaml:
     - k8s-clean/namespace/namespace-prod.yaml
 ---
+# App deployment module (switches between QA and Production based on profile)
 apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
-  name: webapp-qa-prod-deployment
-# Build section required for image substitution, but build is skipped when image is provided
+  name: webapp-app
 build:
   artifacts:
   - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
@@ -37,8 +36,8 @@ deploy:
   kubectl:
     flags:
       apply: ["--server-side", "--force-conflicts"]
+  statusCheck: true  # Enable status checking for app resources
 profiles:
-# QA Profile
 - name: qa
   manifests:
     kustomize:
@@ -46,16 +45,45 @@ profiles:
       - k8s-clean/overlays/qa-gateway
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
-
-# Production Profile  
 - name: prod
   build:
     artifacts:
     - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-prod/webapp-images/webapp
-      # For prod, we use the prod artifact registry
   manifests:
     kustomize:
       paths:
       - k8s-clean/overlays/production-gateway
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+---
+# KCC module (switches between QA and Production based on profile)
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp-kcc
+manifests:
+  kustomize:
+    paths:
+    - k8s-clean/kcc/overlays/qa-gateway  # Default to QA
+    buildArgs:
+    - --load-restrictor=LoadRestrictionsNone
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+  statusCheck: false  # Disable status checking for KCC resources
+profiles:
+- name: qa
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/kcc/overlays/qa-gateway
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+- name: prod
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/kcc/overlays/production-gateway
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
