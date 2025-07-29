@@ -32,6 +32,7 @@ serialPipeline:
           CERT_NAME: "webapp-qa-cert"
           CERT_ENTRY_NAME: "webapp-qa-entry"
           CERT_DESCRIPTION: "Certificate for qa.webapp.u2i.dev"
+          PROJECT_ID: "u2i-tenant-webapp-nonprod"
   - targetId: prod-gke
     profiles:
       - prod
@@ -52,6 +53,7 @@ serialPipeline:
           CERT_NAME: "webapp-prod-cert"
           CERT_ENTRY_NAME: "webapp-prod-entry"
           CERT_DESCRIPTION: "Certificate for webapp.u2i.com"
+          PROJECT_ID: "u2i-tenant-webapp-prod"
 
 ---
 # QA Target

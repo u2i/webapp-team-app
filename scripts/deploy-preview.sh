@@ -62,7 +62,7 @@ gcloud deploy releases create "preview-${PREVIEW_NAME}-${SHORT_SHA}" \
   --images="${REGION}-docker.pkg.dev/${PROJECT_ID}/webapp-images/webapp=${REGION}-docker.pkg.dev/${PROJECT_ID}/webapp-images/webapp:preview-${COMMIT_SHA}" \
   --to-target=preview-gke \
   --skaffold-file=skaffold-preview.yaml \
-  --deploy-parameters="NAMESPACE=${NAMESPACE},ENV=preview,API_URL=https://api-${DOMAIN},STAGE=preview,BOUNDARY=nonprod,TIER=preview,NAME_PREFIX=preview-,DOMAIN=${DOMAIN},ROUTE_NAME=${ROUTE_NAME},SERVICE_NAME=webapp-service,CERT_NAME=${CERT_NAME},CERT_ENTRY_NAME=${CERT_ENTRY_NAME},CERT_DESCRIPTION=Certificate for ${DOMAIN}" \
+  --deploy-parameters="NAMESPACE=${NAMESPACE},ENV=preview,API_URL=https://api-${DOMAIN},STAGE=preview,BOUNDARY=nonprod,TIER=preview,NAME_PREFIX=preview-,DOMAIN=${DOMAIN},ROUTE_NAME=${ROUTE_NAME},SERVICE_NAME=webapp-service,CERT_NAME=${CERT_NAME},CERT_ENTRY_NAME=${CERT_ENTRY_NAME},CERT_DESCRIPTION=Certificate for ${DOMAIN},PROJECT_ID=${PROJECT_ID}" \
   --impersonate-service-account=cloud-deploy-sa@${PROJECT_ID}.iam.gserviceaccount.com
 
 echo "✅ Preview deployment initiated: https://${DOMAIN}"
