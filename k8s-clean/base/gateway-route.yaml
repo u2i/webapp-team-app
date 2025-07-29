@@ -1,4 +1,5 @@
-# Gateway API resources for production environment
+# Base Gateway API HTTPRoute template
+# This template is used by all environments (preview, dev, qa, production)
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:

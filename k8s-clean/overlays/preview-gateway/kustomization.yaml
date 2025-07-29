@@ -5,13 +5,8 @@ kind: Kustomization
 # Combines all resources needed for preview environment
 
 resources:
-# Base resources
-- ../../base/deployment.yaml
-- ../../base/service.yaml
-- ../../base/network-policy.yaml
-
-# Gateway routing
-- gateway-resources.yaml
+# Use base kustomization which includes all base resources
+- ../../base
 
 # Common labels for all resources - Skaffold will merge with skaffold.dev/run-id
 commonLabels:

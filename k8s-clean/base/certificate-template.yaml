@@ -1,0 +1,38 @@
+# Base Certificate template for Config Connector
+# This template is used by all environments that need SSL certificates
+---
+# Google-managed certificate for the domain
+apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
+kind: CertificateManagerCertificate
+metadata:
+  name: webapp-cert # from-param: ${CERT_NAME}
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
+  annotations:
+    cnrm.cloud.google.com/project-id: ${PROJECT_ID} # from-param: ${PROJECT_ID}
+spec:
+  projectRef:
+    external: ${PROJECT_ID} # from-param: ${PROJECT_ID}
+  location: global
+  description: Certificate for webapp # from-param: ${CERT_DESCRIPTION}
+  managed:
+    domains:
+    - example.com # from-param: ${DOMAIN}
+
+---
+# Certificate map entry to associate certificate with the map
+apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
+kind: CertificateManagerCertificateMapEntry  
+metadata:
+  name: webapp-entry # from-param: ${CERT_ENTRY_NAME}
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
+  annotations:
+    cnrm.cloud.google.com/project-id: ${PROJECT_ID} # from-param: ${PROJECT_ID}
+spec:
+  projectRef:
+    external: ${PROJECT_ID} # from-param: ${PROJECT_ID}
+  mapRef:
+    name: webapp-cert-map
+    namespace: infra-gw
+  certificatesRefs:
+  - name: webapp-cert # from-param: ${CERT_NAME}
+  hostname: example.com # from-param: ${DOMAIN}

@@ -5,13 +5,8 @@ kind: Kustomization
 # Single stage deployment
 
 resources:
-# Base resources
-- ../../base/deployment.yaml
-- ../../base/service.yaml
-- ../../base/network-policy.yaml
-
-# Gateway routing
-- gateway-resources.yaml
+# Use base kustomization which includes all base resources
+- ../../base
 
 # Production-specific resources
 - ../../base/pod-disruption-budget.yaml

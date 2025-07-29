@@ -5,7 +5,8 @@ kind: Kustomization
 # These are deployed with statusCheck disabled to avoid Skaffold bug #7207
 
 resources:
-- certificate-resources.yaml
+# Use base certificate template
+- ../../../base/certificate-template.yaml
 
 # Common labels for all KCC resources
 commonLabels:
