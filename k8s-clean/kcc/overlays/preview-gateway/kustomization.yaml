@@ -11,3 +11,51 @@ resources:
 # Common labels for all KCC resources
 commonLabels:
   app.kubernetes.io/component: webapp
+
+# Patches to set preview-specific values
+patches:
+- target:
+    kind: CertificateManagerCertificate
+    name: webapp-cert
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: ${CERT_NAME}
+    - op: replace
+      path: /metadata/namespace
+      value: ${NAMESPACE}
+    - op: replace
+      path: /metadata/annotations/cnrm.cloud.google.com~1project-id
+      value: u2i-tenant-webapp-nonprod
+    - op: replace
+      path: /spec/projectRef/external
+      value: u2i-tenant-webapp-nonprod
+    - op: replace
+      path: /spec/description
+      value: ${CERT_DESCRIPTION}
+    - op: replace
+      path: /spec/managed/domains/0
+      value: ${DOMAIN}
+
+- target:
+    kind: CertificateManagerCertificateMapEntry
+    name: webapp-entry
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: ${CERT_ENTRY_NAME}
+    - op: replace
+      path: /metadata/namespace
+      value: ${NAMESPACE}
+    - op: replace
+      path: /metadata/annotations/cnrm.cloud.google.com~1project-id
+      value: u2i-tenant-webapp-nonprod
+    - op: replace
+      path: /spec/projectRef/external
+      value: u2i-tenant-webapp-nonprod
+    - op: replace
+      path: /spec/hostname
+      value: ${DOMAIN}
+    - op: replace
+      path: /spec/certificatesRefs/0/name
+      value: ${CERT_NAME}

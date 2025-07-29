@@ -13,3 +13,51 @@ commonLabels:
   app.kubernetes.io/component: webapp
   environment: qa
   compliance: iso27001-soc2-gdpr
+
+# Patches to set QA-specific values
+patches:
+- target:
+    kind: CertificateManagerCertificate
+    name: webapp-cert
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: webapp-qa-cert
+    - op: replace
+      path: /metadata/namespace
+      value: webapp-qa
+    - op: replace
+      path: /metadata/annotations/cnrm.cloud.google.com~1project-id
+      value: u2i-tenant-webapp-nonprod
+    - op: replace
+      path: /spec/projectRef/external
+      value: u2i-tenant-webapp-nonprod
+    - op: replace
+      path: /spec/description
+      value: Certificate for qa.webapp.u2i.dev
+    - op: replace
+      path: /spec/managed/domains/0
+      value: qa.webapp.u2i.dev
+
+- target:
+    kind: CertificateManagerCertificateMapEntry
+    name: webapp-entry
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: webapp-qa-entry
+    - op: replace
+      path: /metadata/namespace
+      value: webapp-qa
+    - op: replace
+      path: /metadata/annotations/cnrm.cloud.google.com~1project-id
+      value: u2i-tenant-webapp-nonprod
+    - op: replace
+      path: /spec/projectRef/external
+      value: u2i-tenant-webapp-nonprod
+    - op: replace
+      path: /spec/hostname
+      value: qa.webapp.u2i.dev
+    - op: replace
+      path: /spec/certificatesRefs/0/name
+      value: webapp-qa-cert
