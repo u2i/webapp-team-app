@@ -18,18 +18,18 @@ profiles:
     rawYaml:
     - k8s-clean/namespace/namespace-prod.yaml
 ---
-# QA configurations
+# App deployment module (switches between QA and Production based on profile)
 apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
-  name: webapp-qa-app
+  name: webapp-app
 build:
   artifacts:
   - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
 manifests:
   kustomize:
     paths:
-    - k8s-clean/overlays/qa-gateway
+    - k8s-clean/overlays/qa-gateway  # Default to QA
     buildArgs:
     - --load-restrictor=LoadRestrictionsNone
 deploy:
@@ -39,15 +39,32 @@ deploy:
   statusCheck: true  # Enable status checking for app resources
 profiles:
 - name: qa
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/qa-gateway
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+- name: prod
+  build:
+    artifacts:
+    - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-prod/webapp-images/webapp
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/overlays/production-gateway
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
 ---
+# KCC module (switches between QA and Production based on profile)
 apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
-  name: webapp-qa-kcc
+  name: webapp-kcc
 manifests:
   kustomize:
     paths:
-    - k8s-clean/kcc/overlays/qa-gateway
+    - k8s-clean/kcc/overlays/qa-gateway  # Default to QA
     buildArgs:
     - --load-restrictor=LoadRestrictionsNone
 deploy:
@@ -57,43 +74,16 @@ deploy:
   statusCheck: false  # Disable status checking for KCC resources
 profiles:
 - name: qa
----
-# Production configurations
-apiVersion: skaffold/v4beta13
-kind: Config
-metadata:
-  name: webapp-prod-app
-build:
-  artifacts:
-  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-prod/webapp-images/webapp
-manifests:
-  kustomize:
-    paths:
-    - k8s-clean/overlays/production-gateway
-    buildArgs:
-    - --load-restrictor=LoadRestrictionsNone
-deploy:
-  kubectl:
-    flags:
-      apply: ["--server-side", "--force-conflicts"]
-  statusCheck: true  # Enable status checking for app resources
-profiles:
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/kcc/overlays/qa-gateway
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
 - name: prod
----
-apiVersion: skaffold/v4beta13
-kind: Config
-metadata:
-  name: webapp-prod-kcc
-manifests:
-  kustomize:
-    paths:
-    - k8s-clean/kcc/overlays/production-gateway
-    buildArgs:
-    - --load-restrictor=LoadRestrictionsNone
-deploy:
-  kubectl:
-    flags:
-      apply: ["--server-side", "--force-conflicts"]
-  statusCheck: false  # Disable status checking for KCC resources
-profiles:
-- name: prod
+  manifests:
+    kustomize:
+      paths:
+      - k8s-clean/kcc/overlays/production-gateway
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
