@@ -1,0 +1,13 @@
+# Unified namespace template for all environments
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ${NAMESPACE} # from-param: ${NAMESPACE}
+  annotations:
+    cnrm.cloud.google.com/project-id: ${PROJECT_ID} # from-param: ${PROJECT_ID}
+  labels:
+    name: ${NAMESPACE} # from-param: ${NAMESPACE}
+    istio-injection: enabled
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

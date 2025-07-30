@@ -8,9 +8,9 @@ resources:
 # Use base kustomization which includes all base resources
 - ../../base
 
-# Patches for preview environment
-patches:
-- path: pdb-patch.yaml
+# Use shared component for PDB configuration  
+components:
+- ../../components/pdb-minAvailable-1
 
 # Environment-specific labels only (core labels come from base)
 # Preview doesn't have a fixed environment label due to dynamic PR deployments

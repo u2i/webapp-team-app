@@ -5,34 +5,34 @@
 apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
 kind: CertificateManagerCertificate
 metadata:
-  name: webapp-cert
-  namespace: webapp-default
+  name: ${CERT_NAME} # from-param: ${CERT_NAME}
+  namespace: webapp-resources
   annotations:
-    cnrm.cloud.google.com/project-id: PLACEHOLDER
+    cnrm.cloud.google.com/project-id: ${PROJECT_ID} # from-param: ${PROJECT_ID}
 spec:
   projectRef:
-    external: PLACEHOLDER
+    external: ${PROJECT_ID} # from-param: ${PROJECT_ID}
   location: global
-  description: Certificate for webapp
+  description: ${CERT_DESCRIPTION} # from-param: ${CERT_DESCRIPTION}
   managed:
     domains:
-    - example.com
+    - ${DOMAIN} # from-param: ${DOMAIN}
 
 ---
 # Certificate map entry to associate certificate with the map
 apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
 kind: CertificateManagerCertificateMapEntry  
 metadata:
-  name: webapp-entry
-  namespace: webapp-default
+  name: ${CERT_ENTRY_NAME} # from-param: ${CERT_ENTRY_NAME}
+  namespace: webapp-resources
   annotations:
-    cnrm.cloud.google.com/project-id: PLACEHOLDER
+    cnrm.cloud.google.com/project-id: ${PROJECT_ID} # from-param: ${PROJECT_ID}
 spec:
   projectRef:
-    external: PLACEHOLDER
+    external: ${PROJECT_ID} # from-param: ${PROJECT_ID}
   mapRef:
     name: webapp-cert-map
     namespace: infra-gw
   certificatesRefs:
-  - name: webapp-cert
-  hostname: example.com
+  - name: ${CERT_NAME} # from-param: ${CERT_NAME}
+  hostname: ${DOMAIN} # from-param: ${DOMAIN}
