@@ -14,10 +14,14 @@ spec:
   selector:
     matchLabels:
       app: webapp
+      app.kubernetes.io/component: webapp
+      environment: ${ENV} # from-param: ${ENV}
   template:
     metadata:
       labels:
         app: webapp
+        app.kubernetes.io/component: webapp
+        environment: ${ENV} # from-param: ${ENV}
         tenant: webapp-team
         compliance: iso27001-soc2-gdpr
         data-residency: eu
@@ -33,7 +37,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: webapp
-        image: europe-west1-docker.pkg.dev/${PROJECT_ID}/webapp-images/webapp # from-param: ${PROJECT_ID}
+        image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
         ports:
         - containerPort: 8080
           name: http
