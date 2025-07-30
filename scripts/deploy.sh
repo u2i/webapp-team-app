@@ -219,6 +219,14 @@ echo "  Target: $TARGET"
 echo "  Release: $RELEASE_NAME"
 echo "  Image: $IMAGE_WITH_TAG"
 
+# Check if we need to impersonate (only for dev and preview environments)
+# QA/Prod triggers already run as the cloud-deploy-sa
+if [[ "$ENVIRONMENT" == "dev" || "$ENVIRONMENT" == "preview" ]]; then
+  IMPERSONATE_FLAG="--impersonate-service-account=cloud-deploy-sa@${PROJECT_ID}.iam.gserviceaccount.com"
+else
+  IMPERSONATE_FLAG=""
+fi
+
 gcloud deploy releases create "$RELEASE_NAME" \
   --delivery-pipeline="$PIPELINE" \
   --region="${REGION}" \
@@ -227,6 +235,6 @@ gcloud deploy releases create "$RELEASE_NAME" \
   --to-target="$TARGET" \
   --skaffold-file="$SKAFFOLD_FILE" \
   --deploy-parameters="$DEPLOY_PARAMS" \
-  --impersonate-service-account="cloud-deploy-sa@${PROJECT_ID}.iam.gserviceaccount.com"
+  $IMPERSONATE_FLAG
 
 echo "✅ $ENVIRONMENT deployment initiated: https://${DOMAIN}"
