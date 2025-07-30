@@ -45,7 +45,9 @@ fi
 
 echo "Using PR identifier: $PR_IDENTIFIER"
 
-# Build all the parameters
+# Build dynamic parameters for preview deployments
+# Preview deployments require dynamic parameters based on PR number
+# These override any default values in clouddeploy-preview.yaml
 PREVIEW_NAME="pr${PR_IDENTIFIER}"
 DOMAIN="${PREVIEW_NAME}.webapp.u2i.dev"
 NAMESPACE="webapp-preview-${PREVIEW_NAME}"
