@@ -6,8 +6,8 @@ resources:
 - service.yaml
 - network-policy.yaml
 - gateway-route.yaml
+- pod-disruption-budget.yaml
 # Note: namespace.yaml is handled separately by Cloud Deploy
-# Note: pod-disruption-budget.yaml is only added in production overlay
 
 # Use labels instead of commonLabels to avoid modifying selectors
 # commonLabels would add these to selectors which breaks the service

@@ -7,7 +7,7 @@ spec:
   minAvailable: 2
   selector:
     matchLabels:
-      app.kubernetes.io/name: webapp
+      app: webapp
       app.kubernetes.io/component: webapp
   # Allow disruption during maintenance windows
   unhealthyPodEvictionPolicy: AlwaysAllow

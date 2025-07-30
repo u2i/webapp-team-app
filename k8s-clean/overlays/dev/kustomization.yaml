@@ -8,6 +8,10 @@ resources:
 # Use base kustomization which includes all base resources
 - ../../base
 
+# Patches for dev environment
+patches:
+- path: pdb-patch.yaml
+
 # Common labels for all resources
 # Environment-specific labels only (core labels come from base)
 labels:

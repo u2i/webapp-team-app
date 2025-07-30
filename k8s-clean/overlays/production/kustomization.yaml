@@ -8,8 +8,7 @@ resources:
 # Use base kustomization which includes all base resources
 - ../../base
 
-# Production-specific resources
-- ../../base/pod-disruption-budget.yaml
+# Production uses PDB from base with minAvailable: 2 (no patch needed)
 
 # Common labels for all resources
 # Environment-specific labels only (core labels come from base)
