@@ -9,7 +9,8 @@ resources:
 - ../../base
 
 # Common labels for all resources
-commonLabels:
-  app.kubernetes.io/component: webapp
-  environment: qa
-  compliance: iso27001-soc2-gdpr
+# Environment-specific labels only (core labels come from base)
+labels:
+- pairs:
+    environment: qa
+  includeSelectors: false

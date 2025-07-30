@@ -13,6 +13,7 @@ resources:
 # commonLabels would add these to selectors which breaks the service
 labels:
 - pairs:
+    app.kubernetes.io/component: webapp
     tenant: webapp-team
     compliance: iso27001-soc2-gdpr
     data-residency: eu
