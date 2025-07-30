@@ -14,10 +14,14 @@ spec:
   selector:
     matchLabels:
       app: webapp
+      app.kubernetes.io/component: webapp
+      environment: ${ENV} # from-param: ${ENV}
   template:
     metadata:
       labels:
         app: webapp
+        app.kubernetes.io/component: webapp
+        environment: ${ENV} # from-param: ${ENV}
         tenant: webapp-team
         compliance: iso27001-soc2-gdpr
         data-residency: eu
