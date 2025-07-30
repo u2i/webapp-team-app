@@ -5,8 +5,8 @@ kind: Kustomization
 # These are deployed with statusCheck disabled to avoid Skaffold bug #7207
 
 resources:
-# Preview needs parameterized certificates, so use direct file instead of base template
-- certificate-resources.yaml
+# Use base certificate template with parameters
+- ../../../base/certificate-template.yaml
 
 # Common labels for all KCC resources
 commonLabels:

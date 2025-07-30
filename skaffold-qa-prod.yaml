@@ -6,7 +6,7 @@ metadata:
   name: webapp-namespace
 manifests:
   rawYaml:
-  - k8s-clean/namespace/namespace-nonprod.yaml
+  - k8s-clean/namespace/namespace-unified.yaml
 deploy:
   kubectl:
     flags:
@@ -14,9 +14,6 @@ deploy:
 profiles:
 - name: qa
 - name: prod
-  manifests:
-    rawYaml:
-    - k8s-clean/namespace/namespace-prod.yaml
 ---
 # App deployment module (switches between QA and Production based on profile)
 apiVersion: skaffold/v4beta13

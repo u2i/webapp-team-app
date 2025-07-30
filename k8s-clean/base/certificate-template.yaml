@@ -31,8 +31,8 @@ spec:
   projectRef:
     external: ${PROJECT_ID} # from-param: ${PROJECT_ID}
   mapRef:
-    name: webapp-cert-map
-    namespace: infra-gw
+    name: webapp-cert-map  # Shared infrastructure resource
+    namespace: infra-gw   # Infrastructure gateway namespace
   certificatesRefs:
   - name: ${CERT_NAME} # from-param: ${CERT_NAME}
   hostname: ${DOMAIN} # from-param: ${DOMAIN}

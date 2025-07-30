@@ -7,6 +7,14 @@ metadata:
     cnrm.cloud.google.com/project-id: ${PROJECT_ID} # from-param: ${PROJECT_ID}
   labels:
     name: ${NAMESPACE} # from-param: ${NAMESPACE}
+    app: webapp
+    stage: ${STAGE} # from-param: ${STAGE}
+    boundary: ${BOUNDARY} # from-param: ${BOUNDARY}
+    tier: ${TIER} # from-param: ${TIER}
+    environment: ${ENV} # from-param: ${ENV}
+    compliance: iso27001-soc2-gdpr
+    data-residency: eu
+    tenant: webapp-team
     istio-injection: enabled
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/audit: restricted

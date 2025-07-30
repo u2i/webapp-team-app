@@ -33,7 +33,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: webapp
-        image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
+        image: europe-west1-docker.pkg.dev/${PROJECT_ID}/webapp-images/webapp # from-param: ${PROJECT_ID}
         ports:
         - containerPort: 8080
           name: http
