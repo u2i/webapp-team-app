@@ -18,7 +18,7 @@ steps:
 - name: 'google/cloud-sdk:alpine'
   id: 'deploy-dev'
   entrypoint: 'bash'
-  args: ['scripts/deploy-dev.sh']
+  args: ['scripts/deploy.sh', 'dev']
   env:
   - 'PROJECT_ID=${_PROJECT_ID}'
   - 'REGION=${_REGION}'

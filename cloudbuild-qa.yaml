@@ -18,12 +18,13 @@ steps:
 - name: 'google/cloud-sdk:alpine'
   id: 'deploy-qa'
   entrypoint: 'bash'
-  args: ['scripts/deploy-qa.sh']
+  args: ['scripts/deploy.sh', 'qa']
   env:
   - 'PROJECT_ID=${_PROJECT_ID}'
   - 'REGION=${_REGION}'
   - 'COMMIT_SHA=$COMMIT_SHA'
   - 'SHORT_SHA=$SHORT_SHA'
+  - 'TAG_NAME=$TAG_NAME'
 
 # Send Slack notification
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
