@@ -144,7 +144,7 @@ case "$ENVIRONMENT" in
     SERVICE_NAME="preview-webapp-service"
     CERT_NAME="webapp-preview-cert-${PREVIEW_NAME}"
     CERT_ENTRY_NAME="webapp-preview-entry-${PREVIEW_NAME}"
-    CERT_DESCRIPTION="Certificate for ${DOMAIN}"
+    CERT_DESCRIPTION="Certificate-for-${DOMAIN}"
     IMAGE_TAG="preview-${COMMIT_SHA}"
     RELEASE_NAME="${RELEASE_NAME:-preview-${PREVIEW_NAME}-${SHORT_SHA}}"
     ;;
@@ -210,8 +210,7 @@ IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/webapp-images/webapp"
 IMAGE_WITH_TAG="${IMAGE}:${IMAGE_TAG}"
 
 # Create deployment parameters string
-# Quote CERT_DESCRIPTION to handle spaces
-DEPLOY_PARAMS="NAMESPACE=${NAMESPACE},ENV=${ENV},API_URL=${API_URL},STAGE=${STAGE},BOUNDARY=${BOUNDARY},TIER=${TIER},NAME_PREFIX=${NAME_PREFIX},DOMAIN=${DOMAIN},ROUTE_NAME=${ROUTE_NAME},SERVICE_NAME=${SERVICE_NAME},CERT_NAME=${CERT_NAME},CERT_ENTRY_NAME=${CERT_ENTRY_NAME},CERT_DESCRIPTION=\"${CERT_DESCRIPTION}\",PROJECT_ID=${PROJECT_ID}"
+DEPLOY_PARAMS="NAMESPACE=${NAMESPACE},ENV=${ENV},API_URL=${API_URL},STAGE=${STAGE},BOUNDARY=${BOUNDARY},TIER=${TIER},NAME_PREFIX=${NAME_PREFIX},DOMAIN=${DOMAIN},ROUTE_NAME=${ROUTE_NAME},SERVICE_NAME=${SERVICE_NAME},CERT_NAME=${CERT_NAME},CERT_ENTRY_NAME=${CERT_ENTRY_NAME},CERT_DESCRIPTION=${CERT_DESCRIPTION},PROJECT_ID=${PROJECT_ID}"
 
 # Create Cloud Deploy release
 echo "Creating Cloud Deploy release for $ENVIRONMENT environment..."
@@ -220,26 +219,27 @@ echo "  Target: $TARGET"
 echo "  Release: $RELEASE_NAME"
 echo "  Image: $IMAGE_WITH_TAG"
 
-# Check if we need to impersonate and pass parameters
-# Dev and Preview: Need impersonation and CLI parameters
-# QA and Prod: No impersonation, parameters already in YAML
+# Build the gcloud command based on environment
 if [[ "$ENVIRONMENT" == "dev" || "$ENVIRONMENT" == "preview" ]]; then
-  IMPERSONATE_FLAG="--impersonate-service-account=cloud-deploy-sa@${PROJECT_ID}.iam.gserviceaccount.com"
-  PARAMS_FLAG="--deploy-parameters=$DEPLOY_PARAMS"
+  # Dev and Preview: Need impersonation and CLI parameters
+  gcloud deploy releases create "$RELEASE_NAME" \
+    --delivery-pipeline="$PIPELINE" \
+    --region="${REGION}" \
+    --project="${PROJECT_ID}" \
+    --images="${IMAGE}=${IMAGE_WITH_TAG}" \
+    --to-target="$TARGET" \
+    --skaffold-file="$SKAFFOLD_FILE" \
+    --deploy-parameters="$DEPLOY_PARAMS" \
+    --impersonate-service-account="cloud-deploy-sa@${PROJECT_ID}.iam.gserviceaccount.com"
 else
-  # QA/Prod have parameters in clouddeploy-qa-prod.yaml
-  IMPERSONATE_FLAG=""
-  PARAMS_FLAG=""
+  # QA/Prod: No impersonation, parameters already in YAML
+  gcloud deploy releases create "$RELEASE_NAME" \
+    --delivery-pipeline="$PIPELINE" \
+    --region="${REGION}" \
+    --project="${PROJECT_ID}" \
+    --images="${IMAGE}=${IMAGE_WITH_TAG}" \
+    --to-target="$TARGET" \
+    --skaffold-file="$SKAFFOLD_FILE"
 fi
-
-gcloud deploy releases create "$RELEASE_NAME" \
-  --delivery-pipeline="$PIPELINE" \
-  --region="${REGION}" \
-  --project="${PROJECT_ID}" \
-  --images="${IMAGE}=${IMAGE_WITH_TAG}" \
-  --to-target="$TARGET" \
-  --skaffold-file="$SKAFFOLD_FILE" \
-  $PARAMS_FLAG \
-  $IMPERSONATE_FLAG
 
 echo "✅ $ENVIRONMENT deployment initiated: https://${DOMAIN}"
