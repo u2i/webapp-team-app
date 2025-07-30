@@ -17,21 +17,15 @@ Preview deployments allow you to deploy feature branches or test versions to cus
 
 ## Quick Start
 
-### Deploy with Default Domain
+### Deploy Preview Environment
 
 ```bash
-# Deploy to preview.webapp.u2i.dev
-./scripts/deploy-preview.sh preview
-```
+# Deploy PR preview
+./scripts/deploy.sh preview --pr-number 123
+# Creates: pr123.webapp.u2i.dev
 
-### Deploy with Custom Domain
-
-```bash
-# Deploy to foo.webapp.u2i.dev
-./scripts/deploy-preview.sh foo
-
-# Or specify full domain
-./scripts/deploy-preview.sh myfeature myfeature.webapp.u2i.dev
+# Note: PR number is required for preview deployments
+# In CI/CD, this is automatically extracted from the PR
 ```
 
 ## Manual Deployment

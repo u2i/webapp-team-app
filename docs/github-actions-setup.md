@@ -51,13 +51,13 @@ Until WIF is configured, you can test preview deployments manually:
 
 ```bash
 # Deploy a preview
-./scripts/deploy-preview.sh pr-999
+./scripts/deploy.sh preview --pr-number 999
 
 # Check status
-kubectl get pods -n webapp-preview-pr-999
+kubectl get pods -n webapp-preview-pr999
 
 # Access the preview
-curl https://pr-999.webapp.u2i.dev
+curl https://pr999.webapp.u2i.dev
 
 # Cleanup
 ./scripts/cleanup-preview-pr.sh 999

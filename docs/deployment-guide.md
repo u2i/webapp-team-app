@@ -55,22 +55,15 @@ The WebApp uses Google Cloud Deploy for continuous deployment with the following
 ### Deploy a Preview Environment
 
 ```bash
-./scripts/deploy-preview.sh my-feature
-# Creates: my-feature.webapp.u2i.dev
-```
-
-### Deploy a PR Preview
-
-```bash
-./scripts/deploy-preview.sh pr-123
-# Creates: pr-123.webapp.u2i.dev
+./scripts/deploy.sh preview --pr-number 123
+# Creates: pr123.webapp.u2i.dev
 ```
 
 ### Promote to Production
 
 ```bash
-./scripts/promote-to-prod.sh v1.2.3
-# Promotes release v1.2.3 from QA to Production (requires approval)
+./scripts/deploy.sh prod --promote --release qa-abc123
+# Promotes release qa-abc123 from QA to Production (requires approval)
 ```
 
 ## GitHub Actions
