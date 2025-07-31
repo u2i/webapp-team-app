@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: webapp-team
-  labels:
-    compliance: iso27001-soc2-gdpr
-    data-residency: eu
-    tenant: webapp-team
