@@ -34,6 +34,16 @@ serialPipeline:
           CERT_DESCRIPTION: "Certificate for qa.webapp.u2i.dev"
           PROJECT_ID: "u2i-tenant-webapp-nonprod"
           PDB_MIN_AVAILABLE: "1"
+          # Resource parameters for preprod profile
+          REPLICAS: "2"
+          MEMORY_REQUEST: "128Mi"
+          CPU_REQUEST: "100m"
+          MEMORY_LIMIT: "256Mi"
+          CPU_LIMIT: "200m"
+          # Config parameters
+          PROFILE: "qa"
+          LOG_LEVEL: "info"
+          GRACEFUL_SHUTDOWN_TIMEOUT: "10s"
   - targetId: prod-gke
     profiles:
       - prod
@@ -56,6 +66,18 @@ serialPipeline:
           CERT_DESCRIPTION: "Certificate for webapp.u2i.com"
           PROJECT_ID: "u2i-tenant-webapp-prod"
           PDB_MIN_AVAILABLE: "2"
+          # Resource parameters for prod profile
+          REPLICAS: "3"
+          MEMORY_REQUEST: "512Mi"
+          CPU_REQUEST: "500m"
+          MEMORY_LIMIT: "1Gi"
+          CPU_LIMIT: "1000m"
+          # Config parameters
+          PROFILE: "prod"
+          LOG_LEVEL: "info"
+          GRACEFUL_SHUTDOWN_TIMEOUT: "30s"
+          ENABLE_PROFILING: "false"
+          ENABLE_METRICS: "true"
 
 ---
 # QA Target

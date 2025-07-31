@@ -5,7 +5,7 @@ resources:
 - deployment.yaml
 - service.yaml
 - network-policy.yaml
-- gateway-route.yaml
+- httproute.yaml
 - pod-disruption-budget.yaml
 # Note: namespace.yaml is handled separately by Cloud Deploy
 

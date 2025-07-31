@@ -10,16 +10,16 @@ patches:
   patch: |-
     - op: replace
       path: /spec/replicas
-      value: 3
+      value: ${REPLICAS} # from-param: ${REPLICAS}
     - op: replace
       path: /spec/template/spec/containers/0/resources
       value:
         requests:
-          memory: "512Mi"
-          cpu: "500m"
+          memory: "${MEMORY_REQUEST}" # from-param: ${MEMORY_REQUEST}
+          cpu: "${CPU_REQUEST}" # from-param: ${CPU_REQUEST}
         limits:
-          memory: "1Gi"
-          cpu: "1000m"
+          memory: "${MEMORY_LIMIT}" # from-param: ${MEMORY_LIMIT}
+          cpu: "${CPU_LIMIT}" # from-param: ${CPU_LIMIT}
     - op: add
       path: /spec/template/spec/affinity
       value:
@@ -36,14 +36,13 @@ patches:
               topologyKey: kubernetes.io/hostname
 
 resources:
-- pod-disruption-budget.yaml
 - horizontal-pod-autoscaler.yaml
 
 configMapGenerator:
 - name: webapp-profile-config
   literals:
-    - PROFILE=prod
-    - LOG_LEVEL=info
-    - GRACEFUL_SHUTDOWN_TIMEOUT=30s
-    - ENABLE_PROFILING=false
-    - ENABLE_METRICS=true
+    - PROFILE=${PROFILE} # from-param: ${PROFILE}
+    - LOG_LEVEL=${LOG_LEVEL} # from-param: ${LOG_LEVEL}
+    - GRACEFUL_SHUTDOWN_TIMEOUT=${GRACEFUL_SHUTDOWN_TIMEOUT} # from-param: ${GRACEFUL_SHUTDOWN_TIMEOUT}
+    - ENABLE_PROFILING=${ENABLE_PROFILING} # from-param: ${ENABLE_PROFILING}
+    - ENABLE_METRICS=${ENABLE_METRICS} # from-param: ${ENABLE_METRICS}
