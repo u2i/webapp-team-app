@@ -6,7 +6,7 @@ metadata:
   name: webapp-namespace
 manifests:
   rawYaml:
-  - k8s-clean/namespace/namespace-unified.yaml
+  - k8s/namespace/namespace.yaml
 deploy:
   kubectl:
     flags:
@@ -39,7 +39,8 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s-clean/base
+      - k8s/app/base
+      - k8s/app/resources/preprod
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
 - name: prod
@@ -49,7 +50,8 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s-clean/base
+      - k8s/app/base
+      - k8s/app/resources/prod
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
 ---
@@ -60,7 +62,7 @@ metadata:
   name: webapp-kcc
 manifests:
   rawYaml:
-  - k8s-clean/base/certificate-template.yaml
+  - k8s/gcp/certificate.yaml
 deploy:
   kubectl:
     flags:

@@ -6,7 +6,7 @@ metadata:
 # Namespace module - just renders and deploys namespace
 manifests:
   rawYaml:
-  - k8s-clean/namespace/namespace-unified.yaml
+  - k8s/namespace/namespace.yaml
 deploy:
   kubectl:
     flags:
@@ -25,7 +25,8 @@ build:
 manifests:
   kustomize:
     paths:
-    - k8s-clean/base
+    - k8s/app/base
+    - k8s/app/resources/preview
     buildArgs:
     - --load-restrictor=LoadRestrictionsNone
 deploy:
@@ -42,7 +43,7 @@ metadata:
   name: webapp-preview-kcc
 manifests:
   rawYaml:
-  - k8s-clean/base/certificate-template.yaml
+  - k8s/gcp/certificate.yaml
 deploy:
   kubectl:
     flags:
