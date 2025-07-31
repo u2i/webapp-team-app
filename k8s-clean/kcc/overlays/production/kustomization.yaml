@@ -3,9 +3,10 @@ kind: Kustomization
 
 # KCC resources for production environment
 # These are deployed with statusCheck disabled to avoid Skaffold bug #7207
+# All values come from Cloud Deploy parameters - no patches needed
 
 resources:
-# Use base certificate template
+# Use base certificate template with parameters
 - ../../../base/certificate-template.yaml
 
 # Common labels for all KCC resources
@@ -14,51 +15,3 @@ commonLabels:
   environment: prod
   compliance: iso27001-soc2-gdpr
   data-residency: eu
-
-# Patches to set production-specific values
-patches:
-- target:
-    kind: CertificateManagerCertificate
-    name: webapp-cert
-  patch: |-
-    - op: replace
-      path: /metadata/name
-      value: webapp-prod-cert
-    - op: replace
-      path: /metadata/namespace
-      value: webapp-prod
-    - op: replace
-      path: /metadata/annotations/cnrm.cloud.google.com~1project-id
-      value: u2i-tenant-webapp-prod
-    - op: replace
-      path: /spec/projectRef/external
-      value: u2i-tenant-webapp-prod
-    - op: replace
-      path: /spec/description
-      value: Certificate for webapp.u2i.com
-    - op: replace
-      path: /spec/managed/domains/0
-      value: webapp.u2i.com
-
-- target:
-    kind: CertificateManagerCertificateMapEntry
-    name: webapp-entry
-  patch: |-
-    - op: replace
-      path: /metadata/name
-      value: webapp-prod-entry
-    - op: replace
-      path: /metadata/namespace
-      value: webapp-prod
-    - op: replace
-      path: /metadata/annotations/cnrm.cloud.google.com~1project-id
-      value: u2i-tenant-webapp-prod
-    - op: replace
-      path: /spec/projectRef/external
-      value: u2i-tenant-webapp-prod
-    - op: replace
-      path: /spec/hostname
-      value: webapp.u2i.com
-    - op: replace
-      path: /spec/certificatesRefs/0/name
-      value: webapp-prod-cert
