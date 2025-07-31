@@ -22,12 +22,6 @@ metadata:
 build:
   artifacts:
   - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
-manifests:
-  kustomize:
-    paths:
-    - k8s/app/resources/preview
-    buildArgs:
-    - --load-restrictor=LoadRestrictionsNone
 deploy:
   kubectl:
     flags:
@@ -35,6 +29,12 @@ deploy:
   statusCheck: true  # Enable status checking for app resources
 profiles:
 - name: preview-all
+  manifests:
+    kustomize:
+      paths:
+      - k8s/app/resources/preview
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
 ---
 apiVersion: skaffold/v4beta13
 kind: Config
