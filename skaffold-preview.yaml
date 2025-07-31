@@ -41,11 +41,8 @@ kind: Config
 metadata:
   name: webapp-preview-kcc
 manifests:
-  kustomize:
-    paths:
-    - k8s-clean/kcc/overlays/preview
-    buildArgs:
-    - --load-restrictor=LoadRestrictionsNone
+  rawYaml:
+  - k8s-clean/base/certificate-template.yaml
 deploy:
   kubectl:
     flags:

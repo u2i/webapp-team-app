@@ -59,11 +59,8 @@ kind: Config
 metadata:
   name: webapp-kcc
 manifests:
-  kustomize:
-    paths:
-    - k8s-clean/kcc/overlays/qa  # Default to QA
-    buildArgs:
-    - --load-restrictor=LoadRestrictionsNone
+  rawYaml:
+  - k8s-clean/base/certificate-template.yaml
 deploy:
   kubectl:
     flags:
@@ -71,16 +68,4 @@ deploy:
   statusCheck: false  # Disable status checking for KCC resources
 profiles:
 - name: qa
-  manifests:
-    kustomize:
-      paths:
-      - k8s-clean/kcc/overlays/qa
-      buildArgs:
-      - --load-restrictor=LoadRestrictionsNone
 - name: prod
-  manifests:
-    kustomize:
-      paths:
-      - k8s-clean/kcc/overlays/production
-      buildArgs:
-      - --load-restrictor=LoadRestrictionsNone
