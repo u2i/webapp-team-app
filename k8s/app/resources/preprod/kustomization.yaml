@@ -3,6 +3,9 @@ kind: Kustomization
 
 # Preprod profile - medium resources for dev/qa environments
 
+resources:
+- ../../base
+
 patches:
 - target:
     kind: Deployment
