@@ -39,7 +39,7 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/qa
+      - k8s-clean/base
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
 - name: prod
@@ -49,7 +49,7 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s-clean/overlays/production
+      - k8s-clean/base
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
 ---
