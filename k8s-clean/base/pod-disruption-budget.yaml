@@ -4,10 +4,9 @@ metadata:
   name: webapp-pdb
   namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
 spec:
-  minAvailable: 2
+  minAvailable: ${PDB_MIN_AVAILABLE} # from-param: ${PDB_MIN_AVAILABLE}
   selector:
     matchLabels:
       app: webapp
-      app.kubernetes.io/component: webapp
   # Allow disruption during maintenance windows
   unhealthyPodEvictionPolicy: AlwaysAllow
