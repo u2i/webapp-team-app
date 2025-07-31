@@ -25,7 +25,6 @@ build:
 manifests:
   kustomize:
     paths:
-    - k8s/app/base
     - k8s/app/resources/preview
     buildArgs:
     - --load-restrictor=LoadRestrictionsNone

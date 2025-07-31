@@ -35,16 +35,6 @@ serialPipeline:
           CERT_DESCRIPTION: "Certificate for dev.webapp.u2i.dev"
           PROJECT_ID: "u2i-tenant-webapp-nonprod"
           PDB_MIN_AVAILABLE: "1"
-          # Resource parameters for preprod profile
-          REPLICAS: "1"
-          MEMORY_REQUEST: "64Mi"
-          CPU_REQUEST: "50m"
-          MEMORY_LIMIT: "128Mi"
-          CPU_LIMIT: "100m"
-          # Config parameters
-          PROFILE: "dev"
-          LOG_LEVEL: "debug"
-          GRACEFUL_SHUTDOWN_TIMEOUT: "5s"
 
 ---
 apiVersion: deploy.cloud.google.com/v1

@@ -3,27 +3,30 @@ kind: Kustomization
 
 # Preview profile - small resources for PR preview environments
 
+resources:
+- ../../base
+
 patches:
 - target:
     kind: Deployment
-    name: webapp
+    labelSelector: app=webapp
   patch: |-
     - op: replace
       path: /spec/replicas
-      value: ${REPLICAS} # from-param: ${REPLICAS}
+      value: 1
     - op: replace
       path: /spec/template/spec/containers/0/resources
       value:
         requests:
-          memory: "${MEMORY_REQUEST}" # from-param: ${MEMORY_REQUEST}
-          cpu: "${CPU_REQUEST}" # from-param: ${CPU_REQUEST}
+          memory: "64Mi"
+          cpu: "50m"
         limits:
-          memory: "${MEMORY_LIMIT}" # from-param: ${MEMORY_LIMIT}
-          cpu: "${CPU_LIMIT}" # from-param: ${CPU_LIMIT}
+          memory: "128Mi"
+          cpu: "100m"
 
 configMapGenerator:
 - name: webapp-profile-config
   literals:
-    - PROFILE=${PROFILE} # from-param: ${PROFILE}
-    - LOG_LEVEL=${LOG_LEVEL} # from-param: ${LOG_LEVEL}
-    - GRACEFUL_SHUTDOWN_TIMEOUT=${GRACEFUL_SHUTDOWN_TIMEOUT} # from-param: ${GRACEFUL_SHUTDOWN_TIMEOUT}
+    - PROFILE=preview
+    - LOG_LEVEL=debug
+    - GRACEFUL_SHUTDOWN_TIMEOUT=5s

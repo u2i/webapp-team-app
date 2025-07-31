@@ -23,12 +23,6 @@ metadata:
 build:
   artifacts:
   - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
-manifests:
-  kustomize:
-    paths:
-    - k8s-clean/overlays/qa  # Default to QA
-    buildArgs:
-    - --load-restrictor=LoadRestrictionsNone
 deploy:
   kubectl:
     flags:
@@ -39,7 +33,6 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s/app/base
       - k8s/app/resources/preprod
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
@@ -50,7 +43,6 @@ profiles:
   manifests:
     kustomize:
       paths:
-      - k8s/app/base
       - k8s/app/resources/prod
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
