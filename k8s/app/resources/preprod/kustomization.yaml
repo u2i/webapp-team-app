@@ -6,12 +6,12 @@ kind: Kustomization
 resources:
 - ../../base
 
-patchesJson6902:
+patches:
 - target:
     group: apps
     version: v1
     kind: Deployment
-    name: webapp
+    labelSelector: app=webapp
   patch: |-
     - op: replace
       path: /spec/replicas
@@ -19,12 +19,8 @@ patchesJson6902:
     - op: replace
       path: /spec/template/spec/containers/0/resources
       value:
-        requests:
-          memory: "64Mi"
-          cpu: "50m"
-        limits:
-          memory: "128Mi"
-          cpu: "100m"
+        requests: { cpu: "50m",  memory: "64Mi" }
+        limits:   { cpu: "100m", memory: "128Mi" }
 
 configMapGenerator:
 - name: webapp-profile-config
