@@ -18,18 +18,6 @@ serialPipeline:
     strategy:
       standard:
         verify: false
-    deployParameters:
-      - values:
-          # Resource parameters for preview profile
-          REPLICAS: "1"
-          MEMORY_REQUEST: "64Mi"
-          CPU_REQUEST: "50m"
-          MEMORY_LIMIT: "128Mi"
-          CPU_LIMIT: "100m"
-          # Config parameters
-          PROFILE: "preview"
-          LOG_LEVEL: "debug"
-          GRACEFUL_SHUTDOWN_TIMEOUT: "5s"
 
 ---
 apiVersion: deploy.cloud.google.com/v1
