@@ -1,0 +1,68 @@
+# Unified Skaffold configuration for all environments
+# Preview deployments include namespace and certificate resources
+# Dev/QA/Prod only deploy application updates
+
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp
+build:
+  artifacts:
+  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
+    context: .
+    docker:
+      dockerfile: Dockerfile
+  tagPolicy:
+    gitCommit: {}
+  local:
+    concurrency: 1
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+  statusCheck: true
+profiles:
+# Preview profile - includes namespace and certificate for ephemeral environments
+- name: preview-all
+  manifests:
+    rawYaml:
+    - k8s/namespace/namespace.yaml
+    - k8s/gcp/certificate.yaml
+    kustomize:
+      paths: 
+      - k8s/app/resources/preview
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+
+# Dev profile - application only (namespace pre-exists)
+- name: dev
+  manifests:
+    kustomize:
+      paths: 
+      - k8s/app/resources/preprod
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+
+# QA profile - application only (namespace pre-exists)
+- name: qa
+  manifests:
+    kustomize:
+      paths: 
+      - k8s/app/resources/preprod
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+
+# Production profile - application only with prod image registry
+- name: prod
+  build:
+    artifacts:
+    - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-prod/webapp-images/webapp
+      context: .
+      docker:
+        dockerfile: Dockerfile
+  manifests:
+    kustomize:
+      paths: 
+      - k8s/app/resources/prod
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
