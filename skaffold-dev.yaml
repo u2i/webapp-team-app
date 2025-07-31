@@ -39,11 +39,8 @@ kind: Config
 metadata:
   name: webapp-dev-kcc
 manifests:
-  kustomize:
-    paths:
-    - k8s-clean/kcc/overlays/dev
-    buildArgs:
-    - --load-restrictor=LoadRestrictionsNone
+  rawYaml:
+  - k8s-clean/base/certificate-template.yaml
 deploy:
   kubectl:
     flags:
