@@ -1,6 +1,6 @@
 # Deployment, Validation and Troubleshooting Guide
 
-This guide documents the deployment process, validation steps, and common troubleshooting procedures for the webapp-team-app across all environments (dev, preview, QA, and production).
+This guide documents the deployment process, validation steps, and troubleshooting procedures for the webapp-team-app across all environments.
 
 ## Overview
 
@@ -11,57 +11,97 @@ The deployment pipeline uses:
 - **Kustomize** for configuration management
 - **Config Connector (KCC)** for Google Cloud resources
 
-## Deployment Process
+## Deployment Flow Summary
 
-### 1. Development (Automatic on merge to main)
+1. **PR** → Preview environment (automatic)
+2. **Merge to main** → Dev environment (automatic)
+3. **Git tag** → QA environment (automatic)
+4. **Promote** → Production (manual approval)
 
-When code is merged to main, dev deployment triggers automatically:
+## Deployment Testing Flow
+
+Follow this order to ensure changes are properly tested before reaching production:
+
+### 1. Create Pull Request
 
 ```bash
-# Check for new dev release
-gcloud deploy releases list --delivery-pipeline=webapp-dev-pipeline --region=europe-west1 --project=u2i-tenant-webapp-nonprod --limit=2 --format="table(name.basename(),createTime.date())"
+# Create feature branch
+git checkout -b feature-branch-name
 
-# Check rollout status
-gcloud deploy rollouts describe dev-<SHA>-to-dev-gke-0001 --release=dev-<SHA> --delivery-pipeline=webapp-dev-pipeline --region=europe-west1 --project=u2i-tenant-webapp-nonprod --format="value(state)"
+# Make changes and commit
+git add -A && git commit -m "Description of changes"
+git push -u origin feature-branch-name
+
+# Create PR
+gh pr create --title "Title" --body "Description"
 ```
 
-### 2. Preview (Automatic on PR)
+### 2. Validate Preview Deployment (Automatic on PR)
 
 Preview deployments are created automatically for each PR:
 
 ```bash
-# Check preview deployment status
-kubectl get pods -n webapp-preview-pr<NUMBER> -l app=webapp
+# Wait for preview deployment to complete
+# Check PR status on GitHub or use:
+gh pr view <PR_NUMBER> --json statusCheckRollup
 
-# Verify preview URL
+# Once deployed, verify preview environment
 curl -s https://pr<NUMBER>.webapp.u2i.dev/health | jq .
+
+# Check preview pods and resources
+kubectl get pods -n webapp-preview-pr<NUMBER> -l app=webapp
+kubectl get deployment,svc,pdb -n webapp-preview-pr<NUMBER>
 ```
 
-### 3. QA (Triggered by git tag)
-
-Create a tag to deploy to QA:
+### 3. Merge to Main → Dev Deployment
 
 ```bash
-# Create and push tag
-git tag -a v1.X.Y -m "Description of changes" && git push origin v1.X.Y
+# After preview validation, merge PR
+gh pr merge <PR_NUMBER> --merge --delete-branch
 
-# Check QA release
-gcloud deploy releases list --delivery-pipeline=webapp-qa-prod-pipeline --region=europe-west1 --project=u2i-tenant-webapp-nonprod --limit=2 --format="table(name.basename(),createTime.date())"
+# Dev deployment triggers automatically on merge
+# Monitor dev deployment
+gcloud deploy releases list --delivery-pipeline=webapp-dev-pipeline --region=europe-west1 --project=u2i-tenant-webapp-nonprod --limit=2
+
+# Check rollout status
+gcloud deploy rollouts describe dev-<SHA>-to-dev-gke-0001 --release=dev-<SHA> --delivery-pipeline=webapp-dev-pipeline --region=europe-west1 --project=u2i-tenant-webapp-nonprod --format="value(state)"
+
+# Validate dev environment
+curl -s https://dev.webapp.u2i.dev/health | jq .
+```
+
+### 4. Tag for QA Deployment
+
+```bash
+# After dev validation, create tag for QA
+git pull origin main
+git tag -a v1.X.Y -m "Description of changes"
+git push origin v1.X.Y
+
+# Monitor QA deployment
+gcloud deploy releases list --delivery-pipeline=webapp-qa-prod-pipeline --region=europe-west1 --project=u2i-tenant-webapp-nonprod --limit=2
 
 # Check rollout status
 gcloud deploy rollouts describe qa-<SHA>-to-qa-gke-0001 --release=qa-<SHA> --delivery-pipeline=webapp-qa-prod-pipeline --region=europe-west1 --project=u2i-tenant-webapp-nonprod --format="value(state)"
+
+# Validate QA environment
+curl -s https://qa.webapp.u2i.dev/health | jq .
 ```
 
-### 4. Production (Promotion from QA)
-
-Promote QA release to production:
+### 5. Promote to Production
 
 ```bash
-# Promote to production
+# After QA validation, promote to production
 gcloud deploy releases promote --release=qa-<SHA> --delivery-pipeline=webapp-qa-prod-pipeline --region=europe-west1 --project=u2i-tenant-webapp-nonprod --to-target=prod-gke
 
-# Approve production rollout (if not auto-approved)
+# Approve production rollout if required
 gcloud deploy rollouts approve qa-<SHA>-to-prod-gke-0001 --release=qa-<SHA> --delivery-pipeline=webapp-qa-prod-pipeline --region=europe-west1 --project=u2i-tenant-webapp-nonprod
+
+# Monitor production deployment
+gcloud deploy rollouts describe qa-<SHA>-to-prod-gke-0001 --release=qa-<SHA> --delivery-pipeline=webapp-qa-prod-pipeline --region=europe-west1 --project=u2i-tenant-webapp-nonprod --format="value(state)"
+
+# Validate production environment
+curl -s https://webapp.u2i.com/health | jq .
 ```
 
 ## Validation Steps
@@ -111,70 +151,46 @@ Verify parameters are correctly substituted:
 kubectl get deployment -n <NAMESPACE> -o yaml | grep -E "image:|replicas:|minAvailable:"
 ```
 
-## Common Issues and Troubleshooting
+## Troubleshooting Deployments
 
-### 1. Deployment Selector Immutability Error
+### Finding Failed Deployments
 
-**Error**: `The Deployment "webapp" is invalid: spec.selector: Invalid value: v1.LabelSelector{...}: field is immutable`
-
-**Cause**: Existing deployment has different selector labels than the new configuration.
-
-**Solution**:
 ```bash
-# Delete the existing deployment to allow recreation
-kubectl delete deployment -n <NAMESPACE> <DEPLOYMENT_NAME>
+# List recent releases and their status
+gcloud deploy releases list --delivery-pipeline=<PIPELINE> --region=europe-west1 --project=<PROJECT> --limit=10
 
-# Retry the rollout
-gcloud deploy rollouts retry-job <ROLLOUT_NAME> --release=<RELEASE> --delivery-pipeline=<PIPELINE> --region=europe-west1 --project=<PROJECT> --job-id=deploy --phase-id=stable
+# Check specific rollout status
+gcloud deploy rollouts describe <ROLLOUT> --release=<RELEASE> --delivery-pipeline=<PIPELINE> --region=europe-west1 --project=<PROJECT>
+
+# Find failed builds
+gcloud builds list --project=<PROJECT> --region=europe-west1 --filter="status=FAILURE" --limit=5
+
+# Get build logs
+gcloud builds log <BUILD_ID> --project=<PROJECT> --region=europe-west1
 ```
 
-### 2. Parameter Substitution Failure
+### Retrying Failed Deployments
 
-**Error**: `Invalid value: intstr.IntOrString{Type:1, IntVal:0, StrVal:"${PARAMETER}"}: a valid percent string must be...`
-
-**Cause**: Parameters not being substituted, literal `${PARAMETER}` being used.
-
-**Solution**:
-1. Ensure parameters are defined in the appropriate config:
-   - For dev/preview: In `scripts/deploy.sh` 
-   - For QA/Prod: In `clouddeploy-qa-prod.yaml`
-2. Re-apply Cloud Deploy configuration:
-   ```bash
-   gcloud deploy apply --file=clouddeploy-qa-prod.yaml --region=europe-west1 --project=u2i-tenant-webapp-nonprod
-   ```
-
-### 3. Config Connector Immutable Field Error
-
-**Error**: `admission webhook "deny-immutable-field-updates.cnrm.cloud.google.com" denied the request: cannot make changes to immutable field(s): [projectRef]`
-
-**Cause**: Trying to update Config Connector resources with different project references.
-
-**Solution**:
 ```bash
-# Delete existing certificates
-kubectl delete certificatemanagercertificate <CERT_NAME> -n webapp-resources
-kubectl delete certificatemanagercertificatemapentry <ENTRY_NAME> -n webapp-resources
-
-# Retry deployment to recreate them
-gcloud deploy rollouts retry-job <ROLLOUT_NAME> --release=<RELEASE> --delivery-pipeline=<PIPELINE> --region=europe-west1 --project=<PROJECT> --job-id=deploy --phase-id=stable
+# Retry a failed rollout job
+gcloud deploy rollouts retry-job <ROLLOUT> --release=<RELEASE> --delivery-pipeline=<PIPELINE> --region=europe-west1 --project=<PROJECT> --job-id=deploy --phase-id=stable
 ```
 
-### 4. Cloud Build Failures
+### Common Debugging Commands
 
-**Check build logs**:
 ```bash
-# Find recent failed builds
-gcloud builds list --project=<PROJECT> --region=europe-west1 --filter="status=FAILURE" --limit=5 --format="table(id.scope(builds),status,createTime.date())"
+# Check pod events for errors
+kubectl describe pod -n <NAMESPACE> <POD_NAME>
 
-# Get detailed logs
-gcloud builds log <BUILD_ID> --project=<PROJECT> --region=europe-west1 | tail -50
+# Check deployment status
+kubectl rollout status deployment/<DEPLOYMENT_NAME> -n <NAMESPACE>
+
+# View recent events in namespace
+kubectl get events -n <NAMESPACE> --sort-by='.lastTimestamp'
+
+# Check resource YAML for issues
+kubectl get <RESOURCE_TYPE> <RESOURCE_NAME> -n <NAMESPACE> -o yaml
 ```
-
-### 5. Post-Comment Failures (Non-blocking)
-
-**Error**: `PERMISSION_DENIED: Permission 'secretmanager.versions.access' denied for resource`
-
-**Note**: This is a known non-blocking issue with GitHub comment posting. The deployment succeeds despite this error.
 
 ## Environment-Specific Details
 
@@ -225,15 +241,18 @@ watch -n 2 'kubectl get pods -n <NAMESPACE> -l app=webapp'
 gcloud builds log <BUILD_ID> --project=<PROJECT> --region=europe-west1 --stream
 ```
 
-## Best Practices
+## Testing Best Practices
 
-1. **Always verify preview deployments** before merging to main
-2. **Test dev deployment** before creating QA tag
-3. **Validate QA thoroughly** before promoting to production
-4. **Monitor rollout completion** before declaring success
-5. **Check application health endpoints** after deployment
-6. **Keep tags sequential** (v1.X.Y format) for clarity
-7. **Document significant changes** in tag messages
+1. **Always start with a PR** - Never push directly to main
+2. **Validate each environment** before proceeding to the next:
+   - Preview must pass before merging
+   - Dev must pass before tagging for QA
+   - QA must pass before promoting to production
+3. **Wait for deployments to complete** - Check rollout status, not just trigger
+4. **Verify application functionality** - Don't just check pod status
+5. **Use semantic versioning** for tags (v1.X.Y)
+6. **Test in the morning** - Avoid Friday afternoon deployments
+7. **Have a rollback plan** - Know the last working version
 
 ## Quick Reference Commands
 
