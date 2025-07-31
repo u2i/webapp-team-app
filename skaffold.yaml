@@ -1,0 +1,56 @@
+# Unified Skaffold configuration with profiles for all environments
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: webapp
+build:
+  artifacts:
+  - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+  statusCheck: true
+profiles:
+# Preview profile
+- name: preview-all
+  manifests:
+    rawYaml:
+    - k8s/namespace/namespace.yaml
+    - k8s/gcp/certificate.yaml
+    kustomize:
+      paths:
+      - k8s/app/resources/preview
+# Dev profile  
+- name: dev
+  manifests:
+    rawYaml:
+    - k8s/namespace/namespace.yaml
+    - k8s/gcp/certificate.yaml
+    kustomize:
+      paths:
+      - k8s/app/resources/preprod
+# QA profile
+- name: qa
+  build:
+    artifacts:
+    - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
+  manifests:
+    rawYaml:
+    - k8s/namespace/namespace.yaml
+    - k8s/gcp/certificate.yaml
+    kustomize:
+      paths:
+      - k8s/app/resources/preprod
+# Production profile
+- name: prod
+  build:
+    artifacts:
+    - image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-prod/webapp-images/webapp
+  manifests:
+    rawYaml:
+    - k8s/namespace/namespace.yaml
+    - k8s/gcp/certificate.yaml
+    kustomize:
+      paths:
+      - k8s/app/resources/prod
