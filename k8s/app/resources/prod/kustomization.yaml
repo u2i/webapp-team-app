@@ -5,6 +5,7 @@ kind: Kustomization
 
 resources:
 - ../../base
+- horizontal-pod-autoscaler.yaml
 
 patches:
 - target:
@@ -37,9 +38,6 @@ patches:
                   values:
                   - webapp
               topologyKey: kubernetes.io/hostname
-
-resources:
-- horizontal-pod-autoscaler.yaml
 
 configMapGenerator:
 - name: webapp-profile-config
