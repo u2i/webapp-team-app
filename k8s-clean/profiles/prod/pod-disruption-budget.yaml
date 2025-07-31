@@ -1,9 +1,0 @@
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: webapp-pdb
-spec:
-  minAvailable: 2  # Always keep at least 2 pods running
-  selector:
-    matchLabels:
-      app: webapp
