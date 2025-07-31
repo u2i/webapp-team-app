@@ -9,8 +9,10 @@ resources:
 
 patches:
 - target:
+    group: apps
+    version: v1
     kind: Deployment
-    name: webapp
+    labelSelector: app=webapp
   patch: |-
     - op: replace
       path: /spec/replicas
@@ -18,12 +20,8 @@ patches:
     - op: replace
       path: /spec/template/spec/containers/0/resources
       value:
-        requests:
-          memory: "512Mi"
-          cpu: "500m"
-        limits:
-          memory: "1Gi"
-          cpu: "1000m"
+        requests: { cpu: "500m",  memory: "512Mi" }
+        limits:   { cpu: "1000m", memory: "1Gi" }
     - op: add
       path: /spec/template/spec/affinity
       value:
@@ -35,8 +33,7 @@ patches:
                 matchExpressions:
                 - key: app
                   operator: In
-                  values:
-                  - webapp
+                  values: ["webapp"]
               topologyKey: kubernetes.io/hostname
 
 configMapGenerator:

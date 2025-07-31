@@ -1,0 +1,16 @@
+apiVersion: deploy.cloud.google.com/v1
+description: Preview deployment with Config Connector certificate provisioning
+kind: DeliveryPipeline
+metadata:
+  labels:
+    compliance: iso27001-soc2-gdpr
+    purpose: preview
+    team: webapp-team
+  name: webapp-preview-pipeline
+serialPipeline:
+  stages:
+  - profiles:
+    - preview-all
+    strategy:
+      standard: {}
+    targetId: preview-gke
