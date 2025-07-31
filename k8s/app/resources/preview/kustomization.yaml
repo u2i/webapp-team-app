@@ -3,6 +3,9 @@ kind: Kustomization
 
 # Preview profile - small resources for PR preview environments
 
+resources:
+- ../../base
+
 patches:
 - target:
     kind: Deployment

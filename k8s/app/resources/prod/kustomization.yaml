@@ -3,6 +3,9 @@ kind: Kustomization
 
 # Prod profile - production-grade resources and high availability
 
+resources:
+- ../../base
+
 patches:
 - target:
     kind: Deployment
