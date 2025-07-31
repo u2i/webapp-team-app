@@ -10,3 +10,4 @@ spec:
       app: webapp
   # Allow disruption during maintenance windows
   unhealthyPodEvictionPolicy: AlwaysAllow
+  # Note: PDB selector only needs to match a subset of pod labels
