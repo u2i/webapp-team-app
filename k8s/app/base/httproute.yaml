@@ -6,7 +6,7 @@ metadata:
   name: webapp-route # from-param: ${ROUTE_NAME}
   namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
   labels:
-    app: webapp
+    app: webapp # from-param: ${APP_NAME}
     stage: ${STAGE} # from-param: ${STAGE}
     boundary: ${BOUNDARY} # from-param: ${BOUNDARY}
     tier: ${TIER} # from-param: ${TIER}

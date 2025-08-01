@@ -4,7 +4,7 @@ metadata:
   name: webapp-service # from-param: ${SERVICE_NAME}
   namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
   labels:
-    app: webapp
+    app: webapp # from-param: ${APP_NAME}
     stage: ${STAGE} # from-param: ${STAGE}
     boundary: ${BOUNDARY} # from-param: ${BOUNDARY}
     tier: ${TIER} # from-param: ${TIER}
@@ -12,7 +12,7 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    app: webapp
+    app: webapp # from-param: ${APP_NAME}
   ports:
     - port: 80
       targetPort: 8080
