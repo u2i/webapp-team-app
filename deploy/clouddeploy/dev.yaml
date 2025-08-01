@@ -35,6 +35,7 @@ serialPipeline:
           CERT_DESCRIPTION: "Certificate for dev.webapp.u2i.dev"
           PROJECT_ID: "u2i-tenant-webapp-nonprod"
           PDB_MIN_AVAILABLE: "1"
+          APP_NAME: "webapp"
 
 ---
 apiVersion: deploy.cloud.google.com/v1

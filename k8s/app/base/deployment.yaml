@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: webapp # from-param: ${NAME_PREFIX}webapp
+  name: webapp # from-param: ${NAME_PREFIX}${APP_NAME}
   namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
   labels:
-    app: webapp
+    app: webapp # from-param: ${APP_NAME}
     stage: ${STAGE} # from-param: ${STAGE}
     boundary: ${BOUNDARY} # from-param: ${BOUNDARY}
     tier: ${TIER} # from-param: ${TIER}
@@ -13,12 +13,12 @@ spec:
   replicas: 2
   selector:
     matchLabels:
-      app: webapp
+      app: webapp # from-param: ${APP_NAME}
   template:
     metadata:
       labels:
-        app: webapp
-        tenant: webapp-team
+        app: webapp # from-param: ${APP_NAME}
+        tenant: webapp-team # from-param: ${APP_NAME}-team
         compliance: iso27001-soc2-gdpr
         data-residency: eu
       annotations:
@@ -32,7 +32,7 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       containers:
-      - name: webapp
+      - name: webapp # from-param: ${APP_NAME}
         image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
         ports:
         - containerPort: 8080
