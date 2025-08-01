@@ -22,14 +22,14 @@ deploy:
       apply: ["--server-side", "--force-conflicts"]
   statusCheck: true
 profiles:
-# Preview profile - includes namespace and certificate for ephemeral environments
+# Preview profile - includes all resources for preview deployments
 - name: preview-all
   manifests:
     rawYaml:
     - ../k8s/namespace/namespace.yaml
     - ../k8s/gcp/certificate.yaml
     kustomize:
-      paths: 
+      paths:
       - ../k8s/app/resources/preview
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone

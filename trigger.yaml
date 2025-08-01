@@ -1,0 +1,19 @@
+approvalConfig: {}
+createTime: '2025-07-20T15:23:01.943066869Z'
+description: Deploy webapp preview environments for pull requests
+filename: deploy/cloudbuild/preview.yaml
+id: c1552f42-ebce-47cc-bd3b-8672dca3e9b7
+name: webapp-preview-deployment
+repositoryEventConfig:
+  pullRequest:
+    branch: ^main$
+  repository: projects/u2i-tenant-webapp-nonprod/locations/europe-west1/connections/webapp-github/repositories/webapp-team-app
+  repositoryType: GITHUB
+resourceName: projects/u2i-tenant-webapp-nonprod/locations/europe-west1/triggers/c1552f42-ebce-47cc-bd3b-8672dca3e9b7
+serviceAccount: projects/u2i-tenant-webapp-nonprod/serviceAccounts/webapp-ci@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com
+substitutions:
+  _APP_NAME: webapp
+  _CLUSTER_NAME: webapp-cluster
+  _NAMESPACE: webapp
+  _PROJECT_ID: u2i-tenant-webapp-nonprod
+  _REGION: europe-west1

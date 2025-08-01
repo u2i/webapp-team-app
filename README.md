@@ -119,3 +119,4 @@ Before each deployment, ensure:
 Last deployment triggered after workload identity fix.
 Preview deployment test: 2025-06-29 - Testing with Config Connector CRDs installed
 Deployment cleanup test: 2025-07-26 - Testing full deployment pipeline
+# Preview deployment test
