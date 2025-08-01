@@ -1,0 +1,15 @@
+# Compliance CLI configuration for webapp-team-app
+# All fields are required
+
+# Application identifier
+app: webapp
+
+# GCP projects
+projects:
+  nonprod: u2i-tenant-webapp-nonprod
+  prod: u2i-tenant-webapp-prod
+
+# Domain configuration  
+domains:
+  nonprod_base: u2i.dev
+  prod_base: u2i.com
