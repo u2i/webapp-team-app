@@ -22,17 +22,11 @@ deploy:
       apply: ["--server-side", "--force-conflicts"]
   statusCheck: true
 profiles:
-# Preview profile - includes namespace and certificate for ephemeral environments
+# Preview profile - uses the modular configuration to avoid Config Connector bug
 - name: preview-all
-  manifests:
-    rawYaml:
-    - ../k8s/namespace/namespace.yaml
-    - ../k8s/gcp/certificate.yaml
-    kustomize:
-      paths: 
-      - ../k8s/app/resources/preview
-      buildArgs:
-      - --load-restrictor=LoadRestrictionsNone
+  requires:
+  - configs: ["preview-namespace", "preview-gcp", "preview-app"]
+    path: skaffold-preview-modules.yaml
 
 # Dev profile - application only (namespace pre-exists)
 - name: dev
