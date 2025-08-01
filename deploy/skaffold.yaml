@@ -26,11 +26,11 @@ profiles:
 - name: preview-all
   manifests:
     rawYaml:
-    - k8s/namespace/namespace.yaml
-    - k8s/gcp/certificate.yaml
+    - ../k8s/namespace/namespace.yaml
+    - ../k8s/gcp/certificate.yaml
     kustomize:
       paths: 
-      - k8s/app/resources/preview
+      - ../k8s/app/resources/preview
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
 
@@ -39,7 +39,7 @@ profiles:
   manifests:
     kustomize:
       paths: 
-      - k8s/app/resources/preprod
+      - ../k8s/app/resources/preprod
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
 
@@ -48,7 +48,7 @@ profiles:
   manifests:
     kustomize:
       paths: 
-      - k8s/app/resources/preprod
+      - ../k8s/app/resources/preprod
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
 
@@ -63,6 +63,6 @@ profiles:
   manifests:
     kustomize:
       paths: 
-      - k8s/app/resources/prod
+      - ../k8s/app/resources/prod
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
