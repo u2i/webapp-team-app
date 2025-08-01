@@ -99,7 +99,7 @@ case "$ENVIRONMENT" in
   dev)
     PIPELINE="webapp-dev-pipeline"
     TARGET="dev-gke"
-    SKAFFOLD_FILE="skaffold-dev.yaml"
+    SKAFFOLD_FILE="deploy/skaffold.yaml"
     NAMESPACE="webapp-dev"
     ENV="dev"
     API_URL="https://api-dev.webapp.u2i.dev"
@@ -131,7 +131,7 @@ case "$ENVIRONMENT" in
     
     PIPELINE="webapp-preview-pipeline"
     TARGET="preview-gke"
-    SKAFFOLD_FILE="skaffold-preview.yaml"
+    SKAFFOLD_FILE="deploy/skaffold.yaml"
     PREVIEW_NAME="pr${PR_NUMBER}"
     NAMESPACE="webapp-preview-${PREVIEW_NAME}"
     ENV="preview"
@@ -154,7 +154,7 @@ case "$ENVIRONMENT" in
   qa)
     PIPELINE="webapp-qa-prod-pipeline"
     TARGET="qa-gke"
-    SKAFFOLD_FILE="skaffold-qa-prod.yaml"
+    SKAFFOLD_FILE="deploy/skaffold.yaml"
     NAMESPACE="webapp-qa"
     ENV="qa"
     API_URL="https://api-qa.webapp.u2i.dev"
