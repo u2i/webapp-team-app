@@ -5,6 +5,6 @@
 set -e
 
 # Download and run the compliance-cli
-# Using specific version to ensure we get v0.3.0
-export COMPLIANCE_CLI_VERSION=v0.3.0
-curl -sL https://raw.githubusercontent.com/u2i/compliance-cli/1f13255/scripts/deploy-wrapper.sh | bash -s -- "$@"
+# Using specific version to ensure we get v0.3.1 with cert fix
+export COMPLIANCE_CLI_VERSION=v0.3.1
+curl -sL https://raw.githubusercontent.com/u2i/compliance-cli/main/scripts/deploy-wrapper.sh | bash -s -- "$@"
