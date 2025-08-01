@@ -18,9 +18,6 @@ serialPipeline:
     strategy:
       standard:
         verify: false
-    deployParameters:
-      - values:
-          APP_NAME: "webapp"
 
 ---
 apiVersion: deploy.cloud.google.com/v1
