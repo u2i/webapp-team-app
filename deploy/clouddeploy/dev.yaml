@@ -18,24 +18,6 @@ serialPipeline:
     strategy:
       standard:
         verify: false
-    deployParameters:
-      - values:
-          NAMESPACE: "webapp-dev"
-          ENV: "dev"
-          API_URL: "https://api-dev.webapp.u2i.dev"
-          STAGE: "dev"
-          BOUNDARY: "nonprod"
-          TIER: "standard"
-          NAME_PREFIX: "dev-"
-          DOMAIN: "dev.webapp.u2i.dev"
-          ROUTE_NAME: "webapp-dev-route"
-          SERVICE_NAME: "dev-webapp-service"
-          CERT_NAME: "webapp-dev-cert"
-          CERT_ENTRY_NAME: "webapp-dev-entry"
-          CERT_DESCRIPTION: "Certificate for dev.webapp.u2i.dev"
-          PROJECT_ID: "u2i-tenant-webapp-nonprod"
-          PDB_MIN_AVAILABLE: "1"
-          APP_NAME: "webapp"
 
 ---
 apiVersion: deploy.cloud.google.com/v1

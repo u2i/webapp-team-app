@@ -5,6 +5,6 @@
 set -e
 
 # Download and run the compliance-cli
-# Using specific version to ensure we get v0.3.8 with QA deploy parameters support
-export COMPLIANCE_CLI_VERSION=v0.3.8
+# Using specific version to ensure we get v0.4.0 with full parameter support for all environments
+export COMPLIANCE_CLI_VERSION=v0.4.0
 curl -sL https://raw.githubusercontent.com/u2i/compliance-cli/main/scripts/deploy-wrapper.sh | bash -s -- "$@"
