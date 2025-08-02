@@ -17,6 +17,23 @@ serialPipeline:
       - qa
     strategy:
       standard: {}
+    deployParameters:
+      - values:
+          NAMESPACE: "webapp-qa"
+          ENV: "qa"
+          API_URL: "https://api-qa.webapp.u2i.dev"
+          STAGE: "qa"
+          BOUNDARY: "nonprod"
+          TIER: "standard"
+          NAME_PREFIX: "qa-"
+          DOMAIN: "qa.webapp.u2i.dev"
+          ROUTE_NAME: "webapp-qa-route"
+          SERVICE_NAME: "qa-webapp-service"
+          CERT_NAME: "webapp-qa-cert"
+          CERT_ENTRY_NAME: "webapp-qa-entry"
+          CERT_DESCRIPTION: "Certificate for qa.webapp.u2i.dev"
+          PROJECT_ID: "u2i-tenant-webapp-nonprod"
+          PDB_MIN_AVAILABLE: "1"
   - targetId: prod-gke
     profiles:
       - prod
