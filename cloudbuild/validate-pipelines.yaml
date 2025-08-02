@@ -1,0 +1,35 @@
+# Cloud Build configuration for validating pipeline configurations
+steps:
+  # Download compliance-cli
+  - name: 'gcr.io/cloud-builders/curl'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        mkdir -p bin
+        # For now, build from source since releases aren't published
+        apt-get update && apt-get install -y golang
+        git clone https://github.com/u2i/compliance-cli.git /tmp/compliance-cli
+        cd /tmp/compliance-cli
+        go build -o /workspace/bin/compliance-cli ./cmd/deploy
+        cd /workspace
+        chmod +x bin/compliance-cli
+
+  # Validate pipeline configurations
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Validating pipeline configurations..."
+        ./bin/compliance-cli validate pipelines --pipeline-dir deploy/clouddeploy
+        
+        if [ $? -ne 0 ]; then
+          echo "❌ Pipeline validation failed. Run 'make generate-pipelines' locally to regenerate."
+          exit 1
+        fi
+        
+        echo "✅ All pipeline configurations are valid!"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
