@@ -69,4 +69,4 @@ logs/
 *.log
 
 # Old pipeline files (archived)
-.old-pipeline-files/
+.old-pipeline-files/bin/
