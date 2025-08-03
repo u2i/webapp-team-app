@@ -2,20 +2,24 @@
 
 This repository contains the WebApp Team's application deployment infrastructure following ISO 27001, SOC 2 Type II, and GDPR compliance requirements.
 
-Test PR 85 - Single stage deployment with status checks enabled
-
 ## 🏗️ Repository Structure
 
 ```
 webapp-team-app/
-├── .github/workflows/           # GitOps CI/CD workflows for application
-├── k8s-manifests/              # Kubernetes application manifests
-├── k8s-infra/                  # Team-managed infrastructure (RBAC, quotas)
-├── configs/                    # Environment-specific configurations
-├── clouddeploy-3stage.yaml    # Cloud Deploy 3-stage pipelines
-├── clouddeploy-preview.yaml   # Preview deployment pipeline
-├── skaffold-3stage.yaml       # 3-stage deployment configuration
-├── skaffold-gateway-preview.yaml # Preview deployment configuration
+├── .github/workflows/          # GitOps CI/CD workflows
+├── deploy/                     # Deployment configurations
+│   ├── clouddeploy/           # Cloud Deploy pipelines
+│   │   ├── dev.yaml          # Development pipeline
+│   │   ├── qa-prod.yaml      # QA to Production pipeline
+│   │   └── preview.yaml      # Preview deployment pipeline
+│   ├── skaffold.yaml         # Unified Skaffold configuration
+│   └── skaffold-preview-modules.yaml # Preview-specific config
+├── k8s/                       # Kubernetes manifests
+│   ├── app/                   # Application resources
+│   ├── gcp/                   # GCP-specific resources
+│   └── namespace/             # Namespace definitions
+├── scripts/                   # Deployment and utility scripts
+├── docs/                      # Documentation
 ├── app.js                     # Sample application code
 ├── Dockerfile                 # Container image definition
 └── README.md                  # This file
@@ -51,26 +55,43 @@ This includes:
 - **Art. 32** Security of processing
 - **Data residency** in EU (europe-west1)
 
-## 🚀 Deployment Workflow
+## 🚀 Deployment Pipelines
 
-### Development Flow
-1. **Feature branch** → Create PR
-2. **Automated checks** → Compliance validation, security scanning
-3. **Code review** → Team approval required
-4. **Merge to main** → Auto-deploy to non-production
+### 1. Development Pipeline (`webapp-dev-pipeline`)
+- **Trigger**: Push to `main` branch
+- **Target**: `dev-gke` 
+- **Deployment**: Automatic
+- **Environment**: dev.webapp.u2i.dev
 
-### Production Flow  
-1. **Production release** → Manual promotion from non-prod
-2. **Security review** → Automated compliance checks
-3. **Approval gate** → Security team approval required
-4. **Production deployment** → With full audit trail
+### 2. QA/Production Pipeline (`webapp-qa-prod-pipeline`)
+- **QA Stage**:
+  - **Trigger**: Git tags (v*.*.*)
+  - **Target**: `qa-gke`
+  - **Deployment**: Automatic
+  - **Environment**: qa.webapp.u2i.dev
+- **Production Stage**:
+  - **Trigger**: Manual promotion from QA
+  - **Target**: `prod-gke`
+  - **Approval**: Required
+  - **Environment**: webapp.u2i.com
+
+### 3. Preview Pipeline (`webapp-preview-pipeline`)
+- **Trigger**: Pull Request events
+- **Deployment**: 3-stage (certificate → infrastructure → application)
+- **Environment**: pr-{number}.webapp.u2i.dev
+- **Cleanup**: Automatic on PR close
 
 ## 🔧 Getting Started
 
 ### Prerequisites
-- Access to `u2i-tenant-webapp-nonprod` GCP project
-- Membership in `webapp-team@u2i.com` Google Group
+- Access to GCP projects:
+  - `u2i-tenant-webapp-nonprod` (dev/qa environments)
+  - `u2i-tenant-webapp-prod` (production environment)
+- Membership in appropriate Google Groups:
+  - `gcp-developers@u2i.com` for development access
+  - `webapp-team@u2i.com` for team resources
 - GitHub repository access with proper branch protection
+- Tools: `gcloud`, `kubectl`, `docker`
 
 ### Local Development
 ```bash
@@ -78,23 +99,47 @@ This includes:
 docker build -t webapp .
 docker run -p 8080:8080 webapp
 
-# Deploy to non-production  
-gcloud deploy releases create dev-$(date +%Y%m%d-%H%M%S) \
-  --project=u2i-tenant-webapp-nonprod \
-  --region=europe-west1 \
-  --delivery-pipeline=webapp-delivery-pipeline \
-  --source=.
+# Run tests
+npm test
 ```
 
-### Environment Promotion
+### Deployment Commands
+
+#### Deploy to Development
 ```bash
-# Promote to production (requires approval)
-gcloud deploy releases promote \
+# Automatic on push to main, or manually:
+./scripts/deploy.sh dev
+```
+
+#### Deploy to QA
+```bash
+# Create a version tag
+git tag v1.2.3 -m "Release v1.2.3"
+git push origin v1.2.3
+```
+
+#### Promote to Production
+```bash
+# List QA releases
+gcloud deploy releases list \
   --project=u2i-tenant-webapp-nonprod \
   --region=europe-west1 \
-  --delivery-pipeline=webapp-delivery-pipeline \
-  --release=RELEASE_NAME \
+  --delivery-pipeline=webapp-qa-prod-pipeline
+
+# Promote specific release
+gcloud deploy releases promote \
+  --release=qa-abc1234 \
+  --delivery-pipeline=webapp-qa-prod-pipeline \
+  --region=europe-west1 \
+  --project=u2i-tenant-webapp-nonprod \
   --to-target=prod-gke
+```
+
+#### Deploy Preview Environment
+```bash
+# Automatic on PR creation/update
+# Manual deployment for testing:
+./scripts/deploy.sh preview --pr-number 123
 ```
 
 ## 📋 Compliance Checklist
@@ -113,10 +158,3 @@ Before each deployment, ensure:
 - **Security Issues**: security-team@u2i.com  
 - **Platform Support**: platform-team@u2i.com
 - **Compliance Questions**: compliance@u2i.com
-
-## Deployment Status
-
-Last deployment triggered after workload identity fix.
-Preview deployment test: 2025-06-29 - Testing with Config Connector CRDs installed
-Deployment cleanup test: 2025-07-26 - Testing full deployment pipeline
-# Preview deployment test
