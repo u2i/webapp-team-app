@@ -101,6 +101,5 @@ The unified script replaces:
 - `scripts/deploy-dev.sh`
 - `scripts/deploy-preview.sh`
 - `scripts/deploy-qa.sh`
-- `scripts/promote-to-prod.sh` (partially - for the deploy command)
 
 Cloud Build configurations have been updated to use the unified script with appropriate environment arguments.
