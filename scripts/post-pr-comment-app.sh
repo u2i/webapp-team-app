@@ -1,7 +1,17 @@
 #!/usr/bin/env bash
 set -e
 
+echo "=== Starting post-pr-comment-app.sh ==="
+
+# Check if pr_number.txt exists
+if [ ! -f /workspace/pr_number.txt ]; then
+  echo "ERROR: /workspace/pr_number.txt not found"
+  echo "Make sure get-pr-number.sh ran successfully"
+  exit 1
+fi
+
 PR_ID=$(cat /workspace/pr_number.txt)
+echo "PR ID from file: '$PR_ID'"
 
 # Only post comment if we have a numeric PR number
 if [[ "$PR_ID" =~ ^[0-9]+$ ]]; then
@@ -10,8 +20,19 @@ if [[ "$PR_ID" =~ ^[0-9]+$ ]]; then
   
   # Get GitHub App credentials from Secret Manager
   echo "Fetching GitHub App credentials..."
-  APP_ID=$(gcloud secrets versions access latest --secret=github-pr-app-id --project=u2i-bootstrap)
-  PRIVATE_KEY_CONTENT=$(gcloud secrets versions access latest --secret=github-pr-app-private-key --project=u2i-bootstrap)
+  APP_ID=$(gcloud secrets versions access latest --secret=github-pr-app-id --project=u2i-bootstrap 2>&1)
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to fetch github-pr-app-id: $APP_ID"
+    exit 1
+  fi
+  echo "Got App ID: $APP_ID"
+  
+  PRIVATE_KEY_CONTENT=$(gcloud secrets versions access latest --secret=github-pr-app-private-key --project=u2i-bootstrap 2>&1)
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to fetch github-pr-app-private-key: $PRIVATE_KEY_CONTENT"
+    exit 1
+  fi
+  echo "Got private key (${#PRIVATE_KEY_CONTENT} characters)"
   
   # Save private key to temp file
   PRIVATE_KEY_FILE="/tmp/github-app-private-key.pem"
