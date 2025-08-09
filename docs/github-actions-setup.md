@@ -51,7 +51,7 @@ Until WIF is configured, you can test preview deployments manually:
 
 ```bash
 # Deploy a preview
-./scripts/deploy.sh preview --pr-number 999
+./compliance-cli deploy preview --pr-number 999
 
 # Check status
 kubectl get pods -n webapp-preview-pr999

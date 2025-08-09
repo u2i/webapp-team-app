@@ -18,7 +18,7 @@ steps:
 - name: 'google/cloud-sdk:alpine'
   id: 'deploy-qa'
   entrypoint: 'bash'
-  args: ['scripts/deploy.sh', 'qa']
+  args: ['-c', './compliance-cli deploy qa']
   env:
   - 'PROJECT_ID=${_PROJECT_ID}'
   - 'REGION=${_REGION}'

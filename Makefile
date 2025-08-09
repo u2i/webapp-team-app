@@ -1,19 +1,10 @@
 # Makefile for webapp-team-app
 
-# Variables
-COMPLIANCE_CLI_VERSION ?= v0.5.0
-COMPLIANCE_CLI_URL = https://github.com/u2i/compliance-cli/releases/download/$(COMPLIANCE_CLI_VERSION)/compliance-cli-$(shell uname -s | tr '[:upper:]' '[:lower:]')-$(shell uname -m | sed 's/x86_64/amd64/').tar.gz
-COMPLIANCE_CLI = ./bin/compliance-cli
-
-# Ensure bin directory exists
-$(COMPLIANCE_CLI):
-	@mkdir -p bin
-	@echo "Downloading compliance-cli $(COMPLIANCE_CLI_VERSION)..."
-	@curl -sL $(COMPLIANCE_CLI_URL) | tar -xz -C bin
-	@chmod +x $(COMPLIANCE_CLI)
+# Use the compliance-cli wrapper in root
+COMPLIANCE_CLI = ./compliance-cli
 
 .PHONY: generate-pipelines
-generate-pipelines: $(COMPLIANCE_CLI)
+generate-pipelines:
 	@echo "Generating Cloud Deploy pipeline configurations..."
 	@$(COMPLIANCE_CLI) generate pipeline --env dev > deploy/clouddeploy/dev.yaml
 	@$(COMPLIANCE_CLI) generate pipeline --env preview > deploy/clouddeploy/preview.yaml
@@ -21,7 +12,7 @@ generate-pipelines: $(COMPLIANCE_CLI)
 	@echo "✅ Pipeline configurations generated"
 
 .PHONY: validate-pipelines
-validate-pipelines: $(COMPLIANCE_CLI)
+validate-pipelines:
 	@echo "Validating Cloud Deploy pipeline configurations..."
 	@$(COMPLIANCE_CLI) validate pipelines --pipeline-dir deploy/clouddeploy
 

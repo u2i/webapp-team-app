@@ -1,11 +1,11 @@
-# Unified Deploy Script
+# Unified Deployment Approach
 
-This document describes the unified deployment script that handles all environments.
+This document describes the unified deployment approach using the compliance-cli tool.
 
 ## Usage
 
 ```bash
-./scripts/deploy.sh <environment> [options]
+./compliance-cli deploy <environment> [options]
 ```
 
 ## Environments
@@ -27,28 +27,28 @@ This document describes the unified deployment script that handles all environme
 ### Development Deployment
 ```bash
 # Automatically triggered on merge to main
-./scripts/deploy.sh dev
+./compliance-cli deploy dev
 ```
 
 ### Preview Deployment
 ```bash
 # Automatically triggered on PR creation/update
-./scripts/deploy.sh preview --pr-number 123
+./compliance-cli deploy preview --pr-number 123
 
 # Or if PR number is in /workspace/pr_number.txt
-./scripts/deploy.sh preview
+./compliance-cli deploy preview
 ```
 
 ### QA Deployment
 ```bash
 # Automatically triggered on version tags (v*)
-./scripts/deploy.sh qa
+./compliance-cli deploy qa
 ```
 
 ### Production Promotion
 ```bash
 # Manually promote a QA release to production
-./scripts/deploy.sh prod --promote --release qa-abc123
+./compliance-cli deploy prod --promote --release qa-abc123
 ```
 
 ## Environment Variables

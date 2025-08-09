@@ -105,10 +105,15 @@ npm test
 
 ### Deployment Commands
 
+All deployments use the `compliance-cli` tool. For detailed usage:
+```bash
+./compliance-cli --help
+```
+
 #### Deploy to Development
 ```bash
 # Automatic on push to main, or manually:
-./scripts/deploy.sh dev
+./compliance-cli deploy dev
 ```
 
 #### Deploy to QA
@@ -139,7 +144,7 @@ gcloud deploy releases promote \
 ```bash
 # Automatic on PR creation/update
 # Manual deployment for testing:
-./scripts/deploy.sh preview --pr-number 123
+./compliance-cli deploy preview --pr-number 123
 ```
 
 ## 📋 Compliance Checklist
