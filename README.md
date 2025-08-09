@@ -115,7 +115,7 @@ All deployments use the `compliance-cli` tool. For detailed usage:
 #### Deploy to Development
 ```bash
 # Automatic on push to main, or manually:
-./compliance-cli deploy dev
+./compliance-cli dev
 ```
 
 #### Deploy to QA
@@ -146,7 +146,7 @@ gcloud deploy releases promote \
 ```bash
 # Automatic on PR creation/update
 # Manual deployment for testing:
-./compliance-cli deploy preview --pr-number 123
+./compliance-cli preview --pr-number 123
 ```
 
 ## 📋 Compliance Checklist
