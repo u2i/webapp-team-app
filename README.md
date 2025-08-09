@@ -4,6 +4,8 @@ This repository contains the WebApp Team's application deployment infrastructure
 
 ## 🏗️ Repository Structure
 
+<!-- Testing compliance-cli deployment integration -->
+
 ```
 webapp-team-app/
 ├── .github/workflows/          # GitOps CI/CD workflows
