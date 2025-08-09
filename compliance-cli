@@ -10,25 +10,7 @@ if [ -d "$COMPLIANCE_SOURCE_DIR" ] && [ -f "$COMPLIANCE_SOURCE_DIR/go.mod" ]; th
     # Use local source - build and run
     (cd "$COMPLIANCE_SOURCE_DIR" && go run main.go "$@")
 else
-    # Download and use release version
-    COMPLIANCE_CLI_VERSION="${COMPLIANCE_CLI_VERSION:-v0.5.0}"
-    COMPLIANCE_CLI_DIR="$HOME/.local/share/compliance-cli"
-    COMPLIANCE_CLI_BIN="$COMPLIANCE_CLI_DIR/compliance-cli-$COMPLIANCE_CLI_VERSION"
-    
-    # Download if not already cached
-    if [ ! -f "$COMPLIANCE_CLI_BIN" ]; then
-        echo "Downloading compliance-cli $COMPLIANCE_CLI_VERSION..." >&2
-        mkdir -p "$COMPLIANCE_CLI_DIR"
-        
-        OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-        ARCH=$(uname -m | sed 's/x86_64/amd64/')
-        URL="https://github.com/u2i/compliance-cli/releases/download/$COMPLIANCE_CLI_VERSION/compliance-cli-$OS-$ARCH.tar.gz"
-        
-        curl -sL "$URL" | tar -xz -C "$COMPLIANCE_CLI_DIR"
-        mv "$COMPLIANCE_CLI_DIR/compliance-cli" "$COMPLIANCE_CLI_BIN"
-        chmod +x "$COMPLIANCE_CLI_BIN"
-    fi
-    
-    # Run the cached binary
-    exec "$COMPLIANCE_CLI_BIN" "$@"
+    # Download and run the compliance-cli
+    export COMPLIANCE_CLI_VERSION="${COMPLIANCE_CLI_VERSION:-v0.5.0}"
+    curl -sL https://raw.githubusercontent.com/u2i/compliance-cli/main/scripts/deploy-wrapper.sh | bash -s -- "$@"
 fi
