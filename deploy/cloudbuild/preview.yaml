@@ -32,7 +32,7 @@ steps:
 - name: 'google/cloud-sdk:alpine'
   id: 'deploy-preview'
   entrypoint: 'bash'
-  args: ['-c', './compliance-cli deploy preview']
+  args: ['-c', './compliance-cli preview']
   env:
   - 'PROJECT_ID=${_PROJECT_ID}'
   - 'REGION=${_REGION}'

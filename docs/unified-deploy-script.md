@@ -5,7 +5,7 @@ This document describes the unified deployment approach using the compliance-cli
 ## Usage
 
 ```bash
-./compliance-cli deploy <environment> [options]
+./compliance-cli <environment> [options]
 ```
 
 ## Environments
@@ -27,28 +27,28 @@ This document describes the unified deployment approach using the compliance-cli
 ### Development Deployment
 ```bash
 # Automatically triggered on merge to main
-./compliance-cli deploy dev
+./compliance-cli dev
 ```
 
 ### Preview Deployment
 ```bash
 # Automatically triggered on PR creation/update
-./compliance-cli deploy preview --pr-number 123
+./compliance-cli preview --pr-number 123
 
 # Or if PR number is in /workspace/pr_number.txt
-./compliance-cli deploy preview
+./compliance-cli preview
 ```
 
 ### QA Deployment
 ```bash
 # Automatically triggered on version tags (v*)
-./compliance-cli deploy qa
+./compliance-cli qa
 ```
 
 ### Production Promotion
 ```bash
 # Manually promote a QA release to production
-./compliance-cli deploy prod --promote --release qa-abc123
+./compliance-cli prod --promote --release qa-abc123
 ```
 
 ## Environment Variables

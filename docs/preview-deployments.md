@@ -21,7 +21,7 @@ Preview deployments allow you to deploy feature branches or test versions to cus
 
 ```bash
 # Deploy PR preview
-./compliance-cli deploy preview --pr-number 123
+./compliance-cli preview --pr-number 123
 # Creates: pr123.webapp.u2i.dev
 
 # Note: PR number is required for preview deployments
