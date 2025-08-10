@@ -29,15 +29,8 @@ steps:
 # Send Slack notification
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
   id: 'slack-notification'
-  entrypoint: 'sh'
-  args:
-  - '-c'
-  - |
-    # Update the notification script to handle QA environment
-    export ENVIRONMENT="QA"
-    export ENVIRONMENT_URL="https://qa.webapp.u2i.dev"
-    apk add --no-cache jq
-    bash scripts/slack-notification-env.sh
+  entrypoint: 'bash'
+  args: ['-c', './compliance-cli slack notify --environment qa']
   env:
   - 'PROJECT_ID=${_PROJECT_ID}'
   - 'REGION=${_REGION}'

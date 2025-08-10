@@ -42,12 +42,8 @@ steps:
 # Post comment on PR using GitHub App
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
   id: 'post-comment'
-  entrypoint: 'sh'
-  args:
-  - '-c'
-  - |
-    apk add --no-cache openssl jq
-    bash scripts/post-pr-comment-app.sh
+  entrypoint: 'bash'
+  args: ['-c', './compliance-cli pr comment']
   env:
   - 'PROJECT_ID=${_PROJECT_ID}'
   - 'REGION=${_REGION}'

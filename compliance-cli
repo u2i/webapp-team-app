@@ -8,9 +8,9 @@ COMPLIANCE_SOURCE_DIR="../compliance"
 # Check if we should use local source
 if [ -d "$COMPLIANCE_SOURCE_DIR" ] && [ -f "$COMPLIANCE_SOURCE_DIR/go.mod" ]; then
     # Use local source - build and run
-    (cd "$COMPLIANCE_SOURCE_DIR" && go run main.go "$@")
+    (cd "$COMPLIANCE_SOURCE_DIR" && go run cmd/deploy/main.go cmd/deploy/generate.go cmd/deploy/validate.go "$@")
 else
     # Download and run the compliance-cli
-    export COMPLIANCE_CLI_VERSION="${COMPLIANCE_CLI_VERSION:-v0.6.0}"
+    export COMPLIANCE_CLI_VERSION="${COMPLIANCE_CLI_VERSION:-v0.7.0}"
     curl -sL https://raw.githubusercontent.com/u2i/compliance-cli/main/scripts/deploy-wrapper.sh | bash -s -- "$@"
 fi
