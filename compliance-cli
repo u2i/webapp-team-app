@@ -11,6 +11,6 @@ if [ -d "$COMPLIANCE_SOURCE_DIR" ] && [ -f "$COMPLIANCE_SOURCE_DIR/go.mod" ]; th
     (cd "$COMPLIANCE_SOURCE_DIR" && go run main.go "$@")
 else
     # Download and run the compliance-cli
-    export COMPLIANCE_CLI_VERSION="${COMPLIANCE_CLI_VERSION:-v0.5.0}"
+    export COMPLIANCE_CLI_VERSION="${COMPLIANCE_CLI_VERSION:-v0.6.0}"
     curl -sL https://raw.githubusercontent.com/u2i/compliance-cli/main/scripts/deploy-wrapper.sh | bash -s -- "$@"
 fi
