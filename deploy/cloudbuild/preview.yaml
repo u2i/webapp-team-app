@@ -5,7 +5,7 @@ steps:
 - name: 'gcr.io/cloud-builders/gcloud'
   id: 'get-pr-number'
   entrypoint: 'bash'
-  args: ['scripts/get-pr-number.sh']
+  args: ['-c', './compliance-cli pr get-number']
   env:
   - '_PR_NUMBER=${_PR_NUMBER}'
   - '_HEAD_BRANCH=${_HEAD_BRANCH}'
