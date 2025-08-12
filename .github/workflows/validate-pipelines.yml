@@ -1,0 +1,54 @@
+name: Validate Pipeline Configurations
+
+on:
+  pull_request:
+    paths:
+      - 'deploy/clouddeploy/*.yml'
+      - '.compliance-cli.yml'
+      - 'Makefile'
+      - '.github/workflows/validate-pipelines.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'deploy/clouddeploy/*.yml'
+      - '.compliance-cli.yml'
+      - 'Makefile'
+      - '.github/workflows/validate-pipelines.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate pipeline configurations
+        run: |
+          make validate-pipelines
+          
+      - name: Check for uncommitted changes
+        run: |
+          # Generate pipelines to temp directory
+          mkdir -p /tmp/generated
+          ./bin/compliance-cli generate pipeline --env dev > /tmp/generated/dev.yml
+          ./bin/compliance-cli generate pipeline --env preview > /tmp/generated/preview.yml
+          ./bin/compliance-cli generate pipeline --env qa-prod > /tmp/generated/qa-prod.yml
+          
+          # Compare with committed files
+          if ! diff -q deploy/clouddeploy/dev.yml /tmp/generated/dev.yml; then
+            echo "❌ dev.yml is out of sync. Run 'make generate-pipelines' to regenerate."
+            exit 1
+          fi
+          
+          if ! diff -q deploy/clouddeploy/preview.yml /tmp/generated/preview.yml; then
+            echo "❌ preview.yml is out of sync. Run 'make generate-pipelines' to regenerate."
+            exit 1
+          fi
+          
+          if ! diff -q deploy/clouddeploy/qa-prod.yml /tmp/generated/qa-prod.yml; then
+            echo "❌ qa-prod.yml is out of sync. Run 'make generate-pipelines' to regenerate."
+            exit 1
+          fi
+          
+          echo "✅ All pipeline configurations are in sync with generated templates."

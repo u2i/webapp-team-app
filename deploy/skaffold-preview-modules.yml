@@ -8,7 +8,7 @@ metadata:
 # Namespace module - creates namespace for preview environment
 manifests:
   rawYaml:
-  - ../k8s/namespace/namespace.yaml
+  - ../k8s/namespace/namespace.yml
 deploy:
   kubectl:
     flags:
@@ -38,7 +38,7 @@ metadata:
 # GCP Config Connector module - certificates with status checking disabled
 manifests:
   rawYaml:
-  - ../k8s/gcp/certificate.yaml
+  - ../k8s/gcp/certificate.yml
 deploy:
   kubectl:
     flags:

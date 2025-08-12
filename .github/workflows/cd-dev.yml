@@ -69,7 +69,7 @@ jobs:
           --source=. \
           --gcs-source-staging-dir=gs://u2i-tenant-webapp-nonprod-deploy-artifacts/source \
           --labels="stage=dev,trigger=push-to-main,git-sha=${GITHUB_SHA:0:7}" \
-          --skaffold-file=skaffold-unified.yaml \
+          --skaffold-file=skaffold-unified.yml \
           --to-target=dev-gke
         
         echo "🚀 Deployed to dev: $RELEASE_NAME"

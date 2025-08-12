@@ -126,7 +126,7 @@ jobs:
         
         echo "🕯️ Starting canary deployment..."
         
-        # The canary stages are defined in clouddeploy-stages.yaml
+        # The canary stages are defined in clouddeploy-stages.yml
         # Cloud Deploy will automatically handle the progressive rollout
         
         # Monitor initial canary phase (25%)

@@ -91,7 +91,7 @@ jobs:
           --gcs-source-staging-dir=gs://u2i-tenant-webapp-nonprod-deploy-artifacts/source \
           --labels="stage=qa,version=${LABEL_TAG},trigger=${{ github.event_name }}" \
           --annotations="tag=${TAG},reason=${{ github.event.inputs.reason || 'Tag push' }}" \
-          --skaffold-file=skaffold-unified.yaml \
+          --skaffold-file=skaffold-unified.yml \
           --to-target=qa-gke
         
         echo "🚀 Created QA release: $RELEASE_NAME"

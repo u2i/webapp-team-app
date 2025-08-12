@@ -6,8 +6,8 @@ on:
     paths:
       - 'k8s-manifests/**'
       - 'k8s-infra/**'
-      - 'clouddeploy.yaml'
-      - 'skaffold.yaml'
+      - 'clouddeploy.yml'
+      - 'skaffold.yml'
       - 'Dockerfile'
 
 env:
@@ -28,7 +28,7 @@ jobs:
         echo "🔍 Checking compliance labels on all Kubernetes resources..."
         
         # Check all YAML files have required compliance labels
-        for file in k8s-manifests/*.yaml k8s-infra/*.yaml; do
+        for file in k8s-manifests/*.yml k8s-infra/*.yml; do
           if [ -f "$file" ]; then
             echo "Checking $file..."
             
@@ -67,19 +67,19 @@ jobs:
         fi
         
         # Check all containers have security context
-        if ! grep -A 20 "containers:" k8s-manifests/deployment.yaml | grep -q "securityContext:"; then
+        if ! grep -A 20 "containers:" k8s-manifests/deployment.yml | grep -q "securityContext:"; then
           echo "❌ All containers must have securityContext defined"
           exit 1
         fi
         
         # Check resource limits exist
-        if ! grep -A 10 "resources:" k8s-manifests/deployment.yaml | grep -q "limits:"; then
+        if ! grep -A 10 "resources:" k8s-manifests/deployment.yml | grep -q "limits:"; then
           echo "❌ All containers must have resource limits"
           exit 1
         fi
         
         # Check network policy exists
-        if [ ! -f "k8s-infra/network-policy.yaml" ]; then
+        if [ ! -f "k8s-infra/network-policy.yml" ]; then
           echo "❌ Network policy is required for tenant isolation"
           exit 1
         fi
@@ -91,13 +91,13 @@ jobs:
         echo "🇪🇺 Validating GDPR compliance..."
         
         # Check region is EU
-        if ! grep -q "europe-west1" k8s-manifests/deployment.yaml; then
+        if ! grep -q "europe-west1" k8s-manifests/deployment.yml; then
           echo "❌ Application must be deployed in EU region for GDPR compliance"
           exit 1
         fi
         
         # Check for data classification
-        if ! grep -q "gdpr-compliant.*true" k8s-manifests/deployment.yaml; then
+        if ! grep -q "gdpr-compliant.*true" k8s-manifests/deployment.yml; then
           echo "❌ GDPR compliance flag required"
           exit 1
         fi

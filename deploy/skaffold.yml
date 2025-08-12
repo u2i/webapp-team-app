@@ -26,8 +26,8 @@ profiles:
 - name: preview-all
   manifests:
     rawYaml:
-    - ../k8s/namespace/namespace.yaml
-    - ../k8s/gcp/certificate.yaml
+    - ../k8s/namespace/namespace.yml
+    - ../k8s/gcp/certificate.yml
     kustomize:
       paths:
       - ../k8s/app/resources/preview

@@ -37,7 +37,7 @@ jobs:
           --delivery-pipeline=webapp-qa-prod-pipeline \
           --region=${{ env.GCP_REGION }} \
           --project=${{ env.GCP_PROJECT }} \
-          --skaffold-file=skaffold-single-stage.yaml \
+          --skaffold-file=skaffold-single-stage.yml \
           --to-target=qa-gke \
           --deploy-parameters="NAMESPACE=webapp-qa,ENV=qa,API_URL=https://api-qa.webapp.u2i.dev,STAGE=qa,BOUNDARY=nonprod,TIER=standard,DOMAIN=qa.webapp.u2i.dev,ROUTE_NAME=webapp-qa-route,SERVICE_NAME=webapp-service,CERT_NAME=webapp-qa-cert,CERT_ENTRY_NAME=webapp-qa-entry,CERT_DESCRIPTION=Certificate for qa.webapp.u2i.dev"
     

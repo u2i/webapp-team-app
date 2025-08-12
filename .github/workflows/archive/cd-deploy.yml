@@ -5,8 +5,8 @@ on:
     branches: [main]
     paths:
       - 'k8s-clean/**'
-      - 'clouddeploy-clean.yaml'
-      - 'skaffold.yaml'
+      - 'clouddeploy-clean.yml'
+      - 'skaffold.yml'
       - 'Dockerfile'
       - 'app.js'
       - 'package.json'

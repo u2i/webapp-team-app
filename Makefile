@@ -6,9 +6,9 @@ COMPLIANCE_CLI = ./compliance-cli
 .PHONY: generate-pipelines
 generate-pipelines:
 	@echo "Generating Cloud Deploy pipeline configurations..."
-	@$(COMPLIANCE_CLI) generate pipeline --env dev > deploy/clouddeploy/dev.yaml
-	@$(COMPLIANCE_CLI) generate pipeline --env preview > deploy/clouddeploy/preview.yaml
-	@$(COMPLIANCE_CLI) generate pipeline --env qa-prod > deploy/clouddeploy/qa-prod.yaml
+	@$(COMPLIANCE_CLI) generate pipeline --env dev > deploy/clouddeploy/dev.yml
+	@$(COMPLIANCE_CLI) generate pipeline --env preview > deploy/clouddeploy/preview.yml
+	@$(COMPLIANCE_CLI) generate pipeline --env qa-prod > deploy/clouddeploy/qa-prod.yml
 	@echo "✅ Pipeline configurations generated"
 
 .PHONY: validate-pipelines
