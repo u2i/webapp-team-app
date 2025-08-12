@@ -3,6 +3,32 @@
 ## Repository Overview
 This is a model/demo application repository for the WebApp Team, demonstrating compliant cloud-native application deployment with ISO 27001, SOC 2 Type II, and GDPR compliance.
 
+## 🚨 IMPORTANT: Development Process
+**ALL CHANGES MUST BE MADE VIA PULL REQUEST**
+- Never commit directly to the `main` branch
+- Create a feature branch for changes
+- Open a PR for review and testing
+- PR will trigger preview deployment for testing
+- Merge to main only after approval
+
+### PR Workflow
+```bash
+# Create feature branch
+git checkout -b feature/my-change
+
+# Make changes and commit
+git add .
+git commit -m "feat: Description of change"
+
+# Push branch and create PR
+git push origin feature/my-change
+gh pr create --title "feat: Description" --body "Details of changes"
+
+# After approval and merge, the PR branch will trigger:
+# 1. Preview deployment (during PR)
+# 2. Dev deployment (after merge to main)
+```
+
 ## Deployment Process
 
 ### 1. Development Environment

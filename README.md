@@ -2,6 +2,12 @@
 
 This repository contains the WebApp Team's application deployment infrastructure following ISO 27001, SOC 2 Type II, and GDPR compliance requirements.
 
+## 🚨 Important: Contributing
+**All changes MUST be made via Pull Request.** See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+- Never push directly to `main`
+- Every PR gets a preview deployment
+- Changes require code review approval
+
 ## 🏗️ Repository Structure
 
 ```
