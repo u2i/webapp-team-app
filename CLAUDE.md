@@ -75,9 +75,9 @@ gh pr create --title "feat: Description" --body "Details of changes"
     --region=europe-west1 \
     --project=u2i-tenant-webapp-nonprod
   ```
-- **URL**: https://webapp.u2i.dev
+- **URL**: https://webapp.u2i.com
 - **Approval**: Manual approval required
-- **Test**: `curl https://webapp.u2i.dev/health`
+- **Test**: `curl https://webapp.u2i.com/health`
 
 ### 4. Preview Environment (PR)
 - **Trigger**: Create Pull Request
@@ -92,7 +92,7 @@ gh pr create --title "feat: Description" --body "Details of changes"
 # Check all environments health
 curl -s https://dev.webapp.u2i.dev/health | jq '.'
 curl -s https://qa.webapp.u2i.dev/health | jq '.'
-curl -s https://webapp.u2i.dev/health | jq '.'  # Production
+curl -s https://webapp.u2i.com/health | jq '.'  # Production (note: .com domain)
 curl -s https://preview-pr<NUMBER>.webapp.u2i.dev/health | jq '.'  # Preview
 
 # Check PR status and deployments
@@ -264,6 +264,11 @@ make validate-pipelines
 - `BOUNDARY`: `nonprod` or `prod`
 - `STAGE`: `dev`, `qa`, `prod`, or `preview-*`
 
+## Important Domain Configuration
+- **Dev/QA/Preview**: Use `.u2i.dev` domain (managed in u2i-dns project)
+- **Production**: Uses `.u2i.com` domain (managed in u2i-tenant-webapp-prod project)
+- DNS zones are in different projects - this is intentional for security isolation
+
 ## Compliance Features
 - ISO 27001 controls implemented
 - SOC 2 Type II requirements met
@@ -390,7 +395,7 @@ When helping with deployments, always:
 # Check all environments at once
 for env in dev qa prod; do
   if [ "$env" = "prod" ]; then
-    url="https://webapp.u2i.dev/health"
+    url="https://webapp.u2i.com/health"  # Production uses .com domain
   else
     url="https://${env}.webapp.u2i.dev/health"
   fi
