@@ -240,8 +240,8 @@ make validate-pipelines
 
 ### Deployment Configuration
 - `deploy/clouddeploy/*.yml` - Cloud Deploy pipeline definitions
-- `deploy/cloudbuild/*.yml` - Cloud Build configurations
-- `deploy/skaffold.yml` - Skaffold deployment configuration
+- `deploy/cloudbuild/*.yaml` - Cloud Build configurations
+- `deploy/skaffold.yaml` - Skaffold deployment configuration
 - `.compliance-cli.yml` - Compliance CLI configuration
 
 ### Kubernetes Manifests
