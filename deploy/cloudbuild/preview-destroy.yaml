@@ -1,0 +1,24 @@
+# Cloud Build configuration for destroying preview environment when PR is closed
+# This is triggered when a PR is closed or merged
+
+steps:
+# Destroy the preview environment
+- name: 'google/cloud-sdk:alpine'
+  id: 'destroy-preview'
+  entrypoint: 'bash'
+  args: 
+  - '-c'
+  - |
+    echo "🧹 Destroying preview environment for PR ${_PR_NUMBER}"
+    ./compliance-cli preview destroy --pr=${_PR_NUMBER}
+  env:
+  - 'PROJECT_ID=${_PROJECT_ID}'
+  - 'REGION=${_REGION}'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  
+substitutions:
+  _PROJECT_ID: u2i-tenant-webapp-nonprod
+  _REGION: europe-west1
+  # _PR_NUMBER is provided by the trigger
