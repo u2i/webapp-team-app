@@ -1,0 +1,25 @@
+# Cloud Build configuration for scheduled cleanup of old preview environments
+# This should be triggered on a schedule (e.g., daily)
+
+steps:
+# Run preview cleanup
+- name: 'google/cloud-sdk:alpine'
+  id: 'cleanup-previews'
+  entrypoint: 'bash'
+  args: 
+  - '-c'
+  - |
+    echo "🧹 Cleaning up preview environments older than ${_DAYS_OLD} days"
+    ./compliance-cli preview cleanup --days-old=${_DAYS_OLD}
+  env:
+  - 'PROJECT_ID=${_PROJECT_ID}'
+  - 'REGION=${_REGION}'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  timeout: 1800s  # 30 minutes
+  
+substitutions:
+  _PROJECT_ID: u2i-tenant-webapp-nonprod
+  _REGION: europe-west1
+  _DAYS_OLD: '7'  # Default to 7 days, can be overridden by trigger
