@@ -1,2 +1,0 @@
-Test file for preview cleanup verification.
-This PR will be created and closed to test the preview environment cleanup.

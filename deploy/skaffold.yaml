@@ -1,6 +1,6 @@
 # Unified Skaffold configuration for all environments
-# Application deployments only - certificates handled separately
-# This prevents certificate provisioning from blocking deployments
+# Includes namespace, application, and certificates for all deployments
+# Uses tolerateFailuresUntilDeadline to prevent certificate timeout failures
 
 apiVersion: skaffold/v4beta13
 kind: Config
@@ -79,40 +79,3 @@ profiles:
       - ../k8s/app/resources/prod
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
----
-# Separate config for certificate management (non-blocking)
-# Certificates are deployed separately to prevent blocking main deployments
-# This applies to all environments that need certificate updates
-apiVersion: skaffold/v4beta13
-kind: Config
-metadata:
-  name: webapp-certificates
-deploy:
-  kubectl:
-    flags:
-      apply: ["--server-side", "--force-conflicts"]
-  statusCheck: false  # Don't wait for certificates to provision
-profiles:
-# Preview certificates
-- name: preview-certs
-  manifests:
-    rawYaml:
-    - ../k8s/gcp/certificate.yml
-
-# Dev certificates (if needed)
-- name: dev-certs
-  manifests:
-    rawYaml:
-    - ../k8s/gcp/certificate.yml
-
-# QA certificates (if needed)  
-- name: qa-certs
-  manifests:
-    rawYaml:
-    - ../k8s/gcp/certificate.yml
-
-# Production certificates (if needed)
-- name: prod-certs
-  manifests:
-    rawYaml:
-    - ../k8s/gcp/certificate.yml

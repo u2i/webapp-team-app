@@ -18,8 +18,7 @@ webapp-team-app/
 │   │   ├── dev.yaml          # Development pipeline
 │   │   ├── qa-prod.yaml      # QA to Production pipeline
 │   │   └── preview.yaml      # Preview deployment pipeline
-│   ├── skaffold.yaml         # Unified Skaffold configuration
-│   └── skaffold-preview-modules.yaml # Preview-specific config
+│   └── skaffold.yaml         # Unified Skaffold configuration
 ├── k8s/                       # Kubernetes manifests
 │   ├── app/                   # Application resources
 │   ├── gcp/                   # GCP-specific resources
