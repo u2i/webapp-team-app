@@ -22,16 +22,24 @@ deploy:
       apply: ["--server-side", "--force-conflicts"]
   statusCheck: true
 profiles:
-# Preview profile - namespace and app only (certs handled separately)
+# Preview profile - includes all resources with tolerant status checking
 - name: preview-all
   manifests:
     rawYaml:
     - ../k8s/namespace/namespace.yml
+    - ../k8s/gcp/certificate.yml
     kustomize:
       paths:
       - ../k8s/app/resources/preview
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--server-side", "--force-conflicts"]
+    statusCheck: true
+    statusCheckDeadlineSeconds: 300
+    tolerateFailuresUntilDeadline: true
 
 # Dev profile - application only (namespace pre-exists)
 - name: dev
