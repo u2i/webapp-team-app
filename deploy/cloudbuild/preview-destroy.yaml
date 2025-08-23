@@ -23,7 +23,7 @@ steps:
     apt-get update && apt-get install -y gh
     
     # Use GitHub token from Secret Manager
-    export GH_TOKEN=$(gcloud secrets versions access latest --secret=github-pr-app-token --project=u2i-org-bootstrab2b5)
+    export GH_TOKEN=$(gcloud secrets versions access latest --secret=github-pr-app-token --project=u2i-bootstrap)
     
     # Check PR state
     PR_STATE=$(gh api repos/${REPO_FULL_NAME}/pulls/${PR_NUMBER} --jq '.state' 2>/dev/null || echo "unknown")
