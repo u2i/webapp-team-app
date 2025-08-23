@@ -1,7 +1,8 @@
 # Makefile for webapp-team-app
 
-# Use the compliance-cli wrapper in root
-COMPLIANCE_CLI = ./compliance-cli
+# Use the dockerized compliance-cli
+COMPLIANCE_CLI_IMAGE = us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest
+COMPLIANCE_CLI = docker run --rm -v $(PWD):/workspace -w /workspace $(COMPLIANCE_CLI_IMAGE) compliance-cli
 
 .PHONY: generate-pipelines
 generate-pipelines:
