@@ -16,7 +16,7 @@ app.get('/ready', (req, res) => {
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'Hello from webapp! v7.2 - Full pipeline test',
+    message: 'Hello from webapp! v7.3 - Testing domain-wide permissions',
     boundary: boundary,
     stage: stage,
     version: version,
