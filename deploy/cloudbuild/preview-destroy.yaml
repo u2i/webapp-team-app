@@ -36,8 +36,8 @@ steps:
     echo "PR #$PR_NUMBER is closed, proceeding with cleanup..."
     echo "$PR_NUMBER" > /workspace/pr_number.txt
 
-# Destroy the preview environment (only if PR is closed)
-- name: 'google/cloud-sdk:alpine'
+# Destroy the preview environment using pre-built compliance-cli image
+- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
   id: 'destroy-preview'
   entrypoint: 'bash'
   args: 
@@ -51,12 +51,8 @@ steps:
     PR_NUMBER=$(cat /workspace/pr_number.txt)
     echo "🧹 Destroying preview environment for PR #${PR_NUMBER}"
     
-    # Download and run compliance-cli
-    apk add --no-cache curl
-    ARCH=$(uname -m | sed 's/x86_64/amd64/' | sed 's/aarch64/arm64/')
-    curl -sSL -o /workspace/compliance-cli "https://github.com/u2i/compliance-cli/releases/latest/download/compliance-cli-linux-${ARCH}"
-    chmod +x /workspace/compliance-cli
-    /workspace/compliance-cli preview destroy --pr=${PR_NUMBER}
+    # compliance-cli is pre-installed in this image
+    compliance-cli preview destroy --pr=${PR_NUMBER}
   env:
   - 'PROJECT_ID=${_PROJECT_ID}'
   - 'REGION=${_REGION}'
