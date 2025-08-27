@@ -32,7 +32,7 @@ steps:
 - name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
   id: 'deploy-preview'
   entrypoint: 'bash'
-  args: ['-c', 'compliance-cli preview']
+  args: ['-c', 'compliance-cli preview deploy']
   env:
   - 'PROJECT_ID=${_PROJECT_ID}'
   - 'REGION=${_REGION}'
