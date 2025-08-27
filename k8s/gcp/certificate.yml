@@ -6,7 +6,7 @@ apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
 kind: CertificateManagerCertificate
 metadata:
   name: ${CERT_NAME} # from-param: ${CERT_NAME}
-  namespace: webapp-resources
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
   annotations:
     cnrm.cloud.google.com/project-id: ${PROJECT_ID} # from-param: ${PROJECT_ID}
 spec:
@@ -24,7 +24,7 @@ apiVersion: certificatemanager.cnrm.cloud.google.com/v1beta1
 kind: CertificateManagerCertificateMapEntry  
 metadata:
   name: ${CERT_ENTRY_NAME} # from-param: ${CERT_ENTRY_NAME}
-  namespace: webapp-resources
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
   annotations:
     cnrm.cloud.google.com/project-id: ${PROJECT_ID} # from-param: ${PROJECT_ID}
 spec:

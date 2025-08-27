@@ -37,7 +37,9 @@ profiles:
     kubectl:
       flags:
         apply: ["--server-side", "--force-conflicts"]
-    statusCheck: false  # Disabled due to Skaffold bug with cross-namespace Config Connector resources
+    statusCheck: true
+    statusCheckDeadlineSeconds: 600
+    tolerateFailuresUntilDeadline: true
 
 # Dev profile - includes namespace creation
 - name: dev
