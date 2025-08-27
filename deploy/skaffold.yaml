@@ -38,7 +38,7 @@ profiles:
       flags:
         apply: ["--server-side", "--force-conflicts"]
     statusCheck: true
-    statusCheckDeadlineSeconds: 300
+    statusCheckDeadlineSeconds: 600
     tolerateFailuresUntilDeadline: true
 
 # Dev profile - includes namespace creation
