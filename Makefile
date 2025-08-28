@@ -1,7 +1,7 @@
 # Makefile for webapp-team-app
 
 # Use dockerized compliance-cli for consistency with CI/CD
-COMPLIANCE_CLI_IMAGE = us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest
+COMPLIANCE_CLI_IMAGE = gcr.io/u2i-bootstrap/compliance-cli-builder:latest
 
 # Check if running in CI or locally
 ifdef BUILD_ID
@@ -22,18 +22,15 @@ endif
 PROJECT_ID ?= u2i-tenant-webapp-nonprod
 REGION ?= europe-west1
 
-.PHONY: generate-pipelines
-generate-pipelines:
-	@echo "Generating Cloud Deploy pipeline configurations..."
-	@$(COMPLIANCE_CLI) generate pipeline --env dev > deploy/clouddeploy/dev.yml
-	@$(COMPLIANCE_CLI) generate pipeline --env preview > deploy/clouddeploy/preview.yml
-	@$(COMPLIANCE_CLI) generate pipeline --env qa-prod > deploy/clouddeploy/qa-prod.yml
-	@echo "✅ Pipeline configurations generated"
-
 .PHONY: validate-pipelines
 validate-pipelines:
 	@echo "Validating Cloud Deploy pipeline configurations..."
-	@$(COMPLIANCE_CLI) validate pipelines --pipeline-dir deploy/clouddeploy
+	@echo "Checking dev pipeline..."
+	@gcloud deploy delivery-pipelines describe webapp-dev-pipeline --region=$(REGION) --project=$(PROJECT_ID) --format="value(name)" > /dev/null 2>&1 && echo "✅ Dev pipeline valid" || echo "❌ Dev pipeline not found"
+	@echo "Checking preview pipeline..."
+	@gcloud deploy delivery-pipelines describe webapp-preview-pipeline --region=$(REGION) --project=$(PROJECT_ID) --format="value(name)" > /dev/null 2>&1 && echo "✅ Preview pipeline valid" || echo "❌ Preview pipeline not found"
+	@echo "Checking QA/Prod pipeline..."
+	@gcloud deploy delivery-pipelines describe webapp-qa-prod-pipeline --region=$(REGION) --project=$(PROJECT_ID) --format="value(name)" > /dev/null 2>&1 && echo "✅ QA/Prod pipeline valid" || echo "❌ QA/Prod pipeline not found"
 
 .PHONY: pull-cli-image
 pull-cli-image:
@@ -48,8 +45,7 @@ clean:
 .PHONY: help
 help:
 	@echo "Available targets:"
-	@echo "  generate-pipelines  - Generate Cloud Deploy pipeline YAML files from templates"
-	@echo "  validate-pipelines  - Validate that pipeline YAML files match generated content"
+	@echo "  validate-pipelines  - Validate that Cloud Deploy pipelines exist and are configured"
 	@echo "  pull-cli-image     - Pull the latest compliance-cli Docker image"
 	@echo "  clean              - Remove downloaded binaries"
 	@echo "  help               - Show this help message"

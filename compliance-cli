@@ -3,7 +3,7 @@
 set -e
 
 # Pre-built compliance-cli image
-COMPLIANCE_CLI_IMAGE="${COMPLIANCE_CLI_IMAGE:-us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest}"
+COMPLIANCE_CLI_IMAGE="${COMPLIANCE_CLI_IMAGE:-gcr.io/u2i-bootstrap/compliance-cli-builder:latest}"
 
 # Default values
 PROJECT_ID="${PROJECT_ID:-u2i-tenant-webapp-nonprod}"
