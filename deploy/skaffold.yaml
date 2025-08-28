@@ -36,29 +36,25 @@ profiles:
         apply: ["--server-side", "--force-conflicts"]
     statusCheck: false  # Disabled due to Skaffold Config Connector bug #7207
 
-# Dev profile - includes namespace creation
+# Dev profile
 - name: dev
   manifests:
-    rawYaml:
-    - ../k8s/namespace/namespace.yml
     kustomize:
       paths: 
       - ../k8s/app/resources/preprod
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
 
-# QA profile - includes namespace creation
+# QA profile
 - name: qa
   manifests:
-    rawYaml:
-    - ../k8s/namespace/namespace.yml
     kustomize:
       paths: 
       - ../k8s/app/resources/preprod
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
 
-# Production profile - includes namespace creation with prod image registry
+# Production profile with prod image registry
 - name: prod
   build:
     artifacts:
@@ -67,8 +63,6 @@ profiles:
       docker:
         dockerfile: Dockerfile
   manifests:
-    rawYaml:
-    - ../k8s/namespace/namespace.yml
     kustomize:
       paths: 
       - ../k8s/app/resources/prod
