@@ -22,12 +22,24 @@ deploy:
       apply: ["--server-side", "--force-conflicts"]
   statusCheck: true
 profiles:
-# Preview profile - uses modular configuration to avoid Config Connector bug
+# Preview profile - delegates to modular configuration to avoid Config Connector bug  
 - name: preview-all
-  # Delegate to modular configuration which properly handles Config Connector resources
-  # This avoids the Skaffold status checking bug with cross-namespace resources
-  configPath: skaffold-preview-modules.yaml
-  configs: ["preview-namespace", "preview-certificates", "preview-application"]
+  # NOTE: This profile requires skaffold-preview-modules.yaml to be run with --filename
+  # The modules file separates Config Connector resources to avoid status checking bug
+  manifests:
+    rawYaml:
+    - ../k8s/namespace/namespace.yml
+    - ../k8s/gcp/certificate.yml
+    kustomize:
+      paths:
+      - ../k8s/app/resources/preview
+      buildArgs:
+      - --load-restrictor=LoadRestrictionsNone
+  deploy:
+    kubectl:
+      flags:
+        apply: ["--server-side", "--force-conflicts"]
+    statusCheck: false  # Disabled due to Skaffold Config Connector bug #7207
 
 # Dev profile - includes namespace creation
 - name: dev

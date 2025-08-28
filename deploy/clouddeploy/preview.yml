@@ -25,7 +25,7 @@ description: "Preview deployment with Config Connector certificate provisioning"
 serialPipeline:
   stages:
   - targetId: preview-gke
-    profiles: ["preview-all"]
+    profiles: ["preview-namespace", "preview-certificates", "preview-application"]
     strategy:
       standard:
         verify: false
