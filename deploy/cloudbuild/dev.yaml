@@ -14,22 +14,22 @@ steps:
   id: 'push-image'
   args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp']
 
-# Deploy using Cloud Deploy with pre-built compliance-cli image
-- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
+# Deploy using compliance-cli
+- name: 'gcr.io/u2i-bootstrap/compliance-cli-builder:latest'
   id: 'deploy-dev'
-  entrypoint: 'bash'
-  args: ['-c', 'compliance-cli dev']
+  entrypoint: 'compliance-cli'
+  args: ['dev']
   env:
   - 'PROJECT_ID=${_PROJECT_ID}'
   - 'REGION=${_REGION}'
   - 'COMMIT_SHA=$COMMIT_SHA'
   - 'SHORT_SHA=$SHORT_SHA'
 
-# Send Slack notification using pre-built compliance-cli image
-- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
+# Send Slack notification
+- name: 'gcr.io/u2i-bootstrap/compliance-cli-builder:latest'
   id: 'slack-notification'
-  entrypoint: 'bash'
-  args: ['-c', 'compliance-cli slack notify --environment dev']
+  entrypoint: 'compliance-cli'
+  args: ['slack', 'notify', '--environment', 'dev']
   env:
   - 'PROJECT_ID=${_PROJECT_ID}'
   - 'REGION=${_REGION}'

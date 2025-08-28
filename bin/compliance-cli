@@ -1,27 +1,12 @@
 #!/usr/bin/env bash
-# Wrapper script that delegates everything to compliance-cli
+# Simple wrapper for compliance-cli using Docker
 set -e
 
-# Use dockerized compliance-cli for consistency
-COMPLIANCE_CLI_IMAGE="${COMPLIANCE_CLI_IMAGE:-gcr.io/u2i-bootstrap/compliance-cli-builder:latest}"
-
-# Check if running in CI
-if [ -n "$BUILD_ID" ]; then
-    # In Cloud Build, use the image directly (compliance-cli is in PATH)
-    exec compliance-cli "$@"
-fi
-
-# Check if local compliance-cli binary exists (for development on ARM Macs)
-if [ -f "../compliance/bin/compliance-cli" ]; then
-    exec ../compliance/bin/compliance-cli "$@"
-fi
-
-# Otherwise use Docker
 exec docker run --rm \
     -v "$(pwd):/workspace" \
     -w /workspace \
     -v "${HOME}/.config/gcloud:/root/.config/gcloud" \
     -e "PROJECT_ID=${PROJECT_ID:-u2i-tenant-webapp-nonprod}" \
     -e "REGION=${REGION:-europe-west1}" \
-    ${COMPLIANCE_CLI_IMAGE} \
+    gcr.io/u2i-bootstrap/compliance-cli-builder:latest \
     bash -c "compliance-cli $*"

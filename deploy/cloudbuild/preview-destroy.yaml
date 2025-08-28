@@ -36,8 +36,8 @@ steps:
     echo "PR #$PR_NUMBER is closed, proceeding with cleanup..."
     echo "$PR_NUMBER" > /workspace/pr_number.txt
 
-# Destroy the preview environment using pre-built compliance-cli image
-- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
+# Destroy the preview environment
+- name: 'gcr.io/u2i-bootstrap/compliance-cli-builder:latest'
   id: 'destroy-preview'
   entrypoint: 'bash'
   args: 
@@ -51,7 +51,6 @@ steps:
     PR_NUMBER=$(cat /workspace/pr_number.txt)
     echo "🧹 Destroying preview environment for PR #${PR_NUMBER}"
     
-    # compliance-cli is pre-installed in this image
     compliance-cli preview destroy --pr=${PR_NUMBER}
   env:
   - 'PROJECT_ID=${_PROJECT_ID}'
