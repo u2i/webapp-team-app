@@ -8,20 +8,14 @@ ifdef BUILD_ID
   # In Cloud Build, use the image directly (compliance-cli is in PATH)
   COMPLIANCE_CLI = compliance-cli
 else
-  # Check if compliance-cli source is available locally
-  ifneq ("$(wildcard ../compliance/bin/compliance-cli)","")
-    # Use locally built compliance-cli if available
-    COMPLIANCE_CLI = ../compliance/bin/compliance-cli
-  else
-    # Otherwise use Docker to run the compliance-cli image
-    COMPLIANCE_CLI = docker run --rm \
-      -v $(PWD):/workspace \
-      -w /workspace \
-      -v $(HOME)/.config/gcloud:/root/.config/gcloud \
-      -e PROJECT_ID=$(PROJECT_ID) \
-      -e REGION=$(REGION) \
-      $(COMPLIANCE_CLI_IMAGE) compliance-cli
-  endif
+  # Locally, use Docker to run the compliance-cli image
+  COMPLIANCE_CLI = docker run --rm \
+    -v $(PWD):/workspace \
+    -w /workspace \
+    -v $(HOME)/.config/gcloud:/root/.config/gcloud \
+    -e PROJECT_ID=$(PROJECT_ID) \
+    -e REGION=$(REGION) \
+    $(COMPLIANCE_CLI_IMAGE) compliance-cli
 endif
 
 # Default values for local development
