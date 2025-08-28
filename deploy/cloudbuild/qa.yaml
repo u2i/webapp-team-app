@@ -27,6 +27,7 @@ steps:
       --project=${_PROJECT_ID} \
       --images=europe-west1-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp=europe-west1-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:qa-$COMMIT_SHA \
       --to-target=qa-gke \
+      --skaffold-file=deploy/skaffold.yaml \
       --deploy-parameters=APP_NAME=webapp
 
 # Send Slack notification (skipped for now - needs compliance-cli permissions)
