@@ -25,9 +25,6 @@ profiles:
 # Preview profile - disables status checking to avoid Config Connector bug
 - name: preview-all
   manifests:
-    rawYaml:
-    - ../k8s/namespace/namespace.yml
-    - ../k8s/gcp/certificate.yml
     kustomize:
       paths:
       - ../k8s/app/resources/preview
