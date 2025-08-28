@@ -14,28 +14,28 @@ steps:
   id: 'push-image'
   args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp']
 
-# Deploy to QA using gcloud directly
-- name: 'gcr.io/google.com/cloudsdktool/google-cloud-cli:stable'
+# Deploy to QA using compliance-cli with gcr.io path
+- name: 'gcr.io/u2i-bootstrap/compliance-cli-builder:latest'
   id: 'deploy-qa'
   entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    gcloud deploy releases create qa-$COMMIT_SHA \
-      --delivery-pipeline=webapp-qa-prod-pipeline \
-      --region=${_REGION} \
-      --project=${_PROJECT_ID} \
-      --images=europe-west1-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp=europe-west1-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:qa-$COMMIT_SHA \
-      --to-target=qa-gke \
-      --skaffold-file=deploy/skaffold.yaml \
-      --deploy-parameters=APP_NAME=webapp
+  args: ['-c', 'compliance-cli qa']
+  env:
+  - 'PROJECT_ID=${_PROJECT_ID}'
+  - 'REGION=${_REGION}'
+  - 'COMMIT_SHA=$COMMIT_SHA'
+  - 'SHORT_SHA=$SHORT_SHA'
+  - 'TAG_NAME=$TAG_NAME'
 
-# Send Slack notification (skipped for now - needs compliance-cli permissions)
-# TODO: Grant cloud-deploy-sa access to compliance-cli image or use alternative
-- name: 'gcr.io/google.com/cloudsdktool/google-cloud-cli:stable'
+# Send Slack notification using compliance-cli
+- name: 'gcr.io/u2i-bootstrap/compliance-cli-builder:latest'
   id: 'slack-notification'
   entrypoint: 'bash'
-  args: ['-c', 'echo "Slack notification skipped - QA deployment completed for version $TAG_NAME"']
+  args: ['-c', 'compliance-cli slack notify --environment qa']
+  env:
+  - 'PROJECT_ID=${_PROJECT_ID}'
+  - 'REGION=${_REGION}'
+  - 'COMMIT_SHA=$COMMIT_SHA'
+  - 'BUILD_ID=$BUILD_ID'
 
 options:
   logging: CLOUD_LOGGING_ONLY
