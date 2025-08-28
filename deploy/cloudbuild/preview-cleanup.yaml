@@ -2,8 +2,8 @@
 # This should be triggered on a schedule (e.g., daily)
 
 steps:
-# Run preview cleanup using pre-built compliance-cli image
-- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
+# Run preview cleanup
+- name: 'gcr.io/u2i-bootstrap/compliance-cli-builder:latest'
   id: 'cleanup-previews'
   entrypoint: 'bash'
   args: 

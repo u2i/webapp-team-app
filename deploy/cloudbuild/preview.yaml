@@ -1,11 +1,11 @@
 # No secrets needed here - GitHub App auth handled in script
 
 steps:
-# Extract PR number from the pull request using pre-built compliance-cli image
-- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
+# Extract PR number from the pull request
+- name: 'gcr.io/u2i-bootstrap/compliance-cli-builder:latest'
   id: 'get-pr-number'
-  entrypoint: 'bash'
-  args: ['-c', 'compliance-cli pr get-number']
+  entrypoint: 'compliance-cli'
+  args: ['pr', 'get-number']
   env:
   - '_PR_NUMBER=${_PR_NUMBER}'
   - '_HEAD_BRANCH=${_HEAD_BRANCH}'
@@ -28,22 +28,22 @@ steps:
   id: 'push-image'
   args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp']
 
-# Deploy using Cloud Deploy with pre-built compliance-cli image
-- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
+# Deploy using compliance-cli
+- name: 'gcr.io/u2i-bootstrap/compliance-cli-builder:latest'
   id: 'deploy-preview'
-  entrypoint: 'bash'
-  args: ['-c', 'compliance-cli preview deploy']
+  entrypoint: 'compliance-cli'
+  args: ['preview', 'deploy']
   env:
   - 'PROJECT_ID=${_PROJECT_ID}'
   - 'REGION=${_REGION}'
   - 'COMMIT_SHA=$COMMIT_SHA'
   - 'SHORT_SHA=$SHORT_SHA'
 
-# Post comment on PR using pre-built compliance-cli image
-- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
+# Post comment on PR
+- name: 'gcr.io/u2i-bootstrap/compliance-cli-builder:latest'
   id: 'post-comment'
-  entrypoint: 'bash'
-  args: ['-c', 'compliance-cli pr comment']
+  entrypoint: 'compliance-cli'
+  args: ['pr', 'comment']
   env:
   - 'PROJECT_ID=${_PROJECT_ID}'
   - 'REGION=${_REGION}'
