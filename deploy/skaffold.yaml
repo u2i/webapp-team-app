@@ -22,24 +22,12 @@ deploy:
       apply: ["--server-side", "--force-conflicts"]
   statusCheck: true
 profiles:
-# Preview profile - includes all resources with tolerant status checking
+# Preview profile - uses modular configuration to avoid Config Connector bug
 - name: preview-all
-  manifests:
-    rawYaml:
-    - ../k8s/namespace/namespace.yml
-    - ../k8s/gcp/certificate.yml
-    kustomize:
-      paths:
-      - ../k8s/app/resources/preview
-      buildArgs:
-      - --load-restrictor=LoadRestrictionsNone
-  deploy:
-    kubectl:
-      flags:
-        apply: ["--server-side", "--force-conflicts"]
-    statusCheck: true
-    statusCheckDeadlineSeconds: 600
-    tolerateFailuresUntilDeadline: true
+  # Delegate to modular configuration which properly handles Config Connector resources
+  # This avoids the Skaffold status checking bug with cross-namespace resources
+  configPath: skaffold-preview-modules.yaml
+  configs: ["preview-namespace", "preview-certificates", "preview-application"]
 
 # Dev profile - includes namespace creation
 - name: dev
