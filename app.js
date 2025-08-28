@@ -16,13 +16,14 @@ app.get('/ready', (req, res) => {
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'Hello from webapp! v7.6 - Final preview deployment test',
+    message: 'Hello from webapp! v8.0 - Full deployment cycle test',
     boundary: boundary,
     stage: stage,
     version: version,
     region: 'europe-west1',
     compliance: 'iso27001-soc2-gdpr',
     preview: process.env.PREVIEW_NAME || false,
+    deployment: 'simplified compliance-cli',
     timestamp: new Date().toISOString()
   });
 });
