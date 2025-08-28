@@ -1,18 +1,7 @@
 #!/usr/bin/env bash
-# Simple wrapper for compliance-cli
+# Simple wrapper for compliance-cli using Docker
 set -e
 
-# In CI/CD, compliance-cli is in PATH
-if command -v compliance-cli &> /dev/null; then
-    exec compliance-cli "$@"
-fi
-
-# For local development on ARM Macs, use local build
-if [ -f "../compliance/bin/compliance-cli" ]; then
-    exec ../compliance/bin/compliance-cli "$@"
-fi
-
-# Otherwise use Docker image
 exec docker run --rm \
     -v "$(pwd):/workspace" \
     -w /workspace \
