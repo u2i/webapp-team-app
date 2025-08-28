@@ -5,6 +5,8 @@ kind: Kustomization
 
 resources:
 - ../../base
+- ../../../namespace/namespace.yml
+- ../../../gcp/certificate.yml
 
 patches:
 - target:
