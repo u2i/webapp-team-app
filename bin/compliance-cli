@@ -9,4 +9,4 @@ exec docker run --rm \
     -e "PROJECT_ID=${PROJECT_ID:-u2i-tenant-webapp-nonprod}" \
     -e "REGION=${REGION:-europe-west1}" \
     gcr.io/u2i-bootstrap/compliance-cli-builder:latest \
-    bash -c "compliance-cli $*"
+    -c "compliance-cli $*"
