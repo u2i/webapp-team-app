@@ -22,10 +22,8 @@ deploy:
       apply: ["--server-side", "--force-conflicts"]
   statusCheck: true
 profiles:
-# Preview profile - delegates to modular configuration to avoid Config Connector bug  
+# Preview profile - disables status checking to avoid Config Connector bug
 - name: preview-all
-  # NOTE: This profile requires skaffold-preview-modules.yaml to be run with --filename
-  # The modules file separates Config Connector resources to avoid status checking bug
   manifests:
     rawYaml:
     - ../k8s/namespace/namespace.yml
