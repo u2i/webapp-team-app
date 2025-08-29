@@ -16,7 +16,7 @@ app.get('/ready', (req, res) => {
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'Hello from webapp! v8.1 - Full deployment cycle test with fixes',
+    message: 'Hello from webapp! v9.0 - Final validation with multi-arch support',
     boundary: boundary,
     stage: stage,
     version: version,
