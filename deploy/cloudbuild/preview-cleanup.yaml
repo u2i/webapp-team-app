@@ -3,7 +3,7 @@
 
 steps:
 # Run preview cleanup
-- name: 'gcr.io/u2i-bootstrap/compliance-cli-builder:latest'
+- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
   id: 'cleanup-previews'
   entrypoint: 'bash'
   args: 
