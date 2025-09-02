@@ -1,60 +1,13 @@
-# Cloud Build configuration for destroying preview environment when PR is closed
-# This is triggered on all PR events but only acts when PR is closed
-
 steps:
-# Check if PR is actually closed using GitHub API
-- name: 'gcr.io/cloud-builders/gcloud'
-  id: 'check-pr-status'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    # GitHub provides PR number in _PR_NUMBER substitution
-    PR_NUMBER="${_PR_NUMBER}"
-    
-    if [ -z "$PR_NUMBER" ]; then
-      echo "⚠️  No PR number found, skipping..."
-      exit 0
-    fi
-    
-    echo "Checking PR #$PR_NUMBER status..."
-    
-    # Install gh CLI
-    apt-get update && apt-get install -y gh
-    
-    # Use GitHub token from Secret Manager
-    export GH_TOKEN=$(gcloud secrets versions access latest --secret=github-pr-app-token --project=u2i-bootstrap)
-    
-    # Check PR state
-    PR_STATE=$(gh api repos/${REPO_FULL_NAME}/pulls/${PR_NUMBER} --jq '.state' 2>/dev/null || echo "unknown")
-    
-    if [ "$PR_STATE" != "closed" ]; then
-      echo "✅ PR #$PR_NUMBER is still open (state: $PR_STATE), skipping cleanup"
-      exit 0
-    fi
-    
-    echo "PR #$PR_NUMBER is closed, proceeding with cleanup..."
-    echo "$PR_NUMBER" > /workspace/pr_number.txt
-
-# Destroy the preview environment
+# Destroy preview environment using compliance-cli
 - name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
   id: 'destroy-preview'
-  entrypoint: 'bash'
-  args: 
-  - '-c'
-  - |
-    if [ ! -f /workspace/pr_number.txt ]; then
-      echo "No PR to clean up, skipping..."
-      exit 0
-    fi
-    
-    PR_NUMBER=$(cat /workspace/pr_number.txt)
-    echo "🧹 Destroying preview environment for PR #${PR_NUMBER}"
-    
-    compliance-cli preview destroy --pr=${PR_NUMBER}
+  entrypoint: 'compliance-cli'
+  args: ['preview', 'destroy']
   env:
   - 'PROJECT_ID=${_PROJECT_ID}'
   - 'REGION=${_REGION}'
+  - 'PR_NUMBER=${_PR_NUMBER}'
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -62,4 +15,4 @@ options:
 substitutions:
   _PROJECT_ID: u2i-tenant-webapp-nonprod
   _REGION: europe-west1
-  # _PR_NUMBER is provided by the trigger
+  _PR_NUMBER: '1'  # Default, will be overridden by trigger
