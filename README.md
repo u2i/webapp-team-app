@@ -168,3 +168,7 @@ Before each deployment, ensure:
 - **Security Issues**: security-team@u2i.com  
 - **Platform Support**: platform-team@u2i.com
 - **Compliance Questions**: compliance@u2i.com
+
+## Testing PR Number Fix
+Timestamp: 20250902-201337
+Testing that preview deployments now correctly use the PR number from the trigger.
