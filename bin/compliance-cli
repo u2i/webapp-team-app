@@ -8,5 +8,6 @@ exec docker run --rm \
     -v "${HOME}/.config/gcloud:/root/.config/gcloud" \
     -e "PROJECT_ID=${PROJECT_ID:-u2i-tenant-webapp-nonprod}" \
     -e "REGION=${REGION:-europe-west1}" \
-    us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest \
-    -c "compliance-cli $*"
+    --entrypoint compliance-cli \
+    ghcr.io/u2i/compliance-cli:latest \
+    "$@"

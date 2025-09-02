@@ -5,6 +5,7 @@ steps:
   args: [
     'build',
     '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:qa-${COMMIT_SHA}',
+    '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:qa-${_TAG_NAME}',
     '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:qa-latest',
     '.'
   ]
@@ -14,7 +15,7 @@ steps:
   id: 'push-image'
   args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp']
 
-# Deploy to QA using compliance-cli
+# Deploy using compliance-cli
 - name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
   id: 'deploy-qa'
   entrypoint: 'compliance-cli'
@@ -24,6 +25,7 @@ steps:
   - 'REGION=${_REGION}'
   - 'COMMIT_SHA=$COMMIT_SHA'
   - 'SHORT_SHA=$SHORT_SHA'
+  - 'TAG_NAME=$TAG_NAME'
 
 # Send Slack notification
 - name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
@@ -34,6 +36,7 @@ steps:
   - 'PROJECT_ID=${_PROJECT_ID}'
   - 'REGION=${_REGION}'
   - 'COMMIT_SHA=$COMMIT_SHA'
+  - 'TAG_NAME=$TAG_NAME'
   - 'BUILD_ID=$BUILD_ID'
 
 options:
