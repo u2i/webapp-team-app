@@ -66,6 +66,7 @@ describe('WebApp API Tests', () => {
         .expect(200);
       
       expect(response.body).toHaveProperty('message');
+      expect(response.body.message).toContain('v10.0'); // Verify version update
       expect(response.body).toHaveProperty('boundary', 'test');
       expect(response.body).toHaveProperty('stage', 'test-stage');
       expect(response.body).toHaveProperty('version', 'v1.0.0-test');
