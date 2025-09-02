@@ -18,7 +18,7 @@ steps:
 - name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
   id: 'deploy-preview'
   entrypoint: 'compliance-cli'
-  args: ['preview', 'deploy']
+  args: ['preview', 'deploy', '--pr-number', '${_PR_NUMBER}']
   env:
   - 'PROJECT_ID=${_PROJECT_ID}'
   - 'REGION=${_REGION}'
