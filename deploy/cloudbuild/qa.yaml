@@ -1,7 +1,19 @@
 steps:
+# Install dependencies and run tests
+- name: 'node:18-alpine'
+  id: 'run-tests'
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    npm ci
+    npm run test:ci
+    echo "Tests passed successfully!"
+
 # Build the Docker image
 - name: 'gcr.io/cloud-builders/docker'
   id: 'build-image'
+  waitFor: ['run-tests']
   args: [
     'build',
     '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:qa-${COMMIT_SHA}',
