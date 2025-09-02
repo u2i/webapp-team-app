@@ -269,6 +269,30 @@ make validate-pipelines
 - **Production**: Uses `.u2i.com` domain (managed in u2i-tenant-webapp-prod project)
 - DNS zones are in different projects - this is intentional for security isolation
 
+## Preview Environment Certificate Provisioning
+**IMPORTANT**: When a new preview environment is created (PR opened), the SSL certificate provisioning can take 15-30 minutes. During this time:
+- The deployment will complete successfully
+- Pods will be running and healthy
+- The URL will not be accessible until the certificate moves from `PROVISIONING` to `ACTIVE` state
+
+To check certificate status:
+```bash
+# Check certificate state for a specific PR
+PR_NUM=216
+gcloud certificate-manager certificates describe webapp-preview-cert-pr${PR_NUM} \
+  --location=global \
+  --project=u2i-tenant-webapp-nonprod \
+  --format="get(state,managed.state)"
+```
+
+The certificate goes through these states:
+1. `PROVISIONING` → Initial state
+2. `FAILED (CONFIG)` → Normal during DNS propagation (temporary)
+3. `PROVISIONING` → Retrying after DNS propagates
+4. `ACTIVE` → Ready to use
+
+This is normal behavior for Google-managed certificates and not an error.
+
 ## Compliance Features
 - ISO 27001 controls implemented
 - SOC 2 Type II requirements met
