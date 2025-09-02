@@ -4,8 +4,8 @@ steps:
   id: 'build-image'
   args: [
     'build',
-    '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-${_PR_NUMBER}-${COMMIT_SHA}',
-    '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-${_PR_NUMBER}-latest',
+    '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-${COMMIT_SHA}',
+    '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-pr${_PR_NUMBER}-latest',
     '.'
   ]
 
