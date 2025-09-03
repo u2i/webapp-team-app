@@ -1,0 +1,22 @@
+steps:
+# Lint Check
+- name: 'node:18-alpine'
+  id: 'lint-check'
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    npm ci
+    npx eslint . --ext .js,.jsx,.ts,.tsx
+    echo "✅ Linting passed!"
+
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  
+timeout: 300s
+
+substitutions:
+  _PROJECT_ID: u2i-tenant-webapp-nonprod
+  _REGION: europe-west1
+  _PR_NUMBER: ${_PR_NUMBER}

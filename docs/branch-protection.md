@@ -11,6 +11,7 @@ Navigate to **Settings** → **Branches** → **Add rule** for the `main` branch
 Configure the following settings for the `main` branch:
 
 #### Required Status Checks
+
 - ✅ **Require status checks to pass before merging**
   - Search and select these required checks:
     - `Run Tests`
@@ -23,12 +24,14 @@ Configure the following settings for the `main` branch:
 - ✅ **Require branches to be up to date before merging**
 
 #### Pull Request Requirements
+
 - ✅ **Require a pull request before merging**
   - ✅ Require approvals: **1**
   - ✅ Dismiss stale pull request approvals when new commits are pushed
   - ✅ Require review from CODEOWNERS
 
 #### Additional Protection
+
 - ✅ **Require conversation resolution before merging**
 - ✅ **Require signed commits** (optional but recommended)
 - ✅ **Include administrators** (enforce for everyone)
@@ -39,10 +42,10 @@ Configure the following settings for the `main` branch:
 
 The following GitHub Actions workflows must pass:
 
-| Workflow | File | Description | Required |
-|----------|------|-------------|----------|
-| PR Tests | `.github/workflows/pr-tests.yml` | Runs unit tests and coverage | ✅ |
-| Preview Deploy | Cloud Build Trigger | Creates preview environment | ✅ |
+| Workflow       | File                             | Description                  | Required |
+| -------------- | -------------------------------- | ---------------------------- | -------- |
+| PR Tests       | `.github/workflows/pr-tests.yml` | Runs unit tests and coverage | ✅       |
+| Preview Deploy | Cloud Build Trigger              | Creates preview environment  | ✅       |
 
 ### 3. Cloud Build Integration
 
@@ -68,17 +71,20 @@ gcloud builds triggers describe webapp-preview-deployment \
 When tests fail in any stage:
 
 #### GitHub Actions Test Failures
+
 - PR cannot be merged until tests pass
 - Developer must fix failing tests and push new commits
 - All checks re-run automatically on new commits
 
 #### Cloud Build Test Failures
+
 - Build stops immediately when tests fail
 - No Docker image is created or pushed
 - Preview environment is not deployed
 - PR comment indicates build failure with link to logs
 
 #### Docker Build Test Failures
+
 - Multi-stage build fails at test stage
 - No production image is created
 - Build logs show test failure details
@@ -93,6 +99,7 @@ In emergencies, administrators can bypass protection:
 4. Create follow-up issue to fix tests
 
 ⚠️ **Warning**: Bypassing tests should be extremely rare and requires:
+
 - Incident ticket reference
 - Post-mortem commitment
 - Executive approval for production
@@ -100,13 +107,16 @@ In emergencies, administrators can bypass protection:
 ### 6. Monitoring Test Health
 
 #### Test Coverage Requirements
+
 Configured in `jest.config.js`:
+
 - Branches: 80%
 - Functions: 80%
 - Lines: 80%
 - Statements: 80%
 
 #### Viewing Test Results
+
 - **PR Comments**: Automated test result comments
 - **Actions Tab**: Detailed test logs and artifacts
 - **Coverage Reports**: Upload as artifacts in workflow
@@ -148,12 +158,12 @@ gh run list --workflow=pr-tests.yml
 
 ### Common Issues
 
-| Issue | Solution |
-|-------|----------|
-| Tests pass locally but fail in CI | Check Node version, ensure `npm ci` used |
-| Flaky tests | Add retries, increase timeouts, fix race conditions |
-| Coverage below threshold | Write additional tests for uncovered code |
-| PR stuck on pending checks | Verify workflows triggered, check GitHub Actions status |
+| Issue                             | Solution                                                |
+| --------------------------------- | ------------------------------------------------------- |
+| Tests pass locally but fail in CI | Check Node version, ensure `npm ci` used                |
+| Flaky tests                       | Add retries, increase timeouts, fix race conditions     |
+| Coverage below threshold          | Write additional tests for uncovered code               |
+| PR stuck on pending checks        | Verify workflows triggered, check GitHub Actions status |
 
 ### Support
 

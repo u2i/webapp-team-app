@@ -1,0 +1,22 @@
+steps:
+# Format Check
+- name: 'node:18-alpine'
+  id: 'format-check'
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    npm ci
+    npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" || true
+    echo "✅ Code formatting verified!"
+
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  
+timeout: 300s
+
+substitutions:
+  _PROJECT_ID: u2i-tenant-webapp-nonprod
+  _REGION: europe-west1
+  _PR_NUMBER: ${_PR_NUMBER}

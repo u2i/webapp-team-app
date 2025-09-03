@@ -6,14 +6,20 @@
   "scripts": {
     "start": "node app.js",
     "test": "jest --coverage",
-    "test:ci": "jest --ci --coverage --coverageReporters=text-summary"
+    "test:ci": "jest --ci --coverage --coverageReporters=text-summary",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
+    "format": "prettier --write '**/*.{js,json,md}'",
+    "format:check": "prettier --check '**/*.{js,json,md}'"
   },
   "dependencies": {
     "express": "^4.18.2"
   },
   "devDependencies": {
     "jest": "^29.7.0",
-    "supertest": "^6.3.3"
+    "supertest": "^6.3.3",
+    "eslint": "^8.55.0",
+    "prettier": "^3.1.1"
   },
   "author": "webapp-team@u2i.com",
   "license": "UNLICENSED",
