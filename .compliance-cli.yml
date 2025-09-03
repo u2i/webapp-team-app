@@ -13,3 +13,22 @@ projects:
 domains:
   nonprod_base: u2i.dev
   prod_base: u2i.com
+
+# Test configuration
+tests:
+  # Enable or disable test execution in pipelines
+  enabled: true
+  
+  # Docker image to use for running tests
+  runner_image: node:18-alpine
+  
+  # Commands to execute for testing
+  commands:
+    install: npm ci
+    test: npm run test:ci
+    
+  # Success message to display after tests pass
+  success_message: "Tests passed successfully!"
+  
+  # Whether to fail the build if tests fail
+  fail_on_error: true

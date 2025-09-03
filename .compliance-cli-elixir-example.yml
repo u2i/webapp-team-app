@@ -1,0 +1,42 @@
+# Example Compliance CLI configuration for Elixir/Phoenix app
+# This shows how the test configuration works for different platforms
+
+# Application identifier
+app: webapp
+
+# GCP projects
+projects:
+  nonprod: u2i-tenant-webapp-nonprod
+  prod: u2i-tenant-webapp-prod
+
+# Domain configuration  
+domains:
+  nonprod_base: u2i.dev
+  prod_base: u2i.com
+
+# Test configuration for Elixir/Phoenix
+tests:
+  # Enable or disable test execution in pipelines
+  enabled: true
+  
+  # Docker image to use for running tests
+  runner_image: elixir:1.15-alpine
+  
+  # Commands to execute for testing
+  commands:
+    install: |
+      apk add --no-cache build-base git
+      mix local.hex --force
+      mix local.rebar --force
+      mix deps.get
+      mix deps.compile
+    test: |
+      MIX_ENV=test mix test --trace
+      mix format --check-formatted
+      mix credo --strict
+    
+  # Success message to display after tests pass
+  success_message: "All Elixir tests and checks passed!"
+  
+  # Whether to fail the build if tests fail
+  fail_on_error: true
