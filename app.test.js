@@ -1,5 +1,4 @@
 const request = require('supertest');
-const express = require('express');
 
 // Mock the express app for testing
 describe('WebApp API Tests', () => {
@@ -8,13 +7,13 @@ describe('WebApp API Tests', () => {
   beforeEach(() => {
     // Clear module cache to get fresh app instance
     jest.resetModules();
-    
+
     // Set test environment variables
     process.env.PORT = '3000';
     process.env.BOUNDARY = 'test';
     process.env.STAGE = 'test-stage';
     process.env.VERSION = 'v1.0.0-test';
-    
+
     // Import app
     app = require('./app');
   });
@@ -26,7 +25,7 @@ describe('WebApp API Tests', () => {
         .get('/health')
         .expect('Content-Type', /json/)
         .expect(200);
-      
+
       expect(response.body).toHaveProperty('status', 'healthy');
       expect(response.body).toHaveProperty('timestamp');
       server.close();
@@ -36,7 +35,7 @@ describe('WebApp API Tests', () => {
       const server = app.listen(0);
       const response = await request(server).get('/health');
       const timestamp = new Date(response.body.timestamp);
-      
+
       expect(timestamp).toBeInstanceOf(Date);
       expect(timestamp.getTime()).not.toBeNaN();
       server.close();
@@ -50,7 +49,7 @@ describe('WebApp API Tests', () => {
         .get('/ready')
         .expect('Content-Type', /json/)
         .expect(200);
-      
+
       expect(response.body).toHaveProperty('status', 'ready');
       expect(response.body).toHaveProperty('timestamp');
       server.close();
@@ -64,7 +63,7 @@ describe('WebApp API Tests', () => {
         .get('/')
         .expect('Content-Type', /json/)
         .expect(200);
-      
+
       expect(response.body).toHaveProperty('message');
       expect(response.body.message).toContain('v10.0'); // Verify version update
       expect(response.body).toHaveProperty('boundary', 'test');
@@ -80,10 +79,10 @@ describe('WebApp API Tests', () => {
       jest.resetModules();
       const appWithPreview = require('./app');
       const server = appWithPreview.listen(0);
-      
+
       const response = await request(server).get('/');
       expect(response.body).toHaveProperty('preview', 'pr-123');
-      
+
       delete process.env.PREVIEW_NAME;
       server.close();
     });
@@ -96,7 +95,7 @@ describe('WebApp API Tests', () => {
         .get('/info')
         .expect('Content-Type', /json/)
         .expect(200);
-      
+
       expect(response.body).toHaveProperty('app', 'webapp');
       expect(response.body).toHaveProperty('team', 'webapp-team');
       expect(response.body).toHaveProperty('boundary', 'test');
@@ -111,7 +110,7 @@ describe('WebApp API Tests', () => {
     it('should return valid uptime', async () => {
       const server = app.listen(0);
       const response = await request(server).get('/info');
-      
+
       expect(typeof response.body.environment.uptime).toBe('number');
       expect(response.body.environment.uptime).toBeGreaterThanOrEqual(0);
       server.close();
@@ -124,7 +123,7 @@ describe('WebApp API Tests', () => {
       delete process.env.STAGE;
       delete process.env.VERSION;
       jest.resetModules();
-      
+
       const appWithDefaults = require('./app');
       // The module sets defaults on load
       expect(appWithDefaults).toBeDefined();
@@ -134,9 +133,7 @@ describe('WebApp API Tests', () => {
   describe('404 Handling', () => {
     it('should return 404 for unknown routes', async () => {
       const server = app.listen(0);
-      await request(server)
-        .get('/unknown-route')
-        .expect(404);
+      await request(server).get('/unknown-route').expect(404);
       server.close();
     });
   });
@@ -156,7 +153,7 @@ describe('Compliance Requirements', () => {
   it('should enforce GDPR data residency in EU', async () => {
     const server = app.listen(0);
     const response = await request(server).get('/');
-    
+
     expect(response.body.region).toBe('europe-west1');
     server.close();
   });
@@ -164,7 +161,7 @@ describe('Compliance Requirements', () => {
   it('should include compliance standards in response', async () => {
     const server = app.listen(0);
     const response = await request(server).get('/');
-    
+
     expect(response.body.compliance).toContain('iso27001');
     expect(response.body.compliance).toContain('soc2');
     expect(response.body.compliance).toContain('gdpr');
@@ -188,7 +185,7 @@ describe('Performance Requirements', () => {
     const startTime = Date.now();
     await request(server).get('/health');
     const responseTime = Date.now() - startTime;
-    
+
     expect(responseTime).toBeLessThan(100); // Should respond in less than 100ms
     server.close();
   });
@@ -198,7 +195,7 @@ describe('Performance Requirements', () => {
     const startTime = Date.now();
     await request(server).get('/ready');
     const responseTime = Date.now() - startTime;
-    
+
     expect(responseTime).toBeLessThan(100); // Should respond in less than 100ms
     server.close();
   });

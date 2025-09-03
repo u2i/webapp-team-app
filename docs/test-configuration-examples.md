@@ -11,7 +11,7 @@ tests:
   commands:
     install: npm ci
     test: npm run test:ci
-  success_message: "Tests passed successfully!"
+  success_message: 'Tests passed successfully!'
   fail_on_error: true
 ```
 
@@ -27,7 +27,7 @@ tests:
       mix local.rebar --force
       mix deps.get
     test: mix test --trace
-  success_message: "Tests passed successfully!"
+  success_message: 'Tests passed successfully!'
   fail_on_error: true
 ```
 
@@ -42,7 +42,7 @@ tests:
       bundle config set --local deployment 'true'
       bundle install
     test: bundle exec rspec --format documentation
-  success_message: "Tests passed successfully!"
+  success_message: 'Tests passed successfully!'
   fail_on_error: true
 ```
 
@@ -57,7 +57,7 @@ tests:
       pip install --no-cache-dir -r requirements.txt
       pip install --no-cache-dir -r requirements-test.txt
     test: python manage.py test --parallel
-  success_message: "Tests passed successfully!"
+  success_message: 'Tests passed successfully!'
   fail_on_error: true
 ```
 
@@ -70,7 +70,7 @@ tests:
   commands:
     install: pip install --no-cache-dir -r requirements.txt pytest pytest-cov
     test: pytest tests/ -v --cov=app --cov-report=term-missing
-  success_message: "Tests passed successfully!"
+  success_message: 'Tests passed successfully!'
   fail_on_error: true
 ```
 
@@ -83,7 +83,7 @@ tests:
   commands:
     install: go mod download
     test: go test -v -cover ./...
-  success_message: "Tests passed successfully!"
+  success_message: 'Tests passed successfully!'
   fail_on_error: true
 ```
 
@@ -96,7 +96,7 @@ tests:
   commands:
     install: mvn dependency:go-offline
     test: mvn test
-  success_message: "Tests passed successfully!"
+  success_message: 'Tests passed successfully!'
   fail_on_error: true
 ```
 
@@ -109,7 +109,7 @@ tests:
   commands:
     install: cargo fetch
     test: cargo test --verbose
-  success_message: "Tests passed successfully!"
+  success_message: 'Tests passed successfully!'
   fail_on_error: true
 ```
 
@@ -122,7 +122,7 @@ tests:
   commands:
     install: dotnet restore
     test: dotnet test --logger "console;verbosity=detailed"
-  success_message: "Tests passed successfully!"
+  success_message: 'Tests passed successfully!'
   fail_on_error: true
 ```
 
@@ -137,7 +137,7 @@ tests:
       apk add --no-cache git
       composer install --no-interaction --prefer-dist
     test: php artisan test --parallel
-  success_message: "Tests passed successfully!"
+  success_message: 'Tests passed successfully!'
   fail_on_error: true
 ```
 
@@ -158,7 +158,7 @@ tests:
       npm run test:unit
       npm run test:integration
       npm run test:e2e
-  success_message: "All test suites passed!"
+  success_message: 'All test suites passed!'
   fail_on_error: true
 ```
 
@@ -176,7 +176,7 @@ tests:
       chmod +x ./scripts/install-deps.sh
       ./scripts/install-deps.sh
     test: make test
-  success_message: "Tests completed successfully!"
+  success_message: 'Tests completed successfully!'
   fail_on_error: true
 ```
 
@@ -186,25 +186,25 @@ To disable tests for certain environments:
 
 ```yaml
 tests:
-  enabled: false  # Set to false to skip tests
+  enabled: false # Set to false to skip tests
   runner_image: node:18-alpine
   commands:
     install: echo "Tests disabled"
     test: echo "Tests disabled"
-  success_message: "Tests skipped"
+  success_message: 'Tests skipped'
   fail_on_error: false
 ```
 
 ## Configuration Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `enabled` | boolean | Yes | Whether to run tests in the pipeline |
-| `runner_image` | string | Yes | Docker image to use for test execution |
-| `commands.install` | string | Yes | Command(s) to install dependencies |
-| `commands.test` | string | Yes | Command(s) to run tests |
-| `success_message` | string | No | Message to display on success (default: "Tests passed!") |
-| `fail_on_error` | boolean | No | Whether to fail build on test failure (default: true) |
+| Field              | Type    | Required | Description                                              |
+| ------------------ | ------- | -------- | -------------------------------------------------------- |
+| `enabled`          | boolean | Yes      | Whether to run tests in the pipeline                     |
+| `runner_image`     | string  | Yes      | Docker image to use for test execution                   |
+| `commands.install` | string  | Yes      | Command(s) to install dependencies                       |
+| `commands.test`    | string  | Yes      | Command(s) to run tests                                  |
+| `success_message`  | string  | No       | Message to display on success (default: "Tests passed!") |
+| `fail_on_error`    | boolean | No       | Whether to fail build on test failure (default: true)    |
 
 ## Best Practices
 
@@ -229,17 +229,20 @@ When migrating an existing project to use this configuration:
 ## Troubleshooting
 
 ### Tests Not Running
+
 - Verify `enabled: true` in configuration
 - Check that runner_image exists and is accessible
 - Ensure commands are properly formatted (use `|` for multi-line)
 
 ### Tests Failing in CI but Passing Locally
+
 - Check for environment variable differences
 - Verify the runner_image version matches local environment
 - Look for missing dependencies in the install command
 - Consider adding debugging output to test command
 
 ### Build Continuing Despite Test Failures
+
 - Ensure `fail_on_error: true` is set
 - Check Cloud Build logs for error handling
 - Verify the test command returns non-zero exit code on failure
