@@ -5,7 +5,7 @@
 # To make changes, edit the template at:
 # compliance-cli/internal/generate/templates/pipelines/dev.yaml.tmpl
 # 
-# Generated on: 2025-09-02 20:31:01 UTC
+# Generated on: 2025-09-03 17:02:38 EDT
 # To regenerate: make generate-pipelines
 # ===========================================================================
 

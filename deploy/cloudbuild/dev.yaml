@@ -7,9 +7,7 @@ steps:
   - '-c'
   - |
     npm ci
-    npm audit --audit-level=high
-npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings 0 || true
- || true
+    npm audit --audit-level=high && npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings 0 || true || true
     echo "Static analysis completed!"
 
 # Lint Check
