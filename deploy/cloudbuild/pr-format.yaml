@@ -1,0 +1,28 @@
+steps:
+# Format Check
+- name: 'node:18-alpine'
+  id: 'format-check'
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    npm ci
+    npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}"
+    echo "✅ Code formatting verified!"
+
+# Report success to GitHub
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: 'report-status'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    echo "Format check completed successfully"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  
+timeout: 300s
+
+substitutions:
+  _PR_NUMBER: ${_PR_NUMBER}

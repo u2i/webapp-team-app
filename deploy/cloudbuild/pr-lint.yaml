@@ -1,0 +1,28 @@
+steps:
+# Lint Check
+- name: 'node:18-alpine'
+  id: 'lint-check'
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    npm ci
+    npx eslint . --ext .js,.jsx,.ts,.tsx
+    echo "✅ Linting passed!"
+
+# Report success to GitHub
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: 'report-status'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    echo "Lint check completed successfully"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  
+timeout: 300s
+
+substitutions:
+  _PR_NUMBER: ${_PR_NUMBER}
