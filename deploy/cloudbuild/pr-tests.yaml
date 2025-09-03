@@ -10,14 +10,6 @@ steps:
     npm run test:ci
     echo "✅ Tests passed successfully!"
 
-# Report success to GitHub
-- name: 'gcr.io/cloud-builders/gcloud'
-  id: 'report-status'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    echo "Tests completed successfully"
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -25,4 +17,6 @@ options:
 timeout: 300s
 
 substitutions:
+  _PROJECT_ID: u2i-tenant-webapp-nonprod
+  _REGION: europe-west1
   _PR_NUMBER: ${_PR_NUMBER}

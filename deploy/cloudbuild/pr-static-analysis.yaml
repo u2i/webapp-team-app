@@ -7,17 +7,9 @@ steps:
   - '-c'
   - |
     npm ci
-    npm audit --audit-level=high && npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings 0 || true
+    npm audit --audit-level=high && npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings 0 || true || true
     echo "✅ Static analysis completed!"
 
-# Report success to GitHub
-- name: 'gcr.io/cloud-builders/gcloud'
-  id: 'report-status'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    echo "Static analysis check completed successfully"
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -25,4 +17,6 @@ options:
 timeout: 300s
 
 substitutions:
+  _PROJECT_ID: u2i-tenant-webapp-nonprod
+  _REGION: europe-west1
   _PR_NUMBER: ${_PR_NUMBER}
