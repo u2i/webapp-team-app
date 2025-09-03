@@ -42,10 +42,11 @@ steps:
 - name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
   id: 'post-pr-comment'
   entrypoint: 'compliance-cli'
-  args: ['pr', 'comment']
+  args: ['pr', 'comment', '--pr-number', '${_PR_NUMBER}']
   env:
   - 'PROJECT_ID=${_PROJECT_ID}'
   - 'BUILD_ID=$BUILD_ID'
+  - 'PR_NUMBER=${_PR_NUMBER}'
 
 options:
   logging: CLOUD_LOGGING_ONLY
