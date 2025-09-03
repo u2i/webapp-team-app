@@ -1,5 +1,5 @@
 steps:
-# Install dependencies and run tests
+# Run tests
 - name: 'node:18-alpine'
   id: 'run-tests'
   entrypoint: 'sh'
