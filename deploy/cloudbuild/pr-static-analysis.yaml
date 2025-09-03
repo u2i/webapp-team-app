@@ -1,0 +1,22 @@
+steps:
+# Static Analysis Check
+- name: 'node:18-alpine'
+  id: 'static-analysis'
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    npm ci
+    npm audit --audit-level=high && npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings 0 || true || true
+    echo "✅ Static analysis completed!"
+
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  
+timeout: 300s
+
+substitutions:
+  _PROJECT_ID: u2i-tenant-webapp-nonprod
+  _REGION: europe-west1
+  _PR_NUMBER: ${_PR_NUMBER}

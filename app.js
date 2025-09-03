@@ -7,11 +7,15 @@ const stage = process.env.STAGE || 'unknown';
 const version = process.env.VERSION || process.env.K_REVISION || 'local';
 
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+  res
+    .status(200)
+    .json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
 app.get('/ready', (req, res) => {
-  res.status(200).json({ status: 'ready', timestamp: new Date().toISOString() });
+  res
+    .status(200)
+    .json({ status: 'ready', timestamp: new Date().toISOString() });
 });
 
 app.get('/', (req, res) => {
@@ -24,7 +28,7 @@ app.get('/', (req, res) => {
     compliance: 'iso27001-soc2-gdpr',
     preview: process.env.PREVIEW_NAME || false,
     deployment: 'simplified compliance-cli',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -37,15 +41,18 @@ app.get('/info', (req, res) => {
     version: version,
     environment: {
       node: process.version,
-      uptime: process.uptime()
-    }
+      uptime: process.uptime(),
+    },
   });
 });
 
 // Only start server if this file is run directly (not in tests)
 if (require.main === module) {
   app.listen(port, () => {
-    console.log(`Server running on port ${port} in ${stage} stage (${boundary} boundary)`);
+    // eslint-disable-next-line no-console
+    console.log(
+      `Server running on port ${port} in ${stage} stage (${boundary} boundary)`
+    );
   });
 }
 

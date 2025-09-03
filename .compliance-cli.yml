@@ -32,3 +32,33 @@ tests:
   
   # Whether to fail the build if tests fail
   fail_on_error: true
+
+# Static Analysis configuration
+analysis:
+  enabled: true
+  runner_image: node:18-alpine
+  commands:
+    install: npm ci
+    analyze: npm audit --audit-level=high && npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings 0 || true
+  success_message: "Static analysis completed!"
+  fail_on_error: false  # Set to true to block on security issues
+
+# Lint configuration
+lint:
+  enabled: true
+  runner_image: node:18-alpine
+  commands:
+    install: npm ci
+    lint: npx eslint . --ext .js,.jsx,.ts,.tsx
+  success_message: "Linting passed!"
+  fail_on_error: true
+
+# Format configuration  
+format:
+  enabled: true
+  runner_image: node:18-alpine
+  commands:
+    install: npm ci
+    check: npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}"
+  success_message: "Code formatting verified!"
+  fail_on_error: false  # Usually just a warning

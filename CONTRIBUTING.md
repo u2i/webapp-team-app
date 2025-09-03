@@ -3,6 +3,7 @@
 ## 🚨 Golden Rule: All Changes via Pull Request
 
 **NEVER push directly to the `main` branch.** All changes, no matter how small, must go through a pull request for:
+
 - Code review
 - Automated testing
 - Preview deployment
@@ -11,6 +12,7 @@
 ## Development Workflow
 
 ### 1. Create a Feature Branch
+
 ```bash
 # Always branch from main
 git checkout main
@@ -19,6 +21,7 @@ git checkout -b feature/your-feature-name
 ```
 
 ### 2. Make Your Changes
+
 ```bash
 # Make your code changes
 # Test locally
@@ -31,6 +34,7 @@ git commit -m "feat: Add new feature"  # or fix:, docs:, refactor:, etc.
 ```
 
 ### 3. Create Pull Request
+
 ```bash
 # Push your branch
 git push origin feature/your-feature-name
@@ -42,12 +46,14 @@ gh pr create --title "feat: Your feature" --body "Description of changes"
 ```
 
 ### 4. PR Review Process
+
 - [ ] Automated checks will run (compliance, security)
 - [ ] Preview environment will be deployed
 - [ ] Wait for code review approval
 - [ ] Test preview deployment URL provided in PR comment
 
 ### 5. Merge
+
 - Only merge after approval
 - Use "Squash and merge" for clean history
 - Delete branch after merge
@@ -55,6 +61,7 @@ gh pr create --title "feat: Your feature" --body "Description of changes"
 ## Commit Message Convention
 
 Use conventional commits for clear history:
+
 - `feat:` - New feature
 - `fix:` - Bug fix
 - `docs:` - Documentation changes
@@ -74,6 +81,7 @@ Use conventional commits for clear history:
 ## Testing Requirements
 
 Before creating a PR:
+
 1. **Local Testing**: Run `npm start` and verify locally
 2. **Health Check**: Test `/health` endpoint
 3. **No Direct Secrets**: Never commit secrets or credentials
@@ -82,6 +90,7 @@ Before creating a PR:
 ## Preview Deployments
 
 Every PR automatically gets a preview deployment:
+
 - URL: `https://preview-pr<number>.webapp.u2i.dev`
 - Automatically cleaned up after merge/close
 - Test your changes in a production-like environment
@@ -89,6 +98,7 @@ Every PR automatically gets a preview deployment:
 ## Emergency Hotfixes
 
 Even for critical fixes:
+
 1. Create a `hotfix/` branch
 2. Create PR with `[HOTFIX]` prefix in title
 3. Tag relevant reviewers for expedited review
@@ -97,6 +107,7 @@ Even for critical fixes:
 ## Code Review Checklist
 
 Reviewers will check:
+
 - [ ] Code follows existing patterns
 - [ ] No hardcoded secrets
 - [ ] Appropriate error handling

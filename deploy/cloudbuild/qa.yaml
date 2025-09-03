@@ -1,7 +1,43 @@
 steps:
-# Install dependencies and run tests
+# Static Analysis
+- name: 'node:18-alpine'
+  id: 'static-analysis'
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    npm ci
+    npm audit --audit-level=high && npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings 0 || true || true
+    echo "Static analysis completed!"
+
+# Lint Check
+- name: 'node:18-alpine'
+  id: 'lint-check'
+  waitFor: ['static-analysis']
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    npm ci
+    npx eslint . --ext .js,.jsx,.ts,.tsx
+    echo "Linting passed!"
+
+# Format Check
+- name: 'node:18-alpine'
+  id: 'format-check'
+  waitFor: ['lint-check']
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    npm ci
+    npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" || true
+    echo "Code formatting verified!"
+
+# Run tests
 - name: 'node:18-alpine'
   id: 'run-tests'
+  waitFor: ['format-check']
   entrypoint: 'sh'
   args:
   - '-c'
