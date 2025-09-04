@@ -73,9 +73,23 @@ async function runMigrations() {
   
   try {
     // Fetch database URL
-    const databaseUrl = await fetchDatabaseUrl();
+    let databaseUrl;
+    try {
+      databaseUrl = await fetchDatabaseUrl();
+    } catch (error) {
+      console.error('Could not fetch database credentials:', error.message);
+      if (STAGE === 'preview') {
+        console.log('Skipping migrations for preview environment without database');
+        process.exit(0);
+      }
+      throw error;
+    }
     
     if (!databaseUrl) {
+      if (STAGE === 'preview') {
+        console.log('No database configuration available for preview, skipping migrations');
+        process.exit(0);
+      }
       throw new Error('No database configuration available');
     }
 
