@@ -70,8 +70,8 @@ neon:
   
   # Neon project IDs for each boundary
   projects:
-    nonprod: "gentle-mode-62792659"  # Neon nonprod project ID
-    prod: "patient-hat-70866231"     # Neon prod project ID
+    nonprod: "withered-leaf-60283890"  # Neon nonprod project ID
+    prod: "divine-union-66509090"     # Neon prod project ID
   
   # Database configuration
   database:
