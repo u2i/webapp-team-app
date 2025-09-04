@@ -7,6 +7,8 @@ resources:
 - network-policy.yml
 - httproute.yml
 - pod-disruption-budget.yml
+- secret-store.yml
+- external-secret.yml
 # Note: namespace.yml is handled separately by Cloud Deploy
 
 # Use labels instead of commonLabels to avoid modifying selectors

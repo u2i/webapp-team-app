@@ -63,6 +63,15 @@ spec:
           value: "europe-west1"
         - name: COMPLIANCE_MODE
           value: "gdpr"
+        # Database configuration from ConfigMap (if exists)
+        envFrom:
+        - configMapRef:
+            name: webapp-neon-db-config # from-param: ${APP_NAME}-neon-db-config
+            optional: true
+        # Database credentials from Secret Manager (mounted via External Secrets Operator)
+        - secretRef:
+            name: webapp-neon-db-secret # from-param: ${APP_NAME}-neon-db-secret
+            optional: true
         livenessProbe:
           httpGet:
             path: /health
