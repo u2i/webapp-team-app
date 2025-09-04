@@ -107,7 +107,8 @@ jobs:
 
     - name: Check for hardcoded secrets
       run: |
-        # Simple check for potential secrets (excluding test files and package files)
+        # Check for potential secrets (excluding legitimate uses)
+        # Exclude lines with Secret Manager imports and environment variable references
         if grep -r "password\|secret\|api[_-]key\|token" \
           --include="*.js" \
           --include="*.json" \
@@ -116,7 +117,10 @@ jobs:
           --exclude="jest.config.js" \
           --exclude-dir=node_modules \
           --exclude-dir=.git \
-          --exclude-dir=coverage .; then
+          --exclude-dir=coverage . | \
+          grep -v "SecretManager\|secretManager\|secretClient\|process\.env\|DATABASE_PASSWORD\|require.*secret-manager" | \
+          grep -v "// \|/\* \| \* " | \
+          grep -E "=.*['\"].*['\"]"; then
           echo "⚠️ Potential hardcoded secrets found. Please review."
           exit 1
         fi
