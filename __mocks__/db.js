@@ -1,8 +1,10 @@
 // Mock database module for testing
 const mockDb = {
-  isEnabled: jest.fn().mockReturnValue(false), // Database disabled in tests
+  isEnabled: jest.fn().mockResolvedValue(false), // Database disabled in tests - now async
+  isEnabledSync: jest.fn().mockReturnValue(false), // Sync version for backward compatibility
+  getPool: jest.fn().mockResolvedValue(null),
   initializeSchema: jest.fn().mockResolvedValue(true),
-  query: jest.fn(),
+  query: jest.fn().mockResolvedValue({ rows: [] }),
   recordVisit: jest.fn().mockResolvedValue({ 
     visit: { 
       id: 1, 
@@ -21,7 +23,7 @@ const mockDb = {
     betaFeatures: false,
     debugMode: false
   }),
-  cleanup: jest.fn()
+  cleanup: jest.fn().mockResolvedValue(null)
 };
 
 module.exports = mockDb;

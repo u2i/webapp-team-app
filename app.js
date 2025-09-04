@@ -11,11 +11,14 @@ const version = process.env.VERSION || process.env.K_REVISION || 'local';
 app.use(express.json());
 
 // Initialize database on startup
-if (db.isEnabled()) {
-  db.initializeSchema()
-    .then(() => console.log('Database initialized'))
-    .catch((err) => console.error('Database initialization failed:', err));
-}
+db.isEnabled()
+  .then((enabled) => {
+    if (enabled) {
+      return db.initializeSchema();
+    }
+  })
+  .then(() => console.log('Database initialized'))
+  .catch((err) => console.error('Database initialization failed:', err));
 
 app.get('/health', (req, res) => {
   res
@@ -59,22 +62,44 @@ app.get('/info', (req, res) => {
 
 // Database status endpoint
 app.get('/db/status', async (req, res) => {
-  const status = await db.testConnection();
-  res.status(status.connected ? 200 : 503).json({
-    database: status,
-    enabled: db.isEnabled(),
-  });
+  try {
+    const enabled = await db.isEnabled();
+    if (!enabled) {
+      return res.status(503).json({
+        database: { connected: false, message: 'Database not configured' },
+        enabled: false,
+      });
+    }
+    
+    const pool = await db.getPool();
+    await pool.query('SELECT 1');
+    res.json({
+      database: { connected: true, message: 'Connected' },
+      enabled: true,
+    });
+  } catch (error) {
+    res.status(503).json({
+      database: { connected: false, message: error.message },
+      enabled: false,
+    });
+  }
 });
 
 // Get recent visits
 app.get('/db/visits', async (req, res) => {
-  if (!db.isEnabled()) {
+  const enabled = await db.isEnabled();
+  if (!enabled) {
     return res.status(503).json({ error: 'Database not configured' });
   }
   
   try {
-    const visits = await db.getRecentVisits(20);
-    res.json({ visits, count: visits.length });
+    const stats = await db.getVisitStats();
+    res.json({ 
+      visits: stats.recentVisits, 
+      count: stats.recentVisits.length,
+      totalVisits: stats.totalVisits,
+      uniquePaths: stats.uniquePaths
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -82,12 +107,13 @@ app.get('/db/visits', async (req, res) => {
 
 // Get feature flags
 app.get('/db/features', async (req, res) => {
-  if (!db.isEnabled()) {
+  const enabled = await db.isEnabled();
+  if (!enabled) {
     return res.status(503).json({ error: 'Database not configured' });
   }
   
   try {
-    const flags = await db.getAllFeatureFlags();
+    const flags = await db.getFeatureFlags();
     res.json({ features: flags });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -97,10 +123,25 @@ app.get('/db/features', async (req, res) => {
 // Middleware to log visits (after routes are defined)
 app.use(async (req, res, next) => {
   // Log visit to database if enabled
-  if (db.isEnabled()) {
-    const userAgent = req.headers['user-agent'] || 'unknown';
-    const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    await db.logVisit(req.path, req.method, userAgent, ipAddress);
+  const enabled = await db.isEnabled();
+  if (enabled) {
+    try {
+      const userAgent = req.headers['user-agent'] || 'unknown';
+      const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+      const startTime = Date.now();
+      
+      // Log response time after response is sent
+      res.on('finish', async () => {
+        const responseTime = Date.now() - startTime;
+        try {
+          await db.recordVisit(req.path, userAgent, ipAddress, responseTime);
+        } catch (error) {
+          console.error('Failed to record visit:', error);
+        }
+      });
+    } catch (error) {
+      console.error('Error setting up visit logging:', error);
+    }
   }
   next();
 });
