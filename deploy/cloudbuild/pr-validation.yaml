@@ -14,7 +14,6 @@ steps:
     '.'
   ]
   waitFor: ['-']
-
 # Step 2: Security & Compliance Checks
 - name: 'node:18-alpine'
   id: 'security-compliance'
@@ -23,31 +22,32 @@ steps:
   - '-c'
   - |
     echo "🔍 Running Security & Compliance Checks..."
-    
     # Check for hardcoded secrets (smarter version)
     echo "Checking for hardcoded secrets..."
     if find . -name "*.js" -o -name "*.json" | \
        xargs grep -l "password\|secret\|api[_-]key\|token" | \
        xargs grep -H "password\|secret\|api[_-]key\|token" | \
-       grep -v "SecretManager\|secretManager\|secretClient" | \
-       grep -v "process\.env\|DATABASE_PASSWORD" | \
+       grep -v "SecretManager" | \
+       grep -v "secretManager" | \
+       grep -v "secretClient" | \
+       grep -v "process.env" | \
+       grep -v "DATABASE_PASSWORD" | \
        grep -v "require.*secret-manager" | \
+       grep -v ".test.js:" | \
+       grep -v "package.*\.json:" | \
        grep -v "^[^:]*:\s*//" | \
-       grep -E "=.*['\"].*['\"]" | \
-       grep -v "\.test\.js:" | \
-       grep -v "package.*\.json:"; then
+       grep -E "=.*['\"].*['\"]"; then
       echo "❌ Potential hardcoded secrets found!"
       exit 1
+    else
+      echo "✅ No hardcoded secrets detected"
     fi
-    echo "✅ No hardcoded secrets detected"
-    
     # Check compliance metadata
     if ! grep -q '"compliance":' package.json; then
       echo "❌ Missing compliance metadata in package.json"
       exit 1
     fi
     echo "✅ Compliance metadata present"
-    
     # Check for required security headers in package.json
     if ! grep -q '"iso27001":\s*true' package.json; then
       echo "⚠️ Warning: ISO 27001 compliance flag not set"
@@ -59,9 +59,8 @@ steps:
       echo "⚠️ Warning: GDPR compliance flag not set"
     fi
     
-    echo "✅ Security & Compliance checks completed"
+    echo "Security checks completed!"
   waitFor: ['-']
-
 # Step 3: Container Smoke Test
 - name: 'gcr.io/cloud-builders/docker'
   id: 'container-smoke-test'
@@ -79,18 +78,16 @@ steps:
     
     # Wait for startup
     sleep 5
-    
-    # Test health endpoint
+    # Test /health endpoint
     docker run --network host alpine/curl -f http://localhost:8080/health || {
-      echo "❌ Health check failed"
+      echo "❌ /health check failed (expected 200)"
       docker logs webapp-test
       docker stop webapp-test
       exit 1
     }
-    
-    # Test ready endpoint
+    # Test /ready endpoint
     docker run --network host alpine/curl -f http://localhost:8080/ready || {
-      echo "❌ Ready check failed"
+      echo "❌ /ready check failed (expected 200)"
       docker logs webapp-test
       docker stop webapp-test
       exit 1
@@ -100,9 +97,8 @@ steps:
     docker stop webapp-test
     docker rm webapp-test
     
-    echo "✅ Container smoke test passed"
+    echo "Container smoke test passed!"
   waitFor: ['docker-build-test']
-
 # Step 4: Dependency Security Audit
 - name: 'node:18-alpine'
   id: 'dependency-audit'
@@ -136,7 +132,8 @@ steps:
     echo "✅ Dependency audit: COMPLETED"
     echo "========================================="
     echo "All validation checks completed successfully!"
-  waitFor: ['container-smoke-test', 'security-compliance', 'dependency-audit']
+  waitFor: ['container-smoke-test', 'security-compliance', 'dependency-audit'
+  ]
 
 options:
   logging: CLOUD_LOGGING_ONLY
