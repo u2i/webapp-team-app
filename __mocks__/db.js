@@ -3,7 +3,10 @@ const mockDb = {
   isEnabled: jest.fn().mockResolvedValue(false), // Database disabled in tests - now async
   isEnabledSync: jest.fn().mockReturnValue(false), // Sync version for backward compatibility
   getPool: jest.fn().mockResolvedValue(null),
-  initializeSchema: jest.fn().mockResolvedValue(true),
+  checkMigrations: jest.fn().mockResolvedValue({ 
+    migrated: false, 
+    message: 'Database not enabled' 
+  }),
   query: jest.fn().mockResolvedValue({ rows: [] }),
   recordVisit: jest.fn().mockResolvedValue({ 
     visit: { 

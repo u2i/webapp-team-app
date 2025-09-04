@@ -144,59 +144,49 @@ const db = {
     }
   },
 
-  // Initialize database schema
-  initializeSchema: async () => {
+  // Check if migrations have been run (for health checks)
+  checkMigrations: async () => {
     await initializeDatabase();
     if (!dbEnabled) {
-      console.log('Database not enabled, skipping schema initialization');
-      return;
+      return { migrated: false, message: 'Database not enabled' };
     }
 
     try {
-      // Create visits table if it doesn't exist
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS visits (
-          id SERIAL PRIMARY KEY,
-          timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-          endpoint VARCHAR(255),
-          user_agent TEXT,
-          ip_address INET,
-          response_time INTEGER,
-          stage VARCHAR(50)
+      // Check if migrations table exists
+      const result = await db.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public' 
+          AND table_name = 'pgmigrations'
         )
       `);
-
-      // Create feature_flags table if it doesn't exist
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS feature_flags (
-          id SERIAL PRIMARY KEY,
-          name VARCHAR(255) UNIQUE NOT NULL,
-          enabled BOOLEAN DEFAULT false,
-          description TEXT,
-          created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-
-      // Insert default feature flags if they don't exist
-      const defaultFlags = [
-        { name: 'darkMode', enabled: false, description: 'Enable dark mode UI' },
-        { name: 'betaFeatures', enabled: false, description: 'Enable beta features' },
-        { name: 'debugMode', enabled: false, description: 'Enable debug mode' }
-      ];
-
-      for (const flag of defaultFlags) {
-        await db.query(`
-          INSERT INTO feature_flags (name, enabled, description)
-          VALUES ($1, $2, $3)
-          ON CONFLICT (name) DO NOTHING
-        `, [flag.name, flag.enabled, flag.description]);
+      
+      const migrationsTableExists = result.rows[0].exists;
+      
+      if (!migrationsTableExists) {
+        return { migrated: false, message: 'Migrations table does not exist' };
       }
-
-      console.log('Database schema initialized successfully');
+      
+      // Get latest migration
+      const migrationResult = await db.query(`
+        SELECT name, run_on 
+        FROM pgmigrations 
+        ORDER BY run_on DESC 
+        LIMIT 1
+      `);
+      
+      if (migrationResult.rows.length === 0) {
+        return { migrated: false, message: 'No migrations have been run' };
+      }
+      
+      return {
+        migrated: true,
+        latest: migrationResult.rows[0].name,
+        runOn: migrationResult.rows[0].run_on
+      };
     } catch (error) {
-      console.error('Failed to initialize database schema:', error);
-      throw error;
+      console.error('Failed to check migrations:', error);
+      return { migrated: false, message: error.message };
     }
   },
 

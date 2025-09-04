@@ -11,8 +11,9 @@ COPY package*.json ./
 RUN npm ci
 
 # Copy application code and test files
-COPY app.js db.js app.test.js jest.config.js ./
+COPY app.js db.js migrate.js app.test.js jest.config.js .node-pg-migrate ./
 COPY __mocks__ ./__mocks__
+COPY migrations ./migrations
 
 # Run tests
 RUN npm run test:ci
@@ -30,6 +31,9 @@ RUN npm ci --only=production && npm cache clean --force
 # Copy app source from test stage (ensures tested code)
 COPY --from=test /app/app.js ./
 COPY --from=test /app/db.js ./
+COPY --from=test /app/migrate.js ./
+COPY --from=test /app/.node-pg-migrate ./
+COPY --from=test /app/migrations ./migrations
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \

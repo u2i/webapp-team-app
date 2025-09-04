@@ -10,11 +10,16 @@
     "lint": "eslint . --ext .js",
     "lint:fix": "eslint . --ext .js --fix",
     "format": "prettier --write '**/*.{js,json,md}'",
-    "format:check": "prettier --check '**/*.{js,json,md}'"
+    "format:check": "prettier --check '**/*.{js,json,md}'",
+    "migrate": "node migrate.js",
+    "migrate:up": "node-pg-migrate up",
+    "migrate:down": "node-pg-migrate down",
+    "migrate:create": "node-pg-migrate create"
   },
   "dependencies": {
     "@google-cloud/secret-manager": "^6.1.0",
     "express": "^4.18.2",
+    "node-pg-migrate": "^8.0.3",
     "pg": "^8.11.3"
   },
   "devDependencies": {

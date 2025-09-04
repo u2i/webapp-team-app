@@ -10,15 +10,25 @@ const version = process.env.VERSION || process.env.K_REVISION || 'local';
 // Middleware to parse JSON
 app.use(express.json());
 
-// Initialize database on startup
+// Check database connection on startup
 db.isEnabled()
   .then((enabled) => {
     if (enabled) {
-      return db.initializeSchema();
+      console.log('Database connection available');
+      return db.checkMigrations();
+    }
+    return null;
+  })
+  .then((migrationStatus) => {
+    if (migrationStatus) {
+      if (migrationStatus.migrated) {
+        console.log(`Database migrations up to date. Latest: ${migrationStatus.latest}`);
+      } else {
+        console.warn('Database migrations not run:', migrationStatus.message);
+      }
     }
   })
-  .then(() => console.log('Database initialized'))
-  .catch((err) => console.error('Database initialization failed:', err));
+  .catch((err) => console.error('Database check failed:', err));
 
 app.get('/health', (req, res) => {
   res
@@ -68,19 +78,26 @@ app.get('/db/status', async (req, res) => {
       return res.status(503).json({
         database: { connected: false, message: 'Database not configured' },
         enabled: false,
+        migrations: { migrated: false, message: 'Database not enabled' }
       });
     }
     
     const pool = await db.getPool();
     await pool.query('SELECT 1');
+    
+    // Check migration status
+    const migrationStatus = await db.checkMigrations();
+    
     res.json({
       database: { connected: true, message: 'Connected' },
       enabled: true,
+      migrations: migrationStatus
     });
   } catch (error) {
     res.status(503).json({
       database: { connected: false, message: error.message },
       enabled: false,
+      migrations: { migrated: false, message: 'Unable to check migrations' }
     });
   }
 });

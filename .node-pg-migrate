@@ -1,0 +1,9 @@
+{
+  "migrations-dir": "migrations",
+  "migrations-table": "pgmigrations",
+  "migrations-schema": "public",
+  "check-order": true,
+  "createMigrationsSchema": true,
+  "createMigrationsTable": true,
+  "migration-file-language": "js"
+}
