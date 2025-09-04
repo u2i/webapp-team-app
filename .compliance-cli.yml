@@ -66,12 +66,12 @@ format:
 # Neon Database configuration for preview environments
 neon:
   # Enable Neon database for preview environments
-  enabled: false  # Set to true when Neon projects are configured
+  enabled: true  # Neon projects are now configured
   
   # Neon project IDs for each boundary
   projects:
-    nonprod: ""  # Set this to your Neon nonprod project ID
-    prod: ""     # Set this to your Neon prod project ID
+    nonprod: "gentle-mode-62792659"  # Neon nonprod project ID
+    prod: "patient-hat-70866231"     # Neon prod project ID
   
   # Database configuration
   database:
