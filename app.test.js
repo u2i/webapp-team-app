@@ -1,5 +1,8 @@
 const request = require('supertest');
 
+// Mock the database module
+jest.mock('./db');
+
 // Mock the express app for testing
 describe('WebApp API Tests', () => {
   let app;
@@ -7,6 +10,9 @@ describe('WebApp API Tests', () => {
   beforeEach(() => {
     // Clear module cache to get fresh app instance
     jest.resetModules();
+    
+    // Clear mock calls
+    jest.clearAllMocks();
 
     // Set test environment variables
     process.env.PORT = '3000';
