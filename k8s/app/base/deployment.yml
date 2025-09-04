@@ -92,4 +92,3 @@ spec:
       volumes:
       - name: tmp
         emptyDir: {}
-      automountServiceAccountToken: false
