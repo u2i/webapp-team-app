@@ -1,5 +1,6 @@
 const express = require('express');
 const db = require('./db');
+const feedbackRouter = require('./feedback');
 const app = express();
 const port = process.env.PORT || 8080;
 // Deployment trigger after WIF fix
@@ -44,10 +45,20 @@ app.get('/ready', (req, res) => {
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'Hello from webapp! v10.0 - Testing framework validation',
+    message: 'Hello from webapp! v11.0 - Now with User Feedback System!',
     boundary: boundary,
     stage: stage,
     version: version,
+    features: {
+      feedback: true,
+      endpoints: [
+        'POST /feedback/submit - Submit new feedback',
+        'GET /feedback/list - View feedback list',
+        'GET /feedback/:id - Get specific feedback',
+        'POST /feedback/:id/vote - Vote on feedback',
+        'GET /feedback/stats/summary - View statistics'
+      ]
+    },
     region: 'europe-west1',
     compliance: 'iso27001-soc2-gdpr',
     preview: process.env.PREVIEW_NAME || false,
@@ -136,6 +147,9 @@ app.get('/db/features', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Mount feedback router
+app.use('/feedback', feedbackRouter);
 
 // Middleware to log visits (after routes are defined)
 app.use(async (req, res, next) => {
