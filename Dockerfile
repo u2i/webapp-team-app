@@ -11,7 +11,7 @@ COPY package*.json ./
 RUN npm ci
 
 # Copy application code and test files
-COPY app.js db.js migrate.js app.test.js jest.config.js .node-pg-migrate ./
+COPY app.js db.js migrate.js feedback.js app.test.js feedback.test.js jest.config.js .node-pg-migrate ./
 COPY __mocks__ ./__mocks__
 COPY migrations ./migrations
 
@@ -32,6 +32,7 @@ RUN npm ci --only=production && npm cache clean --force
 COPY --from=test /app/app.js ./
 COPY --from=test /app/db.js ./
 COPY --from=test /app/migrate.js ./
+COPY --from=test /app/feedback.js ./
 COPY --from=test /app/.node-pg-migrate ./
 COPY --from=test /app/migrations ./migrations
 
