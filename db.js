@@ -33,8 +33,9 @@ async function fetchDatabaseUrl() {
   }
 
   try {
-    // Construct the secret name based on environment
-    const secretName = `webapp-${STAGE}-neon-db-connection`;
+    // Construct the secret name based on boundary (nonprod/prod)
+    // Infrastructure creates secrets as webapp-{boundary}-neon-db-connection
+    const secretName = `webapp-${BOUNDARY}-neon-db-connection`;
     const name = `projects/${PROJECT_ID}/secrets/${secretName}/versions/latest`;
     
     console.log(`Fetching database credentials from Secret Manager: ${secretName}`);
