@@ -24,6 +24,8 @@ spec:
       annotations:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
     spec:
+      serviceAccountName: webapp # from-param: ${APP_NAME}
+      automountServiceAccountToken: false # Using metadata service for GCP APIs
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -63,15 +65,15 @@ spec:
           value: "europe-west1"
         - name: COMPLIANCE_MODE
           value: "gdpr"
+        - name: PROJECT_ID
+          value: "u2i-tenant-webapp-nonprod" # GCP project for Secret Manager access
         # Database configuration from ConfigMap (if exists)
         envFrom:
         - configMapRef:
             name: webapp-neon-db-config # from-param: ${APP_NAME}-neon-db-config
             optional: true
-        # Database credentials from Secret Manager (mounted via External Secrets Operator)
-        - secretRef:
-            name: webapp-neon-db-secret # from-param: ${APP_NAME}-neon-db-secret
-            optional: true
+        # Note: Database credentials are now fetched directly from Secret Manager
+        # The app uses PROJECT_ID and STAGE to construct the secret name
         livenessProbe:
           httpGet:
             path: /health
