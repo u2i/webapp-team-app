@@ -25,9 +25,13 @@ patches:
         limits:
           memory: "128Mi"
           cpu: "100m"
-    - op: replace
+    - op: remove
       path: /spec/template/spec/initContainers
-      value: []
+    - op: add
+      path: /spec/template/spec/containers/0/envFrom/-
+      value:
+        configMapRef:
+          name: webapp-preview-postgres-config
     - op: add
       path: /spec/template/spec/containers/-
       value:
