@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('./db');
 const feedbackRouter = require('./feedback');
+const { spawn } = require('child_process');
 const app = express();
 const port = process.env.PORT || 8080;
 // Deployment trigger after WIF fix
@@ -11,8 +12,56 @@ const version = process.env.VERSION || process.env.K_REVISION || 'local';
 // Middleware to parse JSON
 app.use(express.json());
 
-// Check database connection on startup
-db.isEnabled()
+// Function to run migrations
+async function runMigrationsIfNeeded() {
+  if (process.env.RUN_MIGRATIONS_ON_STARTUP === 'true') {
+    console.log('Running database migrations on startup...');
+    
+    // Wait for database to be ready (for sidecar containers)
+    if (process.env.DATABASE_HOST === 'localhost') {
+      const { Client } = require('pg');
+      for (let i = 0; i < 30; i++) {
+        try {
+          const client = new Client({
+            host: process.env.DATABASE_HOST,
+            port: process.env.DATABASE_PORT,
+            database: process.env.DATABASE_NAME,
+            user: process.env.DATABASE_USER,
+            password: process.env.DATABASE_PASSWORD
+          });
+          await client.connect();
+          await client.end();
+          console.log('Database is ready!');
+          break;
+        } catch (error) {
+          console.log(`Waiting for database... (${i+1}/30)`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+    }
+    
+    return new Promise((resolve, reject) => {
+      const migrate = spawn('npm', ['run', 'migrate'], {
+        stdio: 'inherit',
+        env: process.env
+      });
+      
+      migrate.on('close', (code) => {
+        if (code === 0) {
+          console.log('Migrations completed successfully');
+          resolve();
+        } else {
+          console.error('Migrations failed with code:', code);
+          reject(new Error('Migration failed'));
+        }
+      });
+    });
+  }
+}
+
+// Run migrations if needed, then check database
+runMigrationsIfNeeded()
+  .then(() => db.isEnabled())
   .then((enabled) => {
     if (enabled) {
       console.log('Database connection available');
@@ -29,7 +78,7 @@ db.isEnabled()
       }
     }
   })
-  .catch((err) => console.error('Database check failed:', err));
+  .catch((err) => console.error('Database/migration error:', err));
 
 app.get('/health', (req, res) => {
   res
