@@ -30,6 +30,12 @@ async function fetchDatabaseUrl() {
     return `postgresql://${user}:${password}@${host}:${port}/${database}`;
   }
 
+  // Skip Secret Manager for preview environments
+  if (STAGE === 'preview') {
+    console.log('Preview environment: skipping Secret Manager (use ConfigMap instead)');
+    return null;
+  }
+
   // Try to fetch from Secret Manager
   if (!PROJECT_ID) {
     throw new Error('No PROJECT_ID found, cannot fetch database credentials');
@@ -76,6 +82,11 @@ async function runMigrations() {
     const databaseUrl = await fetchDatabaseUrl();
     
     if (!databaseUrl) {
+      if (STAGE === 'preview') {
+        console.log('No database configured for preview environment, skipping migrations');
+        console.log('To enable database: create webapp-neon-db-config ConfigMap');
+        process.exit(0);
+      }
       throw new Error('No database configuration available');
     }
 
