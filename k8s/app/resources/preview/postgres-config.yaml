@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webapp-preview-postgres-config
+data:
+  DATABASE_HOST: "localhost"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "webapp_preview"  
+  DATABASE_USER: "webapp"
+  DATABASE_PASSWORD: "preview_temp_password"
+  RUN_MIGRATIONS_ON_STARTUP: "true"

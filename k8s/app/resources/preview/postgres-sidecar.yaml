@@ -1,15 +1,3 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: webapp-neon-db-config
-data:
-  DATABASE_HOST: "localhost"
-  DATABASE_PORT: "5432"
-  DATABASE_NAME: "webapp_preview"
-  DATABASE_USER: "webapp"
-  DATABASE_PASSWORD: "preview_temp_password"
-  RUN_MIGRATIONS_ON_STARTUP: "true"  # Tell app to run migrations
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -20,6 +8,10 @@ spec:
       # Remove init container for preview
       initContainers: []
       containers:
+      - name: webapp
+        envFrom:
+        - configMapRef:
+            name: webapp-preview-postgres-config
       # Add PostgreSQL as a sidecar container
       - name: postgres
         image: postgres:15-alpine
