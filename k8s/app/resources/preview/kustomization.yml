@@ -8,6 +8,10 @@ resources:
 - ../../../namespace/namespace.yml
 - ../../../gcp/certificate.yml
 
+# Strategic merge patches to add PostgreSQL sidecar
+patchesStrategicMerge:
+- postgres-sidecar.yaml
+
 patches:
 - target:
     kind: Deployment
