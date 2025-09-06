@@ -36,13 +36,8 @@ COPY --from=test /app/feedback.js ./
 COPY --from=test /app/.node-pg-migrate ./
 COPY --from=test /app/migrations ./migrations
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S webapp -u 1001
-
-# Change ownership
-RUN chown -R webapp:nodejs /app
-USER webapp
+# Use the built-in node user (UID 1000)
+USER node
 
 # Expose port
 EXPOSE 8080

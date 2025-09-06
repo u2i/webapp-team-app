@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: webapp-migrate-${SHORT_SHA} # Unique name per deployment
+  namespace: ${NAMESPACE}
+  labels:
+    app: webapp
+    component: migration
+    version: ${SHORT_SHA}
+spec:
+  ttlSecondsAfterFinished: 3600 # Clean up after 1 hour
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: webapp
+        component: migration
+    spec:
+      serviceAccountName: webapp
+      automountServiceAccountToken: true
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
+      containers:
+      - name: migrate
+        image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp:${STAGE}-${COMMIT_SHA}
+        command: ["node", "migrate.js"]
+        env:
+        - name: PROJECT_ID
+          value: "${PROJECT_ID}"
+        - name: BOUNDARY
+          value: "${BOUNDARY}"
+        - name: STAGE
+          value: "${STAGE}"
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
-const { spawn, execSync } = require('child_process');
+const { spawn } = require('child_process');
 
 // Configuration
 const PROJECT_ID = process.env.PROJECT_ID || process.env.GCP_PROJECT;
