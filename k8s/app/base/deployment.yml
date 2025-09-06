@@ -25,7 +25,7 @@ spec:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
     spec:
       serviceAccountName: webapp # from-param: ${APP_NAME}
-      automountServiceAccountToken: false # Using metadata service for GCP APIs
+      automountServiceAccountToken: true # Required for workload identity
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
