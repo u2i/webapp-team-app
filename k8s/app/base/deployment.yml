@@ -46,6 +46,11 @@ spec:
           value: "${STAGE}" # from-param: ${STAGE}
         - name: PROJECT_ID
           value: "u2i-tenant-webapp-nonprod" # GCP project for Secret Manager access
+        # Database configuration from ConfigMap (if exists)
+        envFrom:
+        - configMapRef:
+            name: webapp-neon-db-config # from-param: ${APP_NAME}-neon-db-config
+            optional: true
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: false

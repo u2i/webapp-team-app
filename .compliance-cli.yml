@@ -87,3 +87,77 @@ neon:
   
   # Script location for database management
   manager_script: /workspace/u2i-infrastructure/scripts/neon-preview-manager.py
+
+# Validation configuration for PR checks
+validation:
+  # Enable comprehensive validation checks
+  enabled: true
+  
+  # Docker build validation
+  docker_build:
+    enabled: true
+    test_target: test  # Docker target stage for test builds
+    fail_on_error: true
+  
+  # Security checks configuration
+  security:
+    enabled: true
+    runner_image: node:18-alpine
+    checks:
+      # Check for hardcoded secrets
+      secrets:
+        enabled: true
+        exclude_patterns:
+          - "SecretManager"
+          - "secretManager"
+          - "secretClient"
+          - "process.env"
+          - "DATABASE_PASSWORD"
+          - "require.*secret-manager"
+          - ".test.js:"
+          - "package.*\\.json:"
+        fail_on_detection: true
+      
+      # Dependency audit
+      dependency_audit:
+        enabled: true
+        audit_level: high
+        fail_on_vulnerability: false  # Warning only
+    
+    success_message: "Security checks completed!"
+  
+  # Compliance checks
+  compliance:
+    enabled: true
+    runner_image: node:18-alpine
+    checks:
+      # Check for compliance metadata
+      metadata:
+        enabled: true
+        required_fields:
+          - compliance
+        fail_on_missing: true
+      
+      # ISO/SOC2/GDPR flags
+      flags:
+        iso27001: true
+        soc2_type2: true
+        gdpr: true
+        warn_if_missing: true  # Just warn, don't fail
+    
+    success_message: "Compliance validation passed!"
+  
+  # Container smoke test
+  container_test:
+    enabled: true
+    ports:
+      app: 8080
+      health: 8080
+    endpoints:
+      - path: /health
+        expected_status: 200
+      - path: /ready
+        expected_status: 200
+    startup_delay: 5  # seconds
+    fail_on_error: true
+    success_message: "Container smoke test passed!"

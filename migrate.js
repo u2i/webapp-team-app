@@ -30,6 +30,12 @@ async function fetchDatabaseUrl() {
     return `postgresql://${user}:${password}@${host}:${port}/${database}`;
   }
 
+  // Skip Secret Manager for preview environments
+  if (STAGE === 'preview') {
+    console.log('Preview environment: skipping Secret Manager (use ConfigMap instead)');
+    return null;
+  }
+
   // Try to fetch from Secret Manager
   if (!PROJECT_ID) {
     throw new Error('No PROJECT_ID found, cannot fetch database credentials');
@@ -41,13 +47,28 @@ async function fetchDatabaseUrl() {
     const name = `projects/${PROJECT_ID}/secrets/${secretName}/versions/latest`;
     
     console.log(`Fetching database credentials from Secret Manager: ${secretName}`);
+    console.log(`Project: ${PROJECT_ID}`);
     
-    const [version] = await secretClient.accessSecretVersion({ name });
+    // Add timeout to Secret Manager call
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Secret Manager request timed out after 10 seconds')), 10000);
+    });
+    
+    const secretPromise = secretClient.accessSecretVersion({ name });
+    const [version] = await Promise.race([secretPromise, timeoutPromise]);
     const payload = version.payload.data.toString('utf8');
     
     console.log('Successfully retrieved database credentials from Secret Manager');
     return payload;
   } catch (error) {
+    console.error('Secret Manager error details:', error);
+    // If it's a timeout or permission issue, try to provide more context
+    if (error.message.includes('timeout') || error.code === 7) {
+      console.error('This might be a workload identity issue. Check that:');
+      console.error(`1. Service account webapp-k8s@${PROJECT_ID}.iam.gserviceaccount.com exists`);
+      console.error(`2. It has secretmanager.secretAccessor role for secret ${secretName}`);
+      console.error(`3. Workload identity binding exists for namespace ${process.env.NAMESPACE || 'unknown'}`);
+    }
     throw new Error(`Failed to fetch database credentials from Secret Manager: ${error.message}`);
   }
 }
@@ -61,6 +82,11 @@ async function runMigrations() {
     const databaseUrl = await fetchDatabaseUrl();
     
     if (!databaseUrl) {
+      if (STAGE === 'preview') {
+        console.log('No database configured for preview environment, skipping migrations');
+        console.log('To enable database: create webapp-neon-db-config ConfigMap');
+        process.exit(0);
+      }
       throw new Error('No database configuration available');
     }
 
