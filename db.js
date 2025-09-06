@@ -83,7 +83,32 @@ async function initializeDatabase() {
       };
 
       if (databaseUrl) {
-        dbConfig.connectionString = databaseUrl;
+        // Parse the connection string to handle special characters in password
+        try {
+          // Find the last @ which separates credentials from host
+          const lastAtIndex = databaseUrl.lastIndexOf('@');
+          if (lastAtIndex > 0) {
+            const credentialsPart = databaseUrl.substring(0, lastAtIndex);
+            const hostPart = databaseUrl.substring(lastAtIndex + 1);
+            
+            // Extract username and password from credentials part
+            const credsMatch = credentialsPart.match(/^postgresql:\/\/([^:]+):(.+)$/);
+            if (credsMatch) {
+              const [, user, password] = credsMatch;
+              // URL encode the password to handle special characters
+              const encodedPassword = encodeURIComponent(password);
+              dbConfig.connectionString = `postgresql://${user}:${encodedPassword}@${hostPart}`;
+              console.log('Database URL parsed and encoded successfully');
+            } else {
+              dbConfig.connectionString = databaseUrl;
+            }
+          } else {
+            dbConfig.connectionString = databaseUrl;
+          }
+        } catch (e) {
+          console.error('Error parsing database URL:', e);
+          dbConfig.connectionString = databaseUrl;
+        }
       } else if (process.env.DATABASE_HOST) {
         // Use individual parameters
         dbConfig.host = process.env.DATABASE_HOST;
