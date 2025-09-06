@@ -42,7 +42,12 @@ async function fetchDatabaseUrl() {
   
   try {
     // Create Secret Manager client when needed
+    console.log('Creating Secret Manager client...');
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    console.log('GOOGLE_APPLICATION_CREDENTIALS:', process.env.GOOGLE_APPLICATION_CREDENTIALS);
+    
     const secretClient = new SecretManagerServiceClient();
+    console.log('Client created successfully');
     
     const name = `projects/${PROJECT_ID}/secrets/${secretName}/versions/latest`;
     
