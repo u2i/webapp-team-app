@@ -49,21 +49,18 @@ async function fetchDatabaseUrl() {
     console.log(`Fetching database credentials from Secret Manager: ${secretName}`);
     console.log(`Project: ${PROJECT_ID}`);
     
-    // Add timeout to Secret Manager call (increased to 30 seconds for GKE workload identity)
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Secret Manager request timed out after 30 seconds')), 30000);
-    });
-    
-    const secretPromise = secretClient.accessSecretVersion({ name });
-    const [version] = await Promise.race([secretPromise, timeoutPromise]);
+    // Direct call without timeout to see actual error
+    const [version] = await secretClient.accessSecretVersion({ name });
     const payload = version.payload.data.toString('utf8');
     
     console.log('Successfully retrieved database credentials from Secret Manager');
     return payload;
   } catch (error) {
     console.error('Secret Manager error details:', error);
-    // If it's a timeout or permission issue, try to provide more context
-    if (error.message.includes('timeout') || error.code === 7) {
+    console.error('Error code:', error.code);
+    console.error('Error details:', error.details);
+    // If it's a permission issue, try to provide more context
+    if (error.code === 7 || error.code === 403) {
       console.error('This might be a workload identity issue. Check that:');
       console.error(`1. Service account webapp-k8s@${PROJECT_ID}.iam.gserviceaccount.com exists`);
       console.error(`2. It has secretmanager.secretAccessor role for secret ${secretName}`);
