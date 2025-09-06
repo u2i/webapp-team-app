@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
-const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 
 // Configuration
 const PROJECT_ID = process.env.PROJECT_ID || process.env.GCP_PROJECT;
@@ -93,8 +92,8 @@ async function runMigrations() {
     
     console.log(`Running migrations: ${command}`);
     
-    // Run node-pg-migrate
-    const migrate = spawn('node-pg-migrate', [command, ...args.slice(1)], {
+    // Run node-pg-migrate using npx to ensure it's found
+    const migrate = spawn('npx', ['node-pg-migrate', command, ...args.slice(1)], {
       env: {
         ...process.env,
         DATABASE_URL: databaseUrl
