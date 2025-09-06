@@ -64,7 +64,11 @@ async function initializeDatabase() {
       
       // Configure database connection
       const dbConfig = {
-        ssl: process.env.DATABASE_SSL_MODE === 'require' || BOUNDARY !== 'local' 
+        ssl: process.env.DATABASE_SSL_MODE === 'require' 
+          ? { rejectUnauthorized: false }
+          : process.env.DATABASE_SSL_MODE === 'disable'
+          ? false
+          : BOUNDARY !== 'local' 
           ? { rejectUnauthorized: false } 
           : false,
         max: 20,
