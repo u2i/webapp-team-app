@@ -4,7 +4,6 @@ const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
 // Secret Manager configuration
 const secretClient = new SecretManagerServiceClient();
 const PROJECT_ID = process.env.PROJECT_ID || process.env.GCP_PROJECT;
-const STAGE = process.env.STAGE || 'dev';
 const BOUNDARY = process.env.BOUNDARY || 'nonprod';
 
 // Database configuration

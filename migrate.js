@@ -2,7 +2,6 @@
 
 const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
 const { spawn } = require('child_process');
-const path = require('path');
 
 // Configuration
 const PROJECT_ID = process.env.PROJECT_ID || process.env.GCP_PROJECT;
@@ -41,9 +40,10 @@ async function fetchDatabaseUrl() {
     throw new Error('No PROJECT_ID found, cannot fetch database credentials');
   }
 
+  // Construct the secret name based on boundary
+  const secretName = `webapp-${BOUNDARY}-neon-db-connection`;
+  
   try {
-    // Construct the secret name based on boundary
-    const secretName = `webapp-${BOUNDARY}-neon-db-connection`;
     const name = `projects/${PROJECT_ID}/secrets/${secretName}/versions/latest`;
     
     console.log(`Fetching database credentials from Secret Manager: ${secretName}`);
