@@ -31,11 +31,18 @@ spec:
     - protocol: TCP
       port: 8080
   egress:
-  # Allow DNS
+  # Allow DNS (both UDP and TCP)
   - to:
-    - namespaceSelector: {}
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    - podSelector:
+        matchLabels:
+          k8s-app: kube-dns
     ports:
     - protocol: UDP
+      port: 53
+    - protocol: TCP
       port: 53
   # Allow HTTPS outbound
   - to:
