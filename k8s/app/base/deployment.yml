@@ -36,7 +36,7 @@ spec:
       initContainers:
       - name: migrate # from-param: ${APP_NAME}-migrate
         image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
-        command: ["node", "migrate.js"]
+        command: ["sh", "-c", "exec node migrate.js"]
         env:
         - name: PORT
           value: "8080"
