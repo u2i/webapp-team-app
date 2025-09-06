@@ -24,10 +24,11 @@ async function runMigrationsIfNeeded() {
         try {
           const client = new Client({
             host: process.env.DATABASE_HOST,
-            port: process.env.DATABASE_PORT,
+            port: process.env.DATABASE_PORT || 5432,
             database: process.env.DATABASE_NAME,
             user: process.env.DATABASE_USER,
-            password: process.env.DATABASE_PASSWORD
+            password: process.env.DATABASE_PASSWORD,
+            ssl: process.env.DATABASE_SSL_MODE === 'disable' ? false : undefined
           });
           await client.connect();
           await client.end();
@@ -40,6 +41,47 @@ async function runMigrationsIfNeeded() {
       }
     }
     
+    // For preview environments with local PostgreSQL, run migrations directly
+    if (process.env.STAGE === 'preview' && process.env.DATABASE_HOST === 'localhost') {
+      const databaseUrl = `postgresql://${process.env.DATABASE_USER}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}/${process.env.DATABASE_NAME}`;
+      
+      return new Promise((resolve, reject) => {
+        const migrate = spawn('npx', ['node-pg-migrate', 'up'], {
+          env: { ...process.env, DATABASE_URL: databaseUrl },
+          stdio: ['ignore', 'pipe', 'pipe']
+        });
+        
+        let output = '';
+        migrate.stdout.on('data', (data) => {
+          output += data.toString();
+        });
+        
+        migrate.stderr.on('data', (data) => {
+          console.error('Migration error:', data.toString());
+        });
+        
+        migrate.on('close', (code) => {
+          if (code === 0) {
+            console.log('Migrations completed successfully');
+            if (output.includes('Migrations complete')) {
+              console.log('All migrations applied');
+            }
+            resolve();
+          } else {
+            console.error('Migrations failed with code:', code);
+            reject(new Error('Migration failed'));
+          }
+        });
+        
+        // Timeout after 30 seconds
+        setTimeout(() => {
+          migrate.kill();
+          reject(new Error('Migration timeout'));
+        }, 30000);
+      });
+    }
+    
+    // For other environments, use the regular migrate script
     return new Promise((resolve, reject) => {
       const migrate = spawn('npm', ['run', 'migrate'], {
         stdio: 'inherit',

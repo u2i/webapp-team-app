@@ -29,10 +29,40 @@ patches:
     - op: remove
       path: /spec/template/spec/initContainers
     - op: add
-      path: /spec/template/spec/containers/0/envFrom/-
+      path: /spec/template/spec/containers/0/env/-
       value:
-        configMapRef:
-          name: webapp-preview-postgres-config
+        name: DATABASE_HOST
+        value: localhost
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: DATABASE_PORT
+        value: "5432"
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: DATABASE_NAME
+        value: webapp_preview
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: DATABASE_USER
+        value: webapp
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: DATABASE_PASSWORD
+        value: preview_temp_password
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: DATABASE_SSL_MODE
+        value: disable
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: RUN_MIGRATIONS_ON_STARTUP
+        value: "true"
 
 # Add PostgreSQL sidecar using JSON6902 patch
 - target:
@@ -68,6 +98,26 @@ patches:
         volumeMounts:
         - name: postgres-storage
           mountPath: /var/lib/postgresql/data
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - webapp
+            - -d
+            - webapp_preview
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - webapp
+            - -d
+            - webapp_preview
+          initialDelaySeconds: 5
+          periodSeconds: 5
         securityContext:
           runAsUser: 999
           runAsGroup: 999
@@ -88,11 +138,3 @@ configMapGenerator:
     - PROFILE=preview
     - LOG_LEVEL=debug
     - GRACEFUL_SHUTDOWN_TIMEOUT=5s
-- name: webapp-preview-postgres-config
-  literals:
-    - DATABASE_HOST=localhost
-    - DATABASE_PORT=5432
-    - DATABASE_NAME=webapp_preview
-    - DATABASE_USER=webapp
-    - DATABASE_PASSWORD=preview_temp_password
-    - RUN_MIGRATIONS_ON_STARTUP=true
