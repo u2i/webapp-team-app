@@ -8,9 +8,6 @@ const PROJECT_ID = process.env.PROJECT_ID || process.env.GCP_PROJECT;
 const BOUNDARY = process.env.BOUNDARY || 'nonprod';
 const STAGE = process.env.STAGE || 'dev';
 
-// Secret Manager client
-const secretClient = new SecretManagerServiceClient();
-
 async function fetchDatabaseUrl() {
   // First check if DATABASE_URL is already provided via environment
   if (process.env.DATABASE_URL) {
@@ -44,6 +41,9 @@ async function fetchDatabaseUrl() {
   const secretName = `webapp-${BOUNDARY}-neon-db-connection`;
   
   try {
+    // Create Secret Manager client when needed
+    const secretClient = new SecretManagerServiceClient();
+    
     const name = `projects/${PROJECT_ID}/secrets/${secretName}/versions/latest`;
     
     console.log(`Fetching database credentials from Secret Manager: ${secretName}`);
