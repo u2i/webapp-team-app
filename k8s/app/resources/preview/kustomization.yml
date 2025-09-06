@@ -9,6 +9,7 @@ resources:
 - ../../../gcp/certificate.yml
 
 patches:
+# Remove init containers and adjust resources
 - target:
     kind: Deployment
     name: webapp
@@ -32,46 +33,55 @@ patches:
       value:
         configMapRef:
           name: webapp-preview-postgres-config
-    - op: add
-      path: /spec/template/spec/containers/-
-      value:
-        name: postgres
-        image: postgres:15-alpine
-        env:
-        - name: POSTGRES_DB
-          value: webapp_preview
-        - name: POSTGRES_USER
-          value: webapp
-        - name: POSTGRES_PASSWORD
-          value: preview_temp_password
-        - name: PGDATA
-          value: /var/lib/postgresql/data/pgdata
-        ports:
-        - containerPort: 5432
-          name: postgres
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "200m"
-        volumeMounts:
-        - name: postgres-storage
-          mountPath: /var/lib/postgresql/data
-        securityContext:
-          runAsUser: 999
-          runAsGroup: 999
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false
-          capabilities:
-            drop:
-            - ALL
-    - op: add
-      path: /spec/template/spec/volumes
-      value:
-      - name: postgres-storage
-        emptyDir: {}
+
+# Add PostgreSQL sidecar container using strategic merge
+- target:
+    kind: Deployment
+    name: webapp
+  patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: webapp
+    spec:
+      template:
+        spec:
+          containers:
+          - name: postgres
+            image: postgres:15-alpine
+            env:
+            - name: POSTGRES_DB
+              value: webapp_preview
+            - name: POSTGRES_USER
+              value: webapp
+            - name: POSTGRES_PASSWORD
+              value: preview_temp_password
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            ports:
+            - containerPort: 5432
+              name: postgres
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "100m"
+              limits:
+                memory: "256Mi"
+                cpu: "200m"
+            volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+            securityContext:
+              runAsUser: 999
+              runAsGroup: 999
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: false
+              capabilities:
+                drop:
+                - ALL
+          volumes:
+          - name: postgres-storage
+            emptyDir: {}
 
 configMapGenerator:
 - name: webapp-profile-config
