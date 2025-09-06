@@ -2,7 +2,6 @@ const { Pool } = require('pg');
 const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
 
 // Secret Manager configuration
-const secretClient = new SecretManagerServiceClient();
 const PROJECT_ID = process.env.PROJECT_ID || process.env.GCP_PROJECT;
 const BOUNDARY = process.env.BOUNDARY || 'nonprod';
 
@@ -38,6 +37,9 @@ async function fetchDatabaseUrl() {
     const name = `projects/${PROJECT_ID}/secrets/${secretName}/versions/latest`;
     
     console.log(`Fetching database credentials from Secret Manager: ${secretName}`);
+    
+    // Create Secret Manager client when needed
+    const secretClient = new SecretManagerServiceClient();
     
     const [version] = await secretClient.accessSecretVersion({ name });
     const payload = version.payload.data.toString('utf8');
