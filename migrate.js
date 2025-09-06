@@ -49,9 +49,9 @@ async function fetchDatabaseUrl() {
     console.log(`Fetching database credentials from Secret Manager: ${secretName}`);
     console.log(`Project: ${PROJECT_ID}`);
     
-    // Add timeout to Secret Manager call
+    // Add timeout to Secret Manager call (increased to 30 seconds for GKE workload identity)
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Secret Manager request timed out after 10 seconds')), 10000);
+      setTimeout(() => reject(new Error('Secret Manager request timed out after 30 seconds')), 30000);
     });
     
     const secretPromise = secretClient.accessSecretVersion({ name });
