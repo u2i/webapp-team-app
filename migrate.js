@@ -38,7 +38,7 @@ async function fetchDatabaseUrl() {
   }
 
   // Construct the secret name based on boundary
-  const secretName = `webapp-${BOUNDARY}-neon-db-connection`;
+  const secretName = `webapp-${BOUNDARY}-alloydb-connection`;
   
   try {
     // Create Secret Manager client when needed

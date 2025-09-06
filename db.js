@@ -32,8 +32,8 @@ async function fetchDatabaseUrl() {
 
   try {
     // Construct the secret name based on boundary (nonprod/prod)
-    // Infrastructure creates secrets as webapp-{boundary}-neon-db-connection
-    const secretName = `webapp-${BOUNDARY}-neon-db-connection`;
+    // Infrastructure creates secrets as webapp-{boundary}-alloydb-connection
+    const secretName = `webapp-${BOUNDARY}-alloydb-connection`;
     const name = `projects/${PROJECT_ID}/secrets/${secretName}/versions/latest`;
     
     console.log(`Fetching database credentials from Secret Manager: ${secretName}`);
@@ -83,32 +83,10 @@ async function initializeDatabase() {
       };
 
       if (databaseUrl) {
-        // Parse the connection string to handle special characters in password
-        try {
-          // Find the last @ which separates credentials from host
-          const lastAtIndex = databaseUrl.lastIndexOf('@');
-          if (lastAtIndex > 0) {
-            const credentialsPart = databaseUrl.substring(0, lastAtIndex);
-            const hostPart = databaseUrl.substring(lastAtIndex + 1);
-            
-            // Extract username and password from credentials part
-            const credsMatch = credentialsPart.match(/^postgresql:\/\/([^:]+):(.+)$/);
-            if (credsMatch) {
-              const [, user, password] = credsMatch;
-              // URL encode the password to handle special characters
-              const encodedPassword = encodeURIComponent(password);
-              dbConfig.connectionString = `postgresql://${user}:${encodedPassword}@${hostPart}`;
-              console.log('Database URL parsed and encoded successfully');
-            } else {
-              dbConfig.connectionString = databaseUrl;
-            }
-          } else {
-            dbConfig.connectionString = databaseUrl;
-          }
-        } catch (e) {
-          console.error('Error parsing database URL:', e);
-          dbConfig.connectionString = databaseUrl;
-        }
+        // Use the connection string as-is 
+        // The secret appears to have encoding issues that need to be fixed by infrastructure team
+        dbConfig.connectionString = databaseUrl;
+        console.log('Using database connection string from Secret Manager');
       } else if (process.env.DATABASE_HOST) {
         // Use individual parameters
         dbConfig.host = process.env.DATABASE_HOST;
