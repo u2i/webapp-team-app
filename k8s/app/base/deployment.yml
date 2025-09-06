@@ -33,39 +33,6 @@ spec:
         fsGroup: 2000
         seccompProfile:
           type: RuntimeDefault
-      initContainers:
-      - name: migrate # from-param: ${APP_NAME}-migrate
-        image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
-        command: ["sh", "-c", "exec node migrate.js"]
-        env:
-        - name: PORT
-          value: "8080"
-        - name: BOUNDARY
-          value: "${BOUNDARY}" # from-param: ${BOUNDARY}
-        - name: STAGE
-          value: "${STAGE}" # from-param: ${STAGE}
-        - name: PROJECT_ID
-          value: "u2i-tenant-webapp-nonprod" # GCP project for Secret Manager access
-        # Database configuration from ConfigMap (if exists)
-        envFrom:
-        - configMapRef:
-            name: webapp-neon-db-config # from-param: ${APP_NAME}-neon-db-config
-            optional: true
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false
-          runAsNonRoot: true
-          runAsUser: 1000
-          capabilities:
-            drop:
-            - ALL
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "200m"
       containers:
       - name: webapp # from-param: ${APP_NAME}
         image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp

@@ -45,6 +45,12 @@ async function fetchDatabaseUrl() {
     console.log('Creating Secret Manager client...');
     console.log('NODE_ENV:', process.env.NODE_ENV);
     console.log('GOOGLE_APPLICATION_CREDENTIALS:', process.env.GOOGLE_APPLICATION_CREDENTIALS);
+    console.log('GCE_METADATA_HOST:', process.env.GCE_METADATA_HOST);
+    
+    // Ensure metadata server is set for GKE
+    if (!process.env.GCE_METADATA_HOST) {
+      process.env.GCE_METADATA_HOST = 'metadata.google.internal';
+    }
     
     const secretClient = new SecretManagerServiceClient();
     console.log('Client created successfully');

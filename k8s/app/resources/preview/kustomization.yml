@@ -9,7 +9,7 @@ resources:
 - ../../../gcp/certificate.yml
 
 patches:
-# Remove init containers and adjust resources
+# Adjust resources and configuration
 - target:
     kind: Deployment
     labelSelector: "app=webapp"  # Use label selector to match any name
@@ -26,8 +26,6 @@ patches:
         limits:
           memory: "256Mi"
           cpu: "200m"
-    - op: remove
-      path: /spec/template/spec/initContainers
     - op: add
       path: /spec/template/spec/containers/0/env/-
       value:
