@@ -37,11 +37,16 @@ async function fetchDatabaseUrl() {
     const name = `projects/${PROJECT_ID}/secrets/${secretName}/versions/latest`;
     
     console.log(`Fetching database credentials from Secret Manager: ${secretName}`);
+    console.log(`Project: ${PROJECT_ID}`);
     
     // Create Secret Manager client when needed
+    console.log('Creating Secret Manager client...');
     const secretClient = new SecretManagerServiceClient();
+    console.log('Client created successfully');
     
+    console.log('Calling accessSecretVersion...');
     const [version] = await secretClient.accessSecretVersion({ name });
+    console.log('Got secret version');
     const payload = version.payload.data.toString('utf8');
     
     console.log('Successfully retrieved database credentials from Secret Manager');

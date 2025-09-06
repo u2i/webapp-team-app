@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile with test stage
 # Stage 1: Testing
-FROM node:18-alpine AS test
+FROM node:18-slim AS test
 
 WORKDIR /app
 
@@ -19,7 +19,7 @@ COPY migrations ./migrations
 RUN npm run test:ci
 
 # Stage 2: Production build
-FROM node:18-alpine AS production
+FROM node:18-slim AS production
 
 # Create app directory
 WORKDIR /app
