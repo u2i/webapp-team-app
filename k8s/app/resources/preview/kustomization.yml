@@ -12,7 +12,7 @@ patches:
 # Remove init containers and adjust resources
 - target:
     kind: Deployment
-    name: webapp
+    labelSelector: "app=webapp"  # Use label selector to match any name
   patch: |-
     - op: replace
       path: /spec/replicas
@@ -39,7 +39,7 @@ patches:
     group: apps
     version: v1
     kind: Deployment
-    name: webapp
+    labelSelector: "app=webapp"  # Use label selector to match any name
   patch: |-
     - op: add
       path: /spec/template/spec/containers/1
