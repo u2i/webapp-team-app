@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: webapp-migrate-job
+  generateName: webapp-migrate-
   namespace: webapp-dev # from-param: ${NAMESPACE}
   labels:
     app: webapp
