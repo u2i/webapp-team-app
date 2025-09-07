@@ -33,16 +33,43 @@ spec:
         fsGroup: 2000
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+      # Fetch AlloyDB instance URI from Secret Manager
+      - name: fetch-instance-uri
+        image: google/cloud-sdk:alpine
+        command:
+        - sh
+        - -c
+        - |
+          echo "Fetching AlloyDB instance URI from Secret Manager..."
+          gcloud secrets versions access latest --secret="webapp-${BOUNDARY}-alloydb-instance-uri" --project="${PROJECT_ID}" > /shared/instance-uri
+        env:
+        - name: PROJECT_ID
+          value: "u2i-tenant-webapp-nonprod" # from-param: ${PROJECT_ID}
+        - name: BOUNDARY
+          value: "nonprod" # from-param: ${BOUNDARY}
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
       containers:
       # AlloyDB Auth Proxy sidecar with IAM authentication
       - name: alloydb-auth-proxy
         image: gcr.io/alloydb-connectors/alloydb-auth-proxy:latest
-        args:
-          - "--port=5432"
-          - "--instances=${ALLOYDB_INSTANCE_URI}=tcp:5432" # from-param: ${ALLOYDB_INSTANCE_URI}
-          - "--max-connections=50"
-          - "--private-ip"
-          - "--auto-iam-authn" # Enable automatic IAM authentication
+        command:
+        - sh
+        - -c
+        - |
+          INSTANCE_URI=$(cat /shared/instance-uri)
+          echo "Starting AlloyDB Auth Proxy for instance: $INSTANCE_URI"
+          /alloydb-auth-proxy \
+            --port=5432 \
+            --instances="$INSTANCE_URI=tcp:5432" \
+            --max-connections=50 \
+            --private-ip \
+            --auto-iam-authn
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
         securityContext:
           runAsNonRoot: true
           runAsUser: 2000
@@ -116,4 +143,6 @@ spec:
           mountPath: /tmp
       volumes:
       - name: tmp
+        emptyDir: {}
+      - name: shared-data
         emptyDir: {}
