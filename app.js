@@ -270,22 +270,12 @@ app.use(async (req, res, next) => {
 
 // Only start server if this file is run directly (not in tests)
 if (require.main === module) {
-  // If using AlloyDB Auth Proxy, wait for it to be ready before starting
-  const startServer = async () => {
-    if (process.env.ALLOYDB_AUTH_PROXY === 'true') {
-      console.log('Waiting 20 seconds for AlloyDB Auth Proxy to be ready...');
-      await new Promise(resolve => setTimeout(resolve, 20000));
-    }
-    
-    app.listen(port, () => {
-      // eslint-disable-next-line no-console
-      console.log(
-        `Server running on port ${port} in ${stage} stage (${boundary} boundary)`
-      );
-    });
-  };
-  
-  startServer();
+  app.listen(port, () => {
+    // eslint-disable-next-line no-console
+    console.log(
+      `Server running on port ${port} in ${stage} stage (${boundary} boundary)`
+    );
+  });
 }
 
 module.exports = app;
