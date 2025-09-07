@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: webapp # from-param: ${NAME_PREFIX}${APP_NAME}
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
   labels:
     app: webapp # from-param: ${APP_NAME}
     stage: ${STAGE} # from-param: ${STAGE}
