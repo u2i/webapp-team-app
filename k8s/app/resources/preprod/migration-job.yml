@@ -25,30 +25,16 @@ spec:
       initContainers:
       # Fetch AlloyDB instance URI from Secret Manager
       - name: fetch-instance-uri
-        image: gcr.io/google.com/cloudsdktool/cloud-sdk:alpine
+        image: google/cloud-sdk:alpine
         command:
         - /bin/sh
         - -c
         - |
-          echo "Fetching AlloyDB instance URI from Secret Manager..."
+          gcloud secrets versions access latest \
+            --secret=webapp-nonprod-alloydb-instance-uri \
+            --project=u2i-tenant-webapp-nonprod > /shared/instance-uri
           
-          # Fetch secret using direct API call with Workload Identity
-          SECRET_NAME="webapp-nonprod-alloydb-instance-uri"
-          PROJECT_ID="u2i-tenant-webapp-nonprod"
-          
-          echo "Fetching secret: $SECRET_NAME from project $PROJECT_ID"
-          
-          # Simply use the hardcoded instance URI for now
-          # This avoids the complexity of fetching from Secret Manager in the init container
-          echo "projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-nonprod-alloydb/instances/webapp-nonprod-alloydb-primary" > /shared/instance-uri
-          
-          if [ -s /shared/instance-uri ]; then
-            echo "Instance URI fetched successfully:"
-            cat /shared/instance-uri
-          else
-            echo "Failed to fetch instance URI"
-            exit 1
-          fi
+          echo "Instance URI: $(cat /shared/instance-uri)"
         volumeMounts:
         - name: shared-data
           mountPath: /shared
