@@ -23,16 +23,61 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
         fsGroup: 2000
+      initContainers:
+      # Fetch AlloyDB instance URI from Secret Manager
+      - name: fetch-instance-uri
+        image: gcr.io/google.com/cloudsdktool/cloud-sdk:alpine
+        command:
+        - sh
+        - -c
+        - |
+          echo "Fetching AlloyDB instance URI from Secret Manager..."
+          # Use webapp-nonprod for all non-prod environments (dev, qa, preview)
+          SECRET_NAME="webapp-nonprod-alloydb-instance-uri"
+          echo "Fetching secret: $SECRET_NAME from project u2i-tenant-webapp-nonprod"
+          
+          # The pod uses Workload Identity, so no explicit auth needed
+          # Just ensure we're using the metadata server for auth
+          gcloud secrets versions access latest \
+            --secret="$SECRET_NAME" \
+            --project="u2i-tenant-webapp-nonprod" > /shared/instance-uri
+          
+          if [ $? -eq 0 ]; then
+            echo "Instance URI fetched successfully"
+            cat /shared/instance-uri
+          else
+            echo "Failed to fetch instance URI"
+            exit 1
+          fi
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
       containers:
       # AlloyDB Auth Proxy sidecar with IAM authentication
       - name: alloydb-auth-proxy
         image: gcr.io/alloydb-connectors/alloydb-auth-proxy:latest
-        args:
-          - "--port=5432"
-          - "--instances=${ALLOYDB_INSTANCE_URI}=tcp:5432"
-          - "--max-connections=10"
-          - "--private-ip"
-          - "--auto-iam-authn" # Enable automatic IAM authentication
+        command:
+        - sh
+        - -c
+        - |
+          INSTANCE_URI=$(cat /shared/instance-uri)
+          echo "Starting AlloyDB Auth Proxy for instance: $INSTANCE_URI"
+          /alloydb-auth-proxy \
+            --port=5432 \
+            --instances="$INSTANCE_URI=tcp:5432" \
+            --max-connections=10 \
+            --private-ip \
+            --auto-iam-authn
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
         securityContext:
           runAsNonRoot: true
           runAsUser: 2000
@@ -71,3 +116,6 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
+      volumes:
+      - name: shared-data
+        emptyDir: {}
