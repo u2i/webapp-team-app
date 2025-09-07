@@ -106,6 +106,29 @@ async function fetchDatabaseUrl() {
   }
 }
 
+async function waitForAuthProxy(maxAttempts = 10, delayMs = 3000) {
+  const { Client } = require('pg');
+  
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const testClient = new Client({ 
+        connectionString: 'postgresql://test@localhost:5432/postgres' 
+      });
+      await testClient.connect();
+      await testClient.end();
+      console.log('Auth Proxy is ready');
+      return true;
+    } catch (error) {
+      if (attempt === maxAttempts) {
+        console.error('Auth Proxy not ready after', maxAttempts, 'attempts');
+        return false;
+      }
+      console.log(`Waiting for Auth Proxy to be ready... (attempt ${attempt}/${maxAttempts})`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+}
+
 async function createDatabaseIfNotExists(databaseUrl) {
   const { Client } = require('pg');
   
@@ -162,6 +185,14 @@ async function runMigrations() {
       throw new Error('No database configuration available');
     }
 
+    // Wait for Auth Proxy to be ready if using it
+    if (process.env.ALLOYDB_AUTH_PROXY === 'true') {
+      const proxyReady = await waitForAuthProxy();
+      if (!proxyReady) {
+        throw new Error('AlloyDB Auth Proxy is not ready');
+      }
+    }
+    
     // Create database if it doesn't exist
     await createDatabaseIfNotExists(databaseUrl);
 
