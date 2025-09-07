@@ -30,7 +30,6 @@ spec:
         - "projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-nonprod-alloydb/instances/webapp-nonprod-alloydb-primary"
         - "--port=5432"
         - "--max-connections=10"
-        - "--private-ip"
         - "--auto-iam-authn"
         securityContext:
           runAsNonRoot: true
