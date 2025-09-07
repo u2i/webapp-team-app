@@ -71,6 +71,42 @@ async function fetchDatabaseUrl() {
   }
 }
 
+// Helper function to create database if it doesn't exist
+async function createDatabaseIfNotExists(connectionString) {
+  const { Client } = require('pg');
+  
+  // Parse the connection string to extract database name
+  const url = new URL(connectionString.replace('postgresql://', 'postgres://'));
+  const targetDatabase = url.pathname.substring(1);
+  
+  // Connect to postgres database first
+  url.pathname = '/postgres';
+  const adminUrl = url.toString();
+  
+  const client = new Client({ connectionString: adminUrl });
+  
+  try {
+    await client.connect();
+    
+    // Check if database exists
+    const result = await client.query(
+      'SELECT 1 FROM pg_database WHERE datname = $1',
+      [targetDatabase]
+    );
+    
+    if (result.rows.length === 0) {
+      console.log(`Creating database '${targetDatabase}'...`);
+      await client.query(`CREATE DATABASE "${targetDatabase}"`);
+      console.log(`Database '${targetDatabase}' created successfully`);
+    }
+  } catch (error) {
+    console.error('Error checking/creating database:', error.message);
+    // Don't throw - let the connection pool handle the error
+  } finally {
+    await client.end();
+  }
+}
+
 // Initialize database connection
 async function initializeDatabase() {
   if (initializationPromise) {
@@ -97,9 +133,13 @@ async function initializeDatabase() {
 
       if (databaseUrl) {
         // Use the connection string as-is 
-        // The secret appears to have encoding issues that need to be fixed by infrastructure team
         dbConfig.connectionString = databaseUrl;
         console.log('Using database connection string from Secret Manager');
+        
+        // Create database if it doesn't exist (for AlloyDB with IAM auth)
+        if (process.env.ALLOYDB_AUTH_PROXY === 'true') {
+          await createDatabaseIfNotExists(databaseUrl);
+        }
       } else if (process.env.DATABASE_HOST) {
         // Use individual parameters
         dbConfig.host = process.env.DATABASE_HOST;

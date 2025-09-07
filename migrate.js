@@ -106,6 +106,45 @@ async function fetchDatabaseUrl() {
   }
 }
 
+async function createDatabaseIfNotExists(databaseUrl) {
+  const { Client } = require('pg');
+  
+  // Parse the database URL to extract components
+  const url = new URL(databaseUrl.replace('postgresql://', 'postgres://'));
+  const targetDatabase = url.pathname.substring(1); // Remove leading slash
+  
+  // Connect to postgres database first (always exists)
+  url.pathname = '/postgres';
+  const adminUrl = url.toString();
+  
+  const client = new Client({ connectionString: adminUrl });
+  
+  try {
+    console.log(`Checking if database '${targetDatabase}' exists...`);
+    await client.connect();
+    
+    // Check if database exists
+    const result = await client.query(
+      'SELECT 1 FROM pg_database WHERE datname = $1',
+      [targetDatabase]
+    );
+    
+    if (result.rows.length === 0) {
+      console.log(`Database '${targetDatabase}' does not exist. Creating...`);
+      // Use quoted identifier to handle special characters
+      await client.query(`CREATE DATABASE "${targetDatabase}"`);
+      console.log(`Database '${targetDatabase}' created successfully`);
+    } else {
+      console.log(`Database '${targetDatabase}' already exists`);
+    }
+  } catch (error) {
+    console.error('Error checking/creating database:', error.message);
+    throw error;
+  } finally {
+    await client.end();
+  }
+}
+
 async function runMigrations() {
   console.log('Starting database migrations...');
   console.log(`Environment: ${STAGE} (${BOUNDARY} boundary)`);
@@ -122,6 +161,9 @@ async function runMigrations() {
       }
       throw new Error('No database configuration available');
     }
+
+    // Create database if it doesn't exist
+    await createDatabaseIfNotExists(databaseUrl);
 
     // Get command line arguments (default to 'up')
     const args = process.argv.slice(2);
