@@ -33,8 +33,11 @@ spec:
         - "--max-connections=10"
         - "--auto-iam-authn"
         startupProbe:
-          tcpSocket:
-            port: 5432
+          exec:
+            command:
+            - sh
+            - -c
+            - "nc -z localhost 5432"
           initialDelaySeconds: 5
           periodSeconds: 2
           timeoutSeconds: 5
