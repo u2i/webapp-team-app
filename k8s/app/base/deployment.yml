@@ -42,15 +42,21 @@ spec:
         - -c
         - |
           echo "Fetching AlloyDB instance URI from Secret Manager..."
-          gcloud secrets versions access latest --secret="webapp-${BOUNDARY}-alloydb-instance-uri" --project="${PROJECT_ID}" > /shared/instance-uri
-        env:
-        - name: PROJECT_ID
-          value: "u2i-tenant-webapp-nonprod" # from-param: ${PROJECT_ID}
-        - name: BOUNDARY
-          value: "nonprod" # from-param: ${BOUNDARY}
+          # Use webapp-nonprod for all non-prod environments (dev, qa, preview)
+          SECRET_NAME="webapp-nonprod-alloydb-instance-uri"
+          echo "Fetching secret: $SECRET_NAME"
+          gcloud secrets versions access latest --secret="$SECRET_NAME" --project="u2i-tenant-webapp-nonprod" > /shared/instance-uri
+          echo "Instance URI fetched successfully"
         volumeMounts:
         - name: shared-data
           mountPath: /shared
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
       containers:
       # AlloyDB Auth Proxy sidecar with IAM authentication
       - name: alloydb-auth-proxy
