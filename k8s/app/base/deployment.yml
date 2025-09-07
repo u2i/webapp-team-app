@@ -43,17 +43,6 @@ spec:
         - "--port=5432"
         - "--max-connections=50"
         - "--auto-iam-authn"
-        startupProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - "nc -z localhost 5432"
-          initialDelaySeconds: 5
-          periodSeconds: 2
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 30
         securityContext:
           runAsNonRoot: true
           runAsUser: 2000
