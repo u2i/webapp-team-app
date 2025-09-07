@@ -33,10 +33,11 @@ spec:
         fsGroup: 2000
         seccompProfile:
           type: RuntimeDefault
-      containers:
-      # AlloyDB Auth Proxy sidecar with IAM authentication
+      initContainers:
+      # AlloyDB Auth Proxy sidecar (runs as init container with restartPolicy: Always)
       - name: alloydb-auth-proxy
         image: gcr.io/alloydb-connectors/alloydb-auth-proxy:latest
+        restartPolicy: Always  # This makes it a sidecar
         args:
         - "projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-nonprod-alloydb/instances/webapp-nonprod-alloydb-primary"
         - "--port=5432"
@@ -56,6 +57,7 @@ spec:
           limits:
             memory: "64Mi"
             cpu: "100m"
+      containers:
       - name: webapp # from-param: ${APP_NAME}
         image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
         ports:
