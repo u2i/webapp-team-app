@@ -43,6 +43,14 @@ spec:
         - "--port=5432"
         - "--max-connections=50"
         - "--auto-iam-authn"
+        startupProbe:
+          tcpSocket:
+            port: 5432
+          initialDelaySeconds: 1
+          periodSeconds: 1
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 30
         securityContext:
           runAsNonRoot: true
           runAsUser: 2000
