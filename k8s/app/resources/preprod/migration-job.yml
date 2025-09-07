@@ -48,7 +48,7 @@ spec:
             cpu: "100m"
       containers:
       - name: migrate
-        image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp:dev-840e0eb47bec337439d163ebcecaac924379d57b
+        image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
         command: ["node", "migrate.js"]
         env:
         - name: PROJECT_ID
