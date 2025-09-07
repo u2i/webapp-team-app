@@ -36,7 +36,7 @@ spec:
       initContainers:
       # Fetch AlloyDB instance URI from Secret Manager
       - name: fetch-instance-uri
-        image: google/cloud-sdk:alpine
+        image: gcr.io/google.com/cloudsdktool/cloud-sdk:alpine
         command:
         - sh
         - -c
@@ -44,9 +44,21 @@ spec:
           echo "Fetching AlloyDB instance URI from Secret Manager..."
           # Use webapp-nonprod for all non-prod environments (dev, qa, preview)
           SECRET_NAME="webapp-nonprod-alloydb-instance-uri"
-          echo "Fetching secret: $SECRET_NAME"
-          gcloud secrets versions access latest --secret="$SECRET_NAME" --project="u2i-tenant-webapp-nonprod" > /shared/instance-uri
-          echo "Instance URI fetched successfully"
+          echo "Fetching secret: $SECRET_NAME from project u2i-tenant-webapp-nonprod"
+          
+          # The pod uses Workload Identity, so no explicit auth needed
+          # Just ensure we're using the metadata server for auth
+          gcloud secrets versions access latest \
+            --secret="$SECRET_NAME" \
+            --project="u2i-tenant-webapp-nonprod" > /shared/instance-uri
+          
+          if [ $? -eq 0 ]; then
+            echo "Instance URI fetched successfully"
+            cat /shared/instance-uri
+          else
+            echo "Failed to fetch instance URI"
+            exit 1
+          fi
         volumeMounts:
         - name: shared-data
           mountPath: /shared
