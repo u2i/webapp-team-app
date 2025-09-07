@@ -3,8 +3,6 @@ kind: Kustomization
 
 resources:
 - service-account.yml
-- secret-store.yml
-- alloydb-secret.yml
 - deployment.yml
 - service.yml
 - network-policy.yml

@@ -26,22 +26,12 @@ spec:
       # AlloyDB Auth Proxy sidecar with IAM authentication
       - name: alloydb-auth-proxy
         image: gcr.io/alloydb-connectors/alloydb-auth-proxy:latest
-        command:
-        - /bin/sh
-        - -c
-        - |
-          INSTANCE_URI=$(cat /etc/alloydb/instance-uri)
-          echo "Starting AlloyDB Auth Proxy for instance: $INSTANCE_URI"
-          /alloydb-auth-proxy \
-            --port=5432 \
-            --instances="$INSTANCE_URI=tcp:5432" \
-            --max-connections=10 \
-            --private-ip \
-            --auto-iam-authn
-        volumeMounts:
-        - name: alloydb-secret
-          mountPath: /etc/alloydb
-          readOnly: true
+        args:
+        - "--port=5432"
+        - "--instances=projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-nonprod-alloydb/instances/webapp-nonprod-alloydb-primary=tcp:5432"
+        - "--max-connections=10"
+        - "--private-ip"
+        - "--auto-iam-authn"
         securityContext:
           runAsNonRoot: true
           runAsUser: 2000
@@ -80,7 +70,3 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
-      volumes:
-      - name: alloydb-secret
-        secret:
-          secretName: alloydb-instance-uri
