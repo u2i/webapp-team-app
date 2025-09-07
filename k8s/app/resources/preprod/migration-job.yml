@@ -46,8 +46,8 @@ spec:
           RESPONSE=$(curl -s -H "Authorization: Bearer $TOKEN" \
             "https://secretmanager.googleapis.com/v1/projects/$PROJECT_ID/secrets/$SECRET_NAME/versions/latest:access")
           
-          # Extract the secret data (base64 encoded)
-          echo "$RESPONSE" | sed 's/.*"data":"\([^"]*\)".*/\1/' | base64 -d > /shared/instance-uri
+          # Extract the secret data (base64 encoded) using proper JSON parsing
+          echo "$RESPONSE" | python3 -c "import sys, json, base64; data = json.load(sys.stdin); print(base64.b64decode(data['payload']['data']).decode('utf-8'))" > /shared/instance-uri
           
           if [ -s /shared/instance-uri ]; then
             echo "Instance URI fetched successfully:"
