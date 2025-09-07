@@ -1,12 +1,11 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: webapp-migrate-${SHORT_SHA} # Unique name per deployment
-  namespace: ${NAMESPACE}
+  name: webapp-migrate-job
+  namespace: webapp-dev # from-param: ${NAMESPACE}
   labels:
     app: webapp
     component: migration
-    version: ${SHORT_SHA}
 spec:
   ttlSecondsAfterFinished: 3600 # Clean up after 1 hour
   backoffLimit: 3
@@ -102,15 +101,15 @@ spec:
             memory: "64Mi"
             cpu: "100m"
       - name: migrate
-        image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp:${STAGE}-${COMMIT_SHA}
+        image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
         command: ["node", "migrate.js"]
         env:
         - name: PROJECT_ID
-          value: "${PROJECT_ID}"
+          value: "u2i-tenant-webapp-nonprod" # from-param: ${PROJECT_ID}
         - name: BOUNDARY
-          value: "${BOUNDARY}"
+          value: "nonprod" # from-param: ${BOUNDARY}
         - name: STAGE
-          value: "${STAGE}"
+          value: "dev" # from-param: ${STAGE}
         - name: ALLOYDB_AUTH_PROXY
           value: "true"
         securityContext:
