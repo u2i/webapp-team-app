@@ -37,6 +37,9 @@ async function fetchDatabaseUrl() {
     throw new Error('No PROJECT_ID found, cannot fetch database credentials');
   }
 
+  // Check if AlloyDB Auth Proxy is being used
+  const useAuthProxy = process.env.ALLOYDB_AUTH_PROXY === 'true' || process.env.USE_AUTH_PROXY === 'true';
+
   // Construct the secret name based on boundary
   const secretName = `webapp-${BOUNDARY}-alloydb-connection`;
   
@@ -63,6 +66,16 @@ async function fetchDatabaseUrl() {
     // Direct call without timeout to see actual error
     const [version] = await secretClient.accessSecretVersion({ name });
     const payload = version.payload.data.toString('utf8');
+    
+    // If using Auth Proxy with IAM auth, build localhost connection string without password
+    if (useAuthProxy) {
+      console.log('AlloyDB Auth Proxy detected with IAM authentication');
+      const connectionInfo = JSON.parse(payload);
+      // No password needed - Auth Proxy handles IAM authentication
+      const databaseUrl = `postgresql://${connectionInfo.username}@localhost:5432/${connectionInfo.database}`;
+      console.log(`Connecting as IAM user: ${connectionInfo.username}`);
+      return databaseUrl;
+    }
     
     console.log('Successfully retrieved database credentials from Secret Manager');
     return payload;

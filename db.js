@@ -24,7 +24,39 @@ async function fetchDatabaseUrl() {
     return null; // Will use individual params
   }
 
-  // Try to fetch from Secret Manager
+  // Check if AlloyDB Auth Proxy is being used (connects via localhost)
+  if (process.env.ALLOYDB_AUTH_PROXY === 'true' || process.env.USE_AUTH_PROXY === 'true') {
+    console.log('AlloyDB Auth Proxy detected with IAM authentication');
+    // Fetch connection details from Secret Manager
+    if (!PROJECT_ID) {
+      console.log('No PROJECT_ID found, database features disabled');
+      return null;
+    }
+
+    try {
+      const secretName = `webapp-${BOUNDARY}-alloydb-connection`;
+      const name = `projects/${PROJECT_ID}/secrets/${secretName}/versions/latest`;
+      
+      console.log(`Fetching AlloyDB connection info from Secret Manager: ${secretName}`);
+      
+      const secretClient = new SecretManagerServiceClient();
+      const [version] = await secretClient.accessSecretVersion({ name });
+      const connectionInfo = JSON.parse(version.payload.data.toString('utf8'));
+      
+      // With IAM auth via Auth Proxy, we connect as the service account user
+      // No password needed - Auth Proxy handles IAM authentication
+      const databaseUrl = `postgresql://${connectionInfo.username}@localhost:5432/${connectionInfo.database}`;
+      console.log('Successfully built connection string for AlloyDB Auth Proxy with IAM auth');
+      console.log(`Connecting as IAM user: ${connectionInfo.username}`);
+      return databaseUrl;
+    } catch (error) {
+      console.error('Failed to fetch AlloyDB connection info from Secret Manager:', error.message);
+      console.log('Database features will be disabled');
+      return null;
+    }
+  }
+
+  // Try to fetch from Secret Manager (direct connection)
   if (!PROJECT_ID) {
     console.log('No PROJECT_ID found, database features disabled');
     return null;

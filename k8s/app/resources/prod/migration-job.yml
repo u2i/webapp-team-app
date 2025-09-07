@@ -48,7 +48,7 @@ spec:
             memory: "64Mi"
             cpu: "100m"
       - name: migrate
-        image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp:${STAGE}-${COMMIT_SHA}
+        image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-prod/webapp-images/webapp:${STAGE}-${COMMIT_SHA}
         command: ["node", "migrate.js"]
         env:
         - name: PROJECT_ID

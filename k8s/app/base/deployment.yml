@@ -34,6 +34,29 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       containers:
+      # AlloyDB Auth Proxy sidecar with IAM authentication
+      - name: alloydb-auth-proxy
+        image: gcr.io/alloydb-connectors/alloydb-auth-proxy:latest
+        args:
+          - "--port=5432"
+          - "--instances=${ALLOYDB_INSTANCE_URI}=tcp:5432" # from-param: ${ALLOYDB_INSTANCE_URI}
+          - "--max-connections=50"
+          - "--private-ip"
+          - "--auto-iam-authn" # Enable automatic IAM authentication
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 2000
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
       - name: webapp # from-param: ${APP_NAME}
         image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp
         ports:
@@ -67,6 +90,8 @@ spec:
           value: "gdpr"
         - name: PROJECT_ID
           value: "u2i-tenant-webapp-nonprod" # GCP project for Secret Manager access
+        - name: ALLOYDB_AUTH_PROXY
+          value: "true" # Using AlloyDB Auth Proxy sidecar
         # Database configuration from ConfigMap (if exists)
         envFrom:
         - configMapRef:
