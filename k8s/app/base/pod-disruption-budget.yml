@@ -2,7 +2,6 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: webapp-pdb # from-param: ${APP_NAME}-pdb
-  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
 spec:
   minAvailable: ${PDB_MIN_AVAILABLE} # from-param: ${PDB_MIN_AVAILABLE}
   selector:
