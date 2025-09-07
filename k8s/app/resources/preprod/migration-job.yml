@@ -22,29 +22,6 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
         fsGroup: 2000
-      initContainers:
-      # Fetch AlloyDB instance URI from Secret Manager
-      - name: fetch-instance-uri
-        image: google/cloud-sdk:alpine
-        command:
-        - /bin/sh
-        - -c
-        - |
-          gcloud secrets versions access latest \
-            --secret=webapp-nonprod-alloydb-instance-uri \
-            --project=u2i-tenant-webapp-nonprod > /shared/instance-uri
-          
-          echo "Instance URI: $(cat /shared/instance-uri)"
-        volumeMounts:
-        - name: shared-data
-          mountPath: /shared
-        securityContext:
-          allowPrivilegeEscalation: false
-          runAsNonRoot: true
-          runAsUser: 1000
-          capabilities:
-            drop:
-            - ALL
       containers:
       # AlloyDB Auth Proxy sidecar with IAM authentication
       - name: alloydb-auth-proxy
@@ -53,7 +30,7 @@ spec:
         - /bin/sh
         - -c
         - |
-          INSTANCE_URI=$(cat /shared/instance-uri)
+          INSTANCE_URI=$(cat /etc/alloydb/instance-uri)
           echo "Starting AlloyDB Auth Proxy for instance: $INSTANCE_URI"
           /alloydb-auth-proxy \
             --port=5432 \
@@ -62,8 +39,9 @@ spec:
             --private-ip \
             --auto-iam-authn
         volumeMounts:
-        - name: shared-data
-          mountPath: /shared
+        - name: alloydb-secret
+          mountPath: /etc/alloydb
+          readOnly: true
         securityContext:
           runAsNonRoot: true
           runAsUser: 2000
@@ -103,5 +81,6 @@ spec:
             memory: "256Mi"
             cpu: "200m"
       volumes:
-      - name: shared-data
-        emptyDir: {}
+      - name: alloydb-secret
+        secret:
+          secretName: alloydb-instance-uri
