@@ -32,29 +32,22 @@ spec:
         - |
           echo "Fetching AlloyDB instance URI from Secret Manager..."
           
-          # Get access token from metadata server (Workload Identity)
-          TOKEN=$(curl -s -H "Metadata-Flavor: Google" \
-            "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token" \
-            | sed 's/.*"access_token":"\([^"]*\)".*/\1/')
-          
-          # Fetch secret from Secret Manager API
+          # Fetch secret using gcloud with Workload Identity
           SECRET_NAME="webapp-nonprod-alloydb-instance-uri"
           PROJECT_ID="u2i-tenant-webapp-nonprod"
           
           echo "Fetching secret: $SECRET_NAME from project $PROJECT_ID"
           
-          RESPONSE=$(curl -s -H "Authorization: Bearer $TOKEN" \
-            "https://secretmanager.googleapis.com/v1/projects/$PROJECT_ID/secrets/$SECRET_NAME/versions/latest:access")
-          
-          # Extract the secret data (base64 encoded) using proper JSON parsing
-          echo "$RESPONSE" | python3 -c "import sys, json, base64; data = json.load(sys.stdin); print(base64.b64decode(data['payload']['data']).decode('utf-8'))" > /shared/instance-uri
+          # Use gcloud to access the secret (will use Workload Identity automatically)
+          gcloud secrets versions access latest \
+            --secret="$SECRET_NAME" \
+            --project="$PROJECT_ID" > /shared/instance-uri
           
           if [ -s /shared/instance-uri ]; then
             echo "Instance URI fetched successfully:"
             cat /shared/instance-uri
           else
             echo "Failed to fetch instance URI"
-            echo "Response: $RESPONSE"
             exit 1
           fi
         volumeMounts:
