@@ -147,6 +147,13 @@ async function createDatabaseIfNotExists(databaseUrl) {
 
 async function runMigrations() {
   console.log('Starting database migrations...');
+  
+  // If using AlloyDB Auth Proxy, wait for it to be ready
+  if (process.env.ALLOYDB_AUTH_PROXY === 'true') {
+    console.log('Waiting 20 seconds for AlloyDB Auth Proxy to be ready...');
+    await new Promise(resolve => setTimeout(resolve, 20000));
+  }
+  
   console.log(`Environment: ${STAGE} (${BOUNDARY} boundary)`);
   
   try {
