@@ -27,33 +27,14 @@ async function fetchDatabaseUrl() {
   // Check if AlloyDB Auth Proxy is being used (connects via localhost)
   if (process.env.ALLOYDB_AUTH_PROXY === 'true' || process.env.USE_AUTH_PROXY === 'true') {
     console.log('AlloyDB Auth Proxy detected with IAM authentication');
-    // Fetch connection details from Secret Manager
-    if (!PROJECT_ID) {
-      console.log('No PROJECT_ID found, database features disabled');
-      return null;
-    }
-
-    try {
-      const secretName = `webapp-${BOUNDARY}-alloydb-connection`;
-      const name = `projects/${PROJECT_ID}/secrets/${secretName}/versions/latest`;
-      
-      console.log(`Fetching AlloyDB connection info from Secret Manager: ${secretName}`);
-      
-      const secretClient = new SecretManagerServiceClient();
-      const [version] = await secretClient.accessSecretVersion({ name });
-      const connectionInfo = JSON.parse(version.payload.data.toString('utf8'));
-      
-      // With IAM auth via Auth Proxy, we connect as the service account user
-      // No password needed - Auth Proxy handles IAM authentication
-      const databaseUrl = `postgresql://${connectionInfo.username}@localhost:5432/${connectionInfo.database}`;
-      console.log('Successfully built connection string for AlloyDB Auth Proxy with IAM auth');
-      console.log(`Connecting as IAM user: ${connectionInfo.username}`);
-      return databaseUrl;
-    } catch (error) {
-      console.error('Failed to fetch AlloyDB connection info from Secret Manager:', error.message);
-      console.log('Database features will be disabled');
-      return null;
-    }
+    // No secrets needed - Auth Proxy handles IAM authentication
+    const stage = process.env.STAGE || 'dev';
+    const iamUser = `webapp-k8s@${PROJECT_ID.replace('u2i-tenant-webapp-', '')}`; // e.g., webapp-k8s@nonprod
+    const database = `webapp_${stage}`; // e.g., webapp_dev
+    const databaseUrl = `postgresql://${iamUser}@localhost:5432/${database}`;
+    console.log(`Connecting as IAM user: ${iamUser}`);
+    console.log(`Database: ${database}`);
+    return databaseUrl;
   }
 
   // Try to fetch from Secret Manager (direct connection)

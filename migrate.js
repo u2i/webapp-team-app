@@ -39,6 +39,18 @@ async function fetchDatabaseUrl() {
 
   // Check if AlloyDB Auth Proxy is being used
   const useAuthProxy = process.env.ALLOYDB_AUTH_PROXY === 'true' || process.env.USE_AUTH_PROXY === 'true';
+  
+  // If using Auth Proxy with IAM auth, no secrets needed
+  if (useAuthProxy) {
+    console.log('AlloyDB Auth Proxy detected with IAM authentication');
+    // Connect to localhost:5432 with IAM user
+    const iamUser = `webapp-k8s@${PROJECT_ID.replace('u2i-tenant-webapp-', '')}`; // e.g., webapp-k8s@nonprod
+    const database = `webapp_${STAGE}`; // e.g., webapp_dev
+    const databaseUrl = `postgresql://${iamUser}@localhost:5432/${database}`;
+    console.log(`Connecting as IAM user: ${iamUser}`);
+    console.log(`Database: ${database}`);
+    return databaseUrl;
+  }
 
   // Construct the secret name based on boundary
   const secretName = `webapp-${BOUNDARY}-alloydb-connection`;
