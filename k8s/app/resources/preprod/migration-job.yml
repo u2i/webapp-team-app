@@ -25,9 +25,9 @@ spec:
       initContainers:
       # Fetch AlloyDB instance URI from Secret Manager
       - name: fetch-instance-uri
-        image: curlimages/curl:latest
+        image: gcr.io/google.com/cloudsdktool/cloud-sdk:alpine
         command:
-        - sh
+        - /bin/sh
         - -c
         - |
           echo "Fetching AlloyDB instance URI from Secret Manager..."
@@ -72,7 +72,7 @@ spec:
       - name: alloydb-auth-proxy
         image: gcr.io/alloydb-connectors/alloydb-auth-proxy:latest
         command:
-        - sh
+        - /bin/sh
         - -c
         - |
           INSTANCE_URI=$(cat /shared/instance-uri)
