@@ -36,27 +36,36 @@ spec:
       initContainers:
       # Fetch AlloyDB instance URI from Secret Manager
       - name: fetch-instance-uri
-        image: gcr.io/google.com/cloudsdktool/cloud-sdk:alpine
+        image: curlimages/curl:latest
         command:
         - sh
         - -c
         - |
           echo "Fetching AlloyDB instance URI from Secret Manager..."
-          # Use webapp-nonprod for all non-prod environments (dev, qa, preview)
+          
+          # Get access token from metadata server (Workload Identity)
+          TOKEN=$(curl -s -H "Metadata-Flavor: Google" \
+            "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token" \
+            | sed 's/.*"access_token":"\([^"]*\)".*/\1/')
+          
+          # Fetch secret from Secret Manager API
           SECRET_NAME="webapp-nonprod-alloydb-instance-uri"
-          echo "Fetching secret: $SECRET_NAME from project u2i-tenant-webapp-nonprod"
+          PROJECT_ID="u2i-tenant-webapp-nonprod"
           
-          # The pod uses Workload Identity, so no explicit auth needed
-          # Just ensure we're using the metadata server for auth
-          gcloud secrets versions access latest \
-            --secret="$SECRET_NAME" \
-            --project="u2i-tenant-webapp-nonprod" > /shared/instance-uri
+          echo "Fetching secret: $SECRET_NAME from project $PROJECT_ID"
           
-          if [ $? -eq 0 ]; then
-            echo "Instance URI fetched successfully"
+          RESPONSE=$(curl -s -H "Authorization: Bearer $TOKEN" \
+            "https://secretmanager.googleapis.com/v1/projects/$PROJECT_ID/secrets/$SECRET_NAME/versions/latest:access")
+          
+          # Extract the secret data (base64 encoded)
+          echo "$RESPONSE" | sed 's/.*"data":"\([^"]*\)".*/\1/' | base64 -d > /shared/instance-uri
+          
+          if [ -s /shared/instance-uri ]; then
+            echo "Instance URI fetched successfully:"
             cat /shared/instance-uri
           else
             echo "Failed to fetch instance URI"
+            echo "Response: $RESPONSE"
             exit 1
           fi
         volumeMounts:
