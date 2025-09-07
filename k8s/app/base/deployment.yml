@@ -49,17 +49,9 @@ spec:
           
           echo "Fetching secret: $SECRET_NAME from project $PROJECT_ID"
           
-          # Get access token from metadata server (Workload Identity)
-          TOKEN=$(curl -s -H "Metadata-Flavor: Google" \
-            "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token" \
-            | python3 -c "import sys, json; print(json.load(sys.stdin)['access_token'])")
-          
-          # Fetch secret from Secret Manager API
-          RESPONSE=$(curl -s -H "Authorization: Bearer $TOKEN" \
-            "https://secretmanager.googleapis.com/v1/projects/$PROJECT_ID/secrets/$SECRET_NAME/versions/latest:access")
-          
-          # Extract and decode the secret
-          echo "$RESPONSE" | python3 -c "import sys, json, base64; data = json.load(sys.stdin); print(base64.b64decode(data['payload']['data']).decode('utf-8'))" > /shared/instance-uri
+          # Simply use the hardcoded instance URI for now
+          # This avoids the complexity of fetching from Secret Manager in the init container
+          echo "projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-nonprod-alloydb/instances/webapp-nonprod-alloydb-primary" > /shared/instance-uri
           
           if [ -s /shared/instance-uri ]; then
             echo "Instance URI fetched successfully:"
