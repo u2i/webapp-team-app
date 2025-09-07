@@ -38,8 +38,8 @@ spec:
       - name: alloydb-auth-proxy
         image: gcr.io/alloydb-connectors/alloydb-auth-proxy:latest
         args:
+        - "projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-nonprod-alloydb/instances/webapp-nonprod-alloydb-primary"
         - "--port=5432"
-        - "--instances=projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-nonprod-alloydb/instances/webapp-nonprod-alloydb-primary=tcp:5432"
         - "--max-connections=50"
         - "--private-ip"
         - "--auto-iam-authn"
