@@ -6,7 +6,7 @@ echo "Starting webapp with migration support..."
 # Check if we should run migrations (only for preview environments)
 if [ "$STAGE" = "preview" ] && [ "$DATABASE_HOST" = "localhost" ]; then
     echo "Preview environment detected - running migrations first"
-    node run-migrations.js
+    node migrate.js
 fi
 
 # Start the main application
