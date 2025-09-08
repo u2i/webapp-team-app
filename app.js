@@ -36,7 +36,8 @@ app.get('/health', (req, res) => {
     .status(200)
     .json({ 
       status: 'healthy', 
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      migrationsRefactor: 'test-2025-09-08'
     });
 });
 
