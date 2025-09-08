@@ -126,7 +126,10 @@ async function initializeDatabase() {
       
       // Configure database connection
       const dbConfig = {
-        ssl: process.env.DATABASE_SSL_MODE === 'require' 
+        // When using AlloyDB Auth Proxy, disable SSL as the proxy handles encryption
+        ssl: process.env.ALLOYDB_AUTH_PROXY === 'true'
+          ? false
+          : process.env.DATABASE_SSL_MODE === 'require' 
           ? { rejectUnauthorized: false }
           : process.env.DATABASE_SSL_MODE === 'disable'
           ? false
