@@ -125,7 +125,11 @@ runMigrationsIfNeeded()
 app.get('/health', (req, res) => {
   res
     .status(200)
-    .json({ status: 'healthy', timestamp: new Date().toISOString() });
+    .json({ 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      deploymentTest: 'pipeline-test-2025-09-08'
+    });
 });
 
 app.get('/ready', (req, res) => {
