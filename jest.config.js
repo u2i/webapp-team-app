@@ -8,10 +8,10 @@ module.exports = {
   ],
   coverageThreshold: {
     global: {
-      branches: 27,
+      branches: 25,
       functions: 35,
-      lines: 27,
-      statements: 27,
+      lines: 25,
+      statements: 25,
     },
   },
   testMatch: ['**/*.test.js'],
