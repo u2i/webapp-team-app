@@ -58,11 +58,6 @@ patches:
       value:
         name: DATABASE_SSL_MODE
         value: disable
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: RUN_MIGRATIONS_ON_STARTUP
-        value: "true"
 
 # Add PostgreSQL sidecar using JSON6902 patch
 - target:

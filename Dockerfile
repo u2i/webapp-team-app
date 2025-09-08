@@ -11,7 +11,7 @@ COPY package*.json ./
 RUN npm ci
 
 # Copy application code and test files
-COPY app.js db.js migrate.js feedback.js app.test.js feedback.test.js jest.config.js .node-pg-migrate ./
+COPY app.js db.js migrate.js feedback.js run-migrations.js start.sh app.test.js feedback.test.js jest.config.js .node-pg-migrate ./
 COPY __mocks__ ./__mocks__
 COPY migrations ./migrations
 
@@ -33,8 +33,13 @@ COPY --from=test /app/app.js ./
 COPY --from=test /app/db.js ./
 COPY --from=test /app/migrate.js ./
 COPY --from=test /app/feedback.js ./
+COPY --from=test /app/run-migrations.js ./
+COPY --from=test /app/start.sh ./
 COPY --from=test /app/.node-pg-migrate ./
 COPY --from=test /app/migrations ./migrations
+
+# Make start script executable
+RUN chmod +x start.sh
 
 # Use the built-in node user (UID 1000)
 USER node
@@ -46,8 +51,8 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:8080/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# Run the application
-CMD ["npm", "start"]
+# Run the application using our startup script
+CMD ["./start.sh"]
 
 # Labels for compliance and traceability
 LABEL maintainer="webapp-team@u2i.com" \
