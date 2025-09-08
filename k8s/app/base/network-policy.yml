@@ -64,3 +64,12 @@ spec:
     ports:
     - protocol: TCP
       port: 443
+  # Allow AlloyDB connections (Private Service Access range)
+  - to:
+    - ipBlock:
+        cidr: 10.152.0.0/24
+    ports:
+    - protocol: TCP
+      port: 5433
+    - protocol: TCP
+      port: 5432
