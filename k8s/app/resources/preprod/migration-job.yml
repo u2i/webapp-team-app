@@ -48,7 +48,7 @@ spec:
             cpu: "100m"
       containers:
       - name: migrate
-        image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp:${IMAGE_TAG} # from-param: ${IMAGE_TAG}
+        image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp # Will use latest built image
         command: ["node", "migrate.js"]
         env:
         - name: PROJECT_ID
