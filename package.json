@@ -5,6 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
+    "start:with-migrations": "./start.sh",
     "test": "jest --coverage",
     "test:ci": "jest --ci --coverage --coverageReporters=text-summary",
     "lint": "eslint . --ext .js",

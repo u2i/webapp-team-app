@@ -1,10 +1,8 @@
 const express = require('express');
 const db = require('./db');
 const feedbackRouter = require('./feedback');
-const { spawn } = require('child_process');
 const app = express();
 const port = process.env.PORT || 8080;
-// Deployment trigger after WIF fix
 const boundary = process.env.BOUNDARY || 'nonprod';
 const stage = process.env.STAGE || 'unknown';
 const version = process.env.VERSION || process.env.K_REVISION || 'local';
@@ -12,98 +10,9 @@ const version = process.env.VERSION || process.env.K_REVISION || 'local';
 // Middleware to parse JSON
 app.use(express.json());
 
-// Function to run migrations
-async function runMigrationsIfNeeded() {
-  if (process.env.RUN_MIGRATIONS_ON_STARTUP === 'true') {
-    console.log('Running database migrations on startup...');
-    
-    // Wait for database to be ready (for sidecar containers)
-    if (process.env.DATABASE_HOST === 'localhost') {
-      const { Client } = require('pg');
-      for (let i = 0; i < 30; i++) {
-        try {
-          const client = new Client({
-            host: process.env.DATABASE_HOST,
-            port: process.env.DATABASE_PORT || 5432,
-            database: process.env.DATABASE_NAME,
-            user: process.env.DATABASE_USER,
-            password: process.env.DATABASE_PASSWORD,
-            ssl: process.env.DATABASE_SSL_MODE === 'disable' ? false : undefined
-          });
-          await client.connect();
-          await client.end();
-          console.log('Database is ready!');
-          break;
-        } catch (error) {
-          console.log(`Waiting for database... (${i+1}/30)`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-      }
-    }
-    
-    // For preview environments with local PostgreSQL, run migrations directly
-    if (process.env.STAGE === 'preview' && process.env.DATABASE_HOST === 'localhost') {
-      const databaseUrl = `postgresql://${process.env.DATABASE_USER}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}/${process.env.DATABASE_NAME}`;
-      
-      return new Promise((resolve, reject) => {
-        const migrate = spawn('npx', ['node-pg-migrate', 'up'], {
-          env: { ...process.env, DATABASE_URL: databaseUrl },
-          stdio: ['ignore', 'pipe', 'pipe']
-        });
-        
-        let output = '';
-        migrate.stdout.on('data', (data) => {
-          output += data.toString();
-        });
-        
-        migrate.stderr.on('data', (data) => {
-          console.error('Migration error:', data.toString());
-        });
-        
-        migrate.on('close', (code) => {
-          if (code === 0) {
-            console.log('Migrations completed successfully');
-            if (output.includes('Migrations complete')) {
-              console.log('All migrations applied');
-            }
-            resolve();
-          } else {
-            console.error('Migrations failed with code:', code);
-            reject(new Error('Migration failed'));
-          }
-        });
-        
-        // Timeout after 30 seconds
-        setTimeout(() => {
-          migrate.kill();
-          reject(new Error('Migration timeout'));
-        }, 30000);
-      });
-    }
-    
-    // For other environments, use the regular migrate script
-    return new Promise((resolve, reject) => {
-      const migrate = spawn('npm', ['run', 'migrate'], {
-        stdio: 'inherit',
-        env: process.env
-      });
-      
-      migrate.on('close', (code) => {
-        if (code === 0) {
-          console.log('Migrations completed successfully');
-          resolve();
-        } else {
-          console.error('Migrations failed with code:', code);
-          reject(new Error('Migration failed'));
-        }
-      });
-    });
-  }
-}
 
-// Run migrations if needed, then check database
-runMigrationsIfNeeded()
-  .then(() => db.isEnabled())
+// Check database connection and migration status
+db.isEnabled()
   .then((enabled) => {
     if (enabled) {
       console.log('Database connection available');
@@ -128,7 +37,7 @@ app.get('/health', (req, res) => {
     .json({ 
       status: 'healthy', 
       timestamp: new Date().toISOString(),
-      deploymentTest: 'pipeline-test-2025-09-08'
+      migrationsRefactor: 'test-2025-09-08'
     });
 });
 
