@@ -136,18 +136,20 @@ app.get('/ready', (req, res) => {
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'Hello from webapp! v11.0 - Now with User Feedback System!',
+    message: 'Hello from webapp! v12.0 - With AlloyDB Integration!',
     boundary: boundary,
     stage: stage,
     version: version,
     features: {
       feedback: true,
+      alloydb: process.env.ALLOYDB_AUTH_PROXY === 'true',
       endpoints: [
         'POST /feedback/submit - Submit new feedback',
         'GET /feedback/list - View feedback list',
         'GET /feedback/:id - Get specific feedback',
         'POST /feedback/:id/vote - Vote on feedback',
-        'GET /feedback/stats/summary - View statistics'
+        'GET /feedback/stats/summary - View statistics',
+        'GET /db/alloydb-status - AlloyDB connection status (NEW!)'
       ]
     },
     region: 'europe-west1',
@@ -222,6 +224,56 @@ app.get('/db/visits', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// AlloyDB Status Endpoint - shows connection details
+app.get('/db/alloydb-status', async (req, res) => {
+  const enabled = await db.isEnabled();
+  
+  const status = {
+    timestamp: new Date().toISOString(),
+    alloydb: {
+      enabled: process.env.ALLOYDB_AUTH_PROXY === 'true',
+      authProxy: {
+        configured: process.env.ALLOYDB_AUTH_PROXY === 'true',
+        connectionMethod: 'IAM Authentication'
+      }
+    },
+    database: {
+      connected: enabled,
+      stage: process.env.STAGE || 'unknown',
+      boundary: process.env.BOUNDARY || 'unknown'
+    }
+  };
+  
+  if (enabled) {
+    try {
+      // Test the connection with a simple query
+      const result = await db.query('SELECT current_database(), current_user, version()');
+      status.database.details = {
+        database: result.rows[0].current_database,
+        user: result.rows[0].current_user,
+        version: result.rows[0].version.split(' ')[0] + ' ' + result.rows[0].version.split(' ')[1]
+      };
+      
+      // Get connection pool stats
+      const pool = await db.getPool();
+      status.database.pool = {
+        totalCount: pool.totalCount,
+        idleCount: pool.idleCount,
+        waitingCount: pool.waitingCount
+      };
+      
+      // Check migrations status
+      const migrations = await db.checkMigrations();
+      status.database.migrations = migrations;
+      
+    } catch (error) {
+      status.database.error = error.message;
+    }
+  }
+  
+  res.json(status);
 });
 
 // Get feature flags
