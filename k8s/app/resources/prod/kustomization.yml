@@ -41,8 +41,11 @@ patches:
                   - webapp
               topologyKey: kubernetes.io/hostname
     - op: replace
-      path: /spec/template/spec/initContainers/0/args/0
-      value: "projects/u2i-tenant-webapp-prod/locations/europe-west1/clusters/webapp-prod-alloydb/instances/webapp-prod-primary"
+      path: /spec/template/spec/initContainers/0/args
+      value:
+      - "projects/u2i-tenant-webapp-prod/locations/europe-west1/clusters/webapp-prod-alloydb/instances/webapp-prod-primary"
+      - "--port=5432"
+      - "--auto-iam-authn"
 
 configMapGenerator:
 - name: webapp-profile-config
