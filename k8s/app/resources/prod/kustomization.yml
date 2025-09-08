@@ -40,6 +40,9 @@ patches:
                   values:
                   - webapp
               topologyKey: kubernetes.io/hostname
+    - op: replace
+      path: /spec/template/spec/initContainers/0/args/0
+      value: "projects/u2i-tenant-webapp-prod/locations/europe-west1/clusters/webapp-prod-alloydb/instances/webapp-prod-primary"
 
 configMapGenerator:
 - name: webapp-profile-config

@@ -25,6 +25,16 @@ patches:
         limits:
           memory: "128Mi"
           cpu: "100m"
+    - op: replace
+      path: /spec/template/spec/initContainers/0/args/0
+      value: "projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-nonprod-alloydb/instances/webapp-nonprod-alloydb-primary"
+- target:
+    kind: Job
+    name: webapp-migration
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/initContainers/0/args/0
+      value: "projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-nonprod-alloydb/instances/webapp-nonprod-alloydb-primary"
 
 configMapGenerator:
 - name: webapp-profile-config

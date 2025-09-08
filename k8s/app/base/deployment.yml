@@ -39,7 +39,7 @@ spec:
         image: gcr.io/alloydb-connectors/alloydb-auth-proxy:latest
         restartPolicy: Always  # This makes it a sidecar
         args:
-        - "projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-nonprod-alloydb/instances/webapp-nonprod-alloydb-primary"
+        - "ALLOYDB_INSTANCE_URI_PLACEHOLDER"  # Will be replaced by Kustomize per environment
         - "--port=5432"
         - "--auto-iam-authn"
         securityContext:
