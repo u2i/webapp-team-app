@@ -12,7 +12,7 @@ resources:
 patches:
 - target:
     kind: Deployment
-    name: webapp
+    labelSelector: "app=webapp"
   patch: |-
     - op: replace
       path: /spec/replicas
