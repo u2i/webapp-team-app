@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-proxy
+  namespace: webapp-dev
+spec:
+  serviceAccountName: webapp
+  automountServiceAccountToken: true
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 2000
+  containers:
+  - name: alloydb-auth-proxy
+    image: gcr.io/alloydb-connectors/alloydb-auth-proxy:latest
+    args:
+    - "projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-nonprod-alloydb/instances/webapp-nonprod-alloydb-primary"
+    - "--port=5432"
+    - "--auto-iam-authn"
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "10m"
+      limits:
+        memory: "64Mi"
+        cpu: "100m"
+  - name: psql
+    image: postgres:15-alpine
+    command:
+    - sh
+    - -c
+    - |
+      echo "Waiting for proxy to be ready..."
+      sleep 30
+      echo "Testing connection to AlloyDB via proxy..."
+      psql -h localhost -p 5432 -U "webapp-k8s@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com" -d postgres -c "SELECT version();"
+      echo "Creating webapp databases..."
+      psql -h localhost -p 5432 -U "webapp-k8s@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com" -d postgres -c "CREATE DATABASE webapp_dev;" || echo "Database webapp_dev may already exist"
+      psql -h localhost -p 5432 -U "webapp-k8s@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com" -d postgres -c "CREATE DATABASE webapp_qa;" || echo "Database webapp_qa may already exist"
+      psql -h localhost -p 5432 -U "webapp-k8s@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com" -d postgres -c "CREATE DATABASE webapp_staging;" || echo "Database webapp_staging may already exist"
+      echo "Listing databases..."
+      psql -h localhost -p 5432 -U "webapp-k8s@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com" -d postgres -c "\l"
+      echo "Test complete, keeping pod alive..."
+      sleep 3600
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "10m"
+      limits:
+        memory: "128Mi"
+        cpu: "50m"
