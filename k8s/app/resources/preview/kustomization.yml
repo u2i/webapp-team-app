@@ -7,7 +7,7 @@ resources:
 - ../../base
 - ../../../namespace/namespace.yml
 - ../../../gcp/certificate.yml
-- secret.yml
+# - secret.yml  # Disabled: External Secrets CRDs not installed
 
 patches:
 # Adjust resources and configuration
@@ -59,14 +59,15 @@ patches:
       value:
         name: DATABASE_SSL_MODE
         value: disable
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: WEBAPP_DEMO_SECRET
-        valueFrom:
-          secretKeyRef:
-            name: webapp-demo-secret
-            key: secret-value
+    # Secret injection disabled - External Secrets CRDs not installed
+    # - op: add
+    #   path: /spec/template/spec/containers/0/env/-
+    #   value:
+    #     name: WEBAPP_DEMO_SECRET
+    #     valueFrom:
+    #       secretKeyRef:
+    #         name: webapp-demo-secret
+    #         key: secret-value
 
 # Add PostgreSQL sidecar using JSON6902 patch
 - target:
