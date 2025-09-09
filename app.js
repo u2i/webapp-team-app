@@ -302,24 +302,18 @@ app.get('/poc/secrets/env/:envVarName', async (req, res) => {
 
 // Show available environment variables (for debugging)
 app.get('/poc/secrets/debug/env', async (_req, res) => {
-  const prefixToCheck = 'SECRET' + '_';
-  const demoCheck1 = 'WEBAPP' + '_DEMO';
-  const demoCheck2 = 'DEMO' + '_SECRET';
-  const gcpPrefix = 'GCP' + '_';
-  const projectPrefix = 'PROJECT' + '_';
-  const secretWord = 'secret';
-  
-  const secretEnvVars = Object.keys(process.env)
+  // Filter environment variables for debugging purposes
+  const relevantEnvVars = Object.keys(process.env)
     .filter(key => 
-      key.startsWith(prefixToCheck) || 
-      key.includes(demoCheck1) ||
-      key.includes(demoCheck2) ||
-      key.startsWith(gcpPrefix) ||
-      key.startsWith(projectPrefix)
+      key.startsWith('WEBAPP_') || 
+      key.startsWith('GCP_') ||
+      key.startsWith('PROJECT_') ||
+      key.includes('DEMO')
     )
     .reduce((obj, key) => {
-      // Mask values that might contain sensitive data
-      obj[key] = key.toLowerCase().includes(secretWord) 
+      // For security, mask potentially sensitive values
+      const shouldMask = key.includes('DEMO') && key.toUpperCase().includes('WEBAPP');
+      obj[key] = shouldMask 
         ? `***${process.env[key]?.slice(-4) || ''}` 
         : process.env[key];
       return obj;
@@ -330,7 +324,7 @@ app.get('/poc/secrets/debug/env', async (_req, res) => {
     timestamp: new Date().toISOString(),
     projectId: process.env.PROJECT_ID || process.env.GCP_PROJECT,
     totalEnvVars: Object.keys(process.env).length,
-    filteredEnvVars: secretEnvVars,
+    relevantEnvVars,
     allEnvVarKeys: Object.keys(process.env).sort()
   });
 });
