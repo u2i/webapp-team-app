@@ -1,14 +1,23 @@
 const express = require('express');
 const db = require('./db');
 const feedbackRouter = require('./feedback');
+const { attachDatabase, requireDatabase } = require('./middleware');
+const config = require('./config');
+const { getHealthStatus } = require('./health');
+
 const app = express();
-const port = process.env.PORT || 8080;
-const boundary = process.env.BOUNDARY || 'nonprod';
-const stage = process.env.STAGE || 'unknown';
-const version = process.env.VERSION || process.env.K_REVISION || 'local';
+
+// Validate configuration
+if (!config.validateConfig()) {
+  console.error('Invalid configuration detected');
+  process.exit(1);
+}
 
 // Middleware to parse JSON
 app.use(express.json());
+
+// Attach database to requests
+app.use(attachDatabase);
 
 
 // Check database connection and migration status
@@ -31,31 +40,59 @@ db.isEnabled()
   })
   .catch((err) => console.error('Database/migration error:', err));
 
-app.get('/health', (req, res) => {
-  res
-    .status(200)
-    .json({ 
-      status: 'healthy', 
+// Basic health check (fast, minimal info)
+app.get('/health', async (_req, res) => {
+  try {
+    const health = await getHealthStatus(false);
+    res.status(200).json(health);
+  } catch (error) {
+    res.status(503).json({ 
+      status: 'error', 
       timestamp: new Date().toISOString(),
-      migrationsRefactor: 'test-2025-09-08'
+      error: error.message 
     });
+  }
 });
 
-app.get('/ready', (req, res) => {
-  res
-    .status(200)
-    .json({ status: 'ready', timestamp: new Date().toISOString() });
+// Readiness check (same as health for now)
+app.get('/ready', async (_req, res) => {
+  try {
+    const health = await getHealthStatus(false);
+    const ready = { ...health, status: health.status === 'healthy' ? 'ready' : health.status };
+    res.status(health.status === 'healthy' ? 200 : 503).json(ready);
+  } catch (error) {
+    res.status(503).json({ 
+      status: 'error', 
+      timestamp: new Date().toISOString(),
+      error: error.message 
+    });
+  }
 });
 
-app.get('/', (req, res) => {
+// Detailed health check (includes database, memory, etc.)
+app.get('/health/detailed', async (_req, res) => {
+  try {
+    const health = await getHealthStatus(true);
+    const statusCode = health.status === 'healthy' ? 200 : 
+                      health.status === 'degraded' ? 207 : 503;
+    res.status(statusCode).json(health);
+  } catch (error) {
+    res.status(503).json({ 
+      status: 'error', 
+      timestamp: new Date().toISOString(),
+      error: error.message 
+    });
+  }
+});
+
+app.get('/', (_req, res) => {
   res.json({
     message: 'Hello from webapp! v12.0 - With AlloyDB Integration!',
-    boundary: boundary,
-    stage: stage,
-    version: version,
+    boundary: config.boundary,
+    stage: config.stage,
+    version: config.version,
     features: {
-      feedback: true,
-      alloydb: process.env.ALLOYDB_AUTH_PROXY === 'true',
+      ...config.features,
       endpoints: [
         'POST /feedback/submit - Submit new feedback',
         'GET /feedback/list - View feedback list',
@@ -67,19 +104,19 @@ app.get('/', (req, res) => {
     },
     region: 'europe-west1',
     compliance: 'iso27001-soc2-gdpr',
-    preview: process.env.PREVIEW_NAME || false,
+    preview: config.features.preview,
     deployment: 'simplified compliance-cli',
     timestamp: new Date().toISOString(),
   });
 });
 
-app.get('/info', (req, res) => {
+app.get('/info', (_req, res) => {
   res.json({
     app: 'webapp',
     team: 'webapp-team',
-    boundary: boundary,
-    stage: stage,
-    version: version,
+    boundary: config.boundary,
+    stage: config.stage,
+    version: config.version,
     environment: {
       node: process.version,
       uptime: process.uptime(),
@@ -87,29 +124,26 @@ app.get('/info', (req, res) => {
   });
 });
 
-// Database status endpoint
-app.get('/db/status', async (req, res) => {
+// Database status endpoint (legacy - redirects to detailed health)
+app.get('/db/status', async (_req, res) => {
   try {
-    const enabled = await db.isEnabled();
-    if (!enabled) {
-      return res.status(503).json({
-        database: { connected: false, message: 'Database not configured' },
+    const health = await getHealthStatus(true);
+    if (health.database) {
+      const statusCode = health.database.status === 'healthy' ? 200 : 503;
+      res.status(statusCode).json({
+        database: health.database.connected ? 
+          { connected: true, message: 'Connected' } : 
+          { connected: false, message: health.database.error || health.database.message },
+        enabled: health.database.status !== 'disabled',
+        migrations: health.database.migrations || { migrated: false, message: 'Unable to check migrations' }
+      });
+    } else {
+      res.status(503).json({
+        database: { connected: false, message: 'Database status unavailable' },
         enabled: false,
-        migrations: { migrated: false, message: 'Database not enabled' }
+        migrations: { migrated: false, message: 'Unable to check migrations' }
       });
     }
-    
-    const pool = await db.getPool();
-    await pool.query('SELECT 1');
-    
-    // Check migration status
-    const migrationStatus = await db.checkMigrations();
-    
-    res.json({
-      database: { connected: true, message: 'Connected' },
-      enabled: true,
-      migrations: migrationStatus
-    });
   } catch (error) {
     res.status(503).json({
       database: { connected: false, message: error.message },
@@ -120,12 +154,7 @@ app.get('/db/status', async (req, res) => {
 });
 
 // Get recent visits
-app.get('/db/visits', async (req, res) => {
-  const enabled = await db.isEnabled();
-  if (!enabled) {
-    return res.status(503).json({ error: 'Database not configured' });
-  }
-  
+app.get('/db/visits', requireDatabase, async (_req, res) => {
   try {
     const stats = await db.getVisitStats();
     res.json({ 
@@ -139,63 +168,57 @@ app.get('/db/visits', async (req, res) => {
   }
 });
 
-// AlloyDB Status Endpoint - shows connection details
-app.get('/db/alloydb-status', async (req, res) => {
-  const enabled = await db.isEnabled();
-  
-  const status = {
-    timestamp: new Date().toISOString(),
-    alloydb: {
-      enabled: process.env.ALLOYDB_AUTH_PROXY === 'true',
-      authProxy: {
-        configured: process.env.ALLOYDB_AUTH_PROXY === 'true',
-        connectionMethod: 'IAM Authentication'
+// AlloyDB Status Endpoint (legacy - use /health/detailed instead)
+app.get('/db/alloydb-status', async (_req, res) => {
+  try {
+    const health = await getHealthStatus(true);
+    const status = {
+      timestamp: health.timestamp,
+      alloydb: {
+        enabled: config.alloydb.authProxy,
+        authProxy: {
+          configured: config.alloydb.authProxy,
+          connectionMethod: 'IAM Authentication'
+        }
+      },
+      database: {
+        connected: health.database?.connected || false,
+        stage: config.stage,
+        boundary: config.boundary
       }
-    },
-    database: {
-      connected: enabled,
-      stage: process.env.STAGE || 'unknown',
-      boundary: process.env.BOUNDARY || 'unknown'
-    }
-  };
-  
-  if (enabled) {
-    try {
-      // Test the connection with a simple query
-      const result = await db.query('SELECT current_database(), current_user, version()');
+    };
+    
+    if (health.database?.alloydb) {
       status.database.details = {
-        database: result.rows[0].current_database,
-        user: result.rows[0].current_user,
-        version: result.rows[0].version.split(' ')[0] + ' ' + result.rows[0].version.split(' ')[1]
+        database: health.database.alloydb.database,
+        user: health.database.alloydb.user,
+        version: health.database.alloydb.version
       };
-      
-      // Get connection pool stats
-      const pool = await db.getPool();
-      status.database.pool = {
-        totalCount: pool.totalCount,
-        idleCount: pool.idleCount,
-        waitingCount: pool.waitingCount
-      };
-      
-      // Check migrations status
-      const migrations = await db.checkMigrations();
-      status.database.migrations = migrations;
-      
-    } catch (error) {
-      status.database.error = error.message;
     }
+    
+    if (health.database?.pool) {
+      status.database.pool = health.database.pool;
+    }
+    
+    if (health.database?.migrations) {
+      status.database.migrations = health.database.migrations;
+    }
+    
+    if (health.database?.error) {
+      status.database.error = health.database.error;
+    }
+    
+    res.json(status);
+  } catch (error) {
+    res.status(503).json({
+      timestamp: new Date().toISOString(),
+      error: error.message
+    });
   }
-  
-  res.json(status);
 });
 
 // Get feature flags
-app.get('/db/features', async (req, res) => {
-  const enabled = await db.isEnabled();
-  if (!enabled) {
-    return res.status(503).json({ error: 'Database not configured' });
-  }
-  
+app.get('/db/features', requireDatabase, async (_req, res) => {
   try {
     const flags = await db.getFeatureFlags();
     res.json({ features: flags });
@@ -235,10 +258,10 @@ app.use(async (req, res, next) => {
 
 // Only start server if this file is run directly (not in tests)
 if (require.main === module) {
-  app.listen(port, () => {
+  app.listen(config.port, () => {
     // eslint-disable-next-line no-console
     console.log(
-      `Server running on port ${port} in ${stage} stage (${boundary} boundary)`
+      `Server running on port ${config.port} in ${config.stage} stage (${config.boundary} boundary)`
     );
   });
 }

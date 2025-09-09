@@ -1,5 +1,11 @@
 const { Pool } = require('pg');
 const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
+const {
+  DB_POOL_MAX_CONNECTIONS,
+  DB_POOL_IDLE_TIMEOUT_MS,
+  DB_POOL_CONNECTION_TIMEOUT_MS,
+  ALLOYDB_STARTUP_DELAY_MS
+} = require('./constants');
 
 // Secret Manager configuration
 const PROJECT_ID = process.env.PROJECT_ID || process.env.GCP_PROJECT;
@@ -118,8 +124,8 @@ async function initializeDatabase() {
     try {
       // If using AlloyDB Auth Proxy, wait for it to be ready
       if (process.env.ALLOYDB_AUTH_PROXY === 'true') {
-        console.log('Waiting 20 seconds for AlloyDB Auth Proxy to be ready...');
-        await new Promise(resolve => setTimeout(resolve, 20000));
+        console.log(`Waiting ${ALLOYDB_STARTUP_DELAY_MS / 1000} seconds for AlloyDB Auth Proxy to be ready...`);
+        await new Promise(resolve => setTimeout(resolve, ALLOYDB_STARTUP_DELAY_MS));
       }
       
       const databaseUrl = await fetchDatabaseUrl();
@@ -136,9 +142,9 @@ async function initializeDatabase() {
           : BOUNDARY !== 'local' 
           ? { rejectUnauthorized: false } 
           : false,
-        max: 20,
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 2000,
+        max: DB_POOL_MAX_CONNECTIONS,
+        idleTimeoutMillis: DB_POOL_IDLE_TIMEOUT_MS,
+        connectionTimeoutMillis: DB_POOL_CONNECTION_TIMEOUT_MS,
       };
 
       if (databaseUrl) {

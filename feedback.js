@@ -1,16 +1,15 @@
 const express = require('express');
 const db = require('./db');
+const { requireDatabase } = require('./middleware');
+const { buildWhereClause, addPagination, buildCountQuery } = require('./query-builder');
+const { VALID_FEEDBACK_TYPES, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET } = require('./constants');
 
 const router = express.Router();
 
 /**
  * Submit new feedback
  */
-router.post('/submit', async (req, res) => {
-  const enabled = await db.isEnabled();
-  if (!enabled) {
-    return res.status(503).json({ error: 'Database not configured' });
-  }
+router.post('/submit', requireDatabase, async (req, res) => {
 
   const {
     user_id,
@@ -29,8 +28,7 @@ router.post('/submit', async (req, res) => {
   }
 
   // Validate feedback type
-  const validTypes = ['bug', 'feature', 'improvement', 'question', 'other'];
-  if (!validTypes.includes(feedback_type)) {
+  if (!VALID_FEEDBACK_TYPES.includes(feedback_type)) {
     return res.status(400).json({ 
       error: 'Invalid feedback type' 
     });
@@ -68,76 +66,32 @@ router.post('/submit', async (req, res) => {
 /**
  * Get feedback list (with optional filters)
  */
-router.get('/list', async (req, res) => {
-  const enabled = await db.isEnabled();
-  if (!enabled) {
-    return res.status(503).json({ error: 'Database not configured' });
-  }
-
+router.get('/list', requireDatabase, async (req, res) => {
   const { 
     status, 
     feedback_type, 
     priority,
     user_id,
-    limit = 20,
-    offset = 0
+    limit = DEFAULT_PAGE_LIMIT,
+    offset = DEFAULT_PAGE_OFFSET
   } = req.query;
 
   try {
     const pool = await db.getPool();
-    let query = 'SELECT * FROM user_feedback WHERE 1=1';
-    const params = [];
-    let paramCount = 0;
-
-    if (status) {
-      params.push(status);
-      query += ` AND status = $${++paramCount}`;
-    }
-    if (feedback_type) {
-      params.push(feedback_type);
-      query += ` AND feedback_type = $${++paramCount}`;
-    }
-    if (priority) {
-      params.push(priority);
-      query += ` AND priority = $${++paramCount}`;
-    }
-    if (user_id) {
-      params.push(user_id);
-      query += ` AND user_id = $${++paramCount}`;
-    }
-
-    query += ' ORDER BY created_at DESC';
     
-    params.push(parseInt(limit));
-    query += ` LIMIT $${++paramCount}`;
+    // Build the WHERE clause
+    const filters = { status, feedback_type, priority, user_id };
+    const validColumns = ['status', 'feedback_type', 'priority', 'user_id'];
+    const { query: whereClause, params: whereParams } = buildWhereClause(filters, validColumns);
     
-    params.push(parseInt(offset));
-    query += ` OFFSET $${++paramCount}`;
-
-    const result = await pool.query(query, params);
+    // Build the main query
+    const baseQuery = `SELECT * FROM user_feedback ${whereClause} ORDER BY created_at DESC`;
+    const { query: finalQuery, params: finalParams } = addPagination(baseQuery, whereParams, limit, offset);
+    
+    const result = await pool.query(finalQuery, finalParams);
 
     // Get total count for pagination
-    let countQuery = 'SELECT COUNT(*) FROM user_feedback WHERE 1=1';
-    const countParams = [];
-    paramCount = 0;
-
-    if (status) {
-      countParams.push(status);
-      countQuery += ` AND status = $${++paramCount}`;
-    }
-    if (feedback_type) {
-      countParams.push(feedback_type);
-      countQuery += ` AND feedback_type = $${++paramCount}`;
-    }
-    if (priority) {
-      countParams.push(priority);
-      countQuery += ` AND priority = $${++paramCount}`;
-    }
-    if (user_id) {
-      countParams.push(user_id);
-      countQuery += ` AND user_id = $${++paramCount}`;
-    }
-
+    const { query: countQuery, params: countParams } = buildCountQuery(baseQuery, whereParams);
     const countResult = await pool.query(countQuery, countParams);
 
     res.json({
@@ -155,11 +109,7 @@ router.get('/list', async (req, res) => {
 /**
  * Get specific feedback by ID
  */
-router.get('/:id', async (req, res) => {
-  const enabled = await db.isEnabled();
-  if (!enabled) {
-    return res.status(503).json({ error: 'Database not configured' });
-  }
+router.get('/:id', requireDatabase, async (req, res) => {
 
   const { id } = req.params;
 
@@ -211,11 +161,7 @@ router.get('/:id', async (req, res) => {
 /**
  * Vote on feedback
  */
-router.post('/:id/vote', async (req, res) => {
-  const enabled = await db.isEnabled();
-  if (!enabled) {
-    return res.status(503).json({ error: 'Database not configured' });
-  }
+router.post('/:id/vote', requireDatabase, async (req, res) => {
 
   const { id } = req.params;
   const { user_id, vote_type } = req.body;
@@ -268,11 +214,7 @@ router.post('/:id/vote', async (req, res) => {
 /**
  * Get feedback statistics
  */
-router.get('/stats/summary', async (req, res) => {
-  const enabled = await db.isEnabled();
-  if (!enabled) {
-    return res.status(503).json({ error: 'Database not configured' });
-  }
+router.get('/stats/summary', requireDatabase, async (req, res) => {
 
   try {
     const pool = await db.getPool();
