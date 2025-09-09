@@ -4,6 +4,7 @@ const feedbackRouter = require('./feedback');
 const { attachDatabase, requireDatabase } = require('./middleware');
 const config = require('./config');
 const { getHealthStatus } = require('./health');
+const SecretManagerPOC = require('./secret-manager-poc');
 
 const app = express();
 
@@ -107,7 +108,11 @@ app.get('/', (_req, res) => {
         'GET /feedback/:id - Get specific feedback',
         'POST /feedback/:id/vote - Vote on feedback',
         'GET /feedback/stats/summary - View statistics',
-        'GET /db/alloydb-status - AlloyDB connection status (NEW!)',
+        'GET /db/alloydb-status - AlloyDB connection status',
+        'GET /poc/secrets/compare - Compare Secret Manager approaches (NEW!)',
+        'GET /poc/secrets/client/:secretName - Test JavaScript client approach (NEW!)',
+        'GET /poc/secrets/env/:envVarName - Test environment variable approach (NEW!)',
+        'GET /poc/secrets/debug/env - Debug environment variables (NEW!)',
       ],
     },
     region: 'europe-west1',
@@ -239,6 +244,88 @@ app.get('/db/features', requireDatabase, async (_req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// SECRET MANAGER POC ENDPOINTS
+const secretPoc = new SecretManagerPOC();
+
+// Compare both secret approaches
+app.get('/poc/secrets/compare', async (_req, res) => {
+  try {
+    console.log('\n🔐 Starting Secret Manager POC comparison...');
+    const comparison = await secretPoc.compareApproaches();
+    res.json(comparison);
+  } catch (error) {
+    console.error('POC comparison failed:', error);
+    res.status(500).json({ 
+      error: 'Failed to run POC comparison',
+      details: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Test JavaScript client approach only
+app.get('/poc/secrets/client/:secretName', async (req, res) => {
+  try {
+    const { secretName } = req.params;
+    console.log(`\n🔐 Testing JavaScript client approach for: ${secretName}`);
+    const result = await secretPoc.fetchSecretViaClient(secretName);
+    res.json(result);
+  } catch (error) {
+    console.error('Client approach failed:', error);
+    res.status(500).json({ 
+      error: 'JavaScript client approach failed',
+      details: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Test environment variable approach only
+app.get('/poc/secrets/env/:envVarName', async (req, res) => {
+  try {
+    const { envVarName } = req.params;
+    const secretName = req.query.secret || envVarName;
+    console.log(`\n🔐 Testing environment variable approach: ${envVarName}`);
+    const result = secretPoc.getSecretViaEnvVar(envVarName, secretName);
+    res.json(result);
+  } catch (error) {
+    console.error('Environment variable approach failed:', error);
+    res.status(500).json({ 
+      error: 'Environment variable approach failed',
+      details: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Show available environment variables (for debugging)
+app.get('/poc/secrets/debug/env', async (_req, res) => {
+  const secretEnvVars = Object.keys(process.env)
+    .filter(key => 
+      key.startsWith('SECRET_') || 
+      key.includes('WEBAPP_DEMO') ||
+      key.includes('DEMO_SECRET') ||
+      key.startsWith('GCP_') ||
+      key.startsWith('PROJECT_')
+    )
+    .reduce((obj, key) => {
+      // Mask secret values for security
+      obj[key] = key.toLowerCase().includes('secret') 
+        ? `***${process.env[key]?.slice(-4) || ''}` 
+        : process.env[key];
+      return obj;
+    }, {});
+
+  res.json({
+    purpose: 'Debug environment variables for Secret Manager POC',
+    timestamp: new Date().toISOString(),
+    projectId: process.env.PROJECT_ID || process.env.GCP_PROJECT,
+    totalEnvVars: Object.keys(process.env).length,
+    secretRelatedEnvVars: secretEnvVars,
+    allEnvVarKeys: Object.keys(process.env).sort()
+  });
 });
 
 // Mount feedback router
