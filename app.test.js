@@ -10,7 +10,7 @@ describe('WebApp API Tests', () => {
   beforeEach(() => {
     // Clear module cache to get fresh app instance
     jest.resetModules();
-    
+
     // Clear mock calls
     jest.clearAllMocks();
 

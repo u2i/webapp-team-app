@@ -20,5 +20,5 @@ const attachDatabase = async (req, res, next) => {
 
 module.exports = {
   requireDatabase,
-  attachDatabase
+  attachDatabase,
 };

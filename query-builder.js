@@ -14,7 +14,10 @@ function buildWhereClause(filters, validColumns = []) {
   let paramCount = 0;
 
   for (const [key, value] of Object.entries(filters)) {
-    if (value != null && (validColumns.length === 0 || validColumns.includes(key))) {
+    if (
+      value != null &&
+      (validColumns.length === 0 || validColumns.includes(key))
+    ) {
       params.push(value);
       query += ` AND ${key} = $${++paramCount}`;
     }
@@ -34,13 +37,12 @@ function buildWhereClause(filters, validColumns = []) {
 function addPagination(baseQuery, baseParams, limit = 20, offset = 0) {
   const params = [...baseParams];
   let paramCount = baseParams.length;
-  
-  const query = baseQuery + 
-    ` LIMIT $${++paramCount}` + 
-    ` OFFSET $${++paramCount}`;
-  
+
+  const query =
+    baseQuery + ` LIMIT $${++paramCount}` + ` OFFSET $${++paramCount}`;
+
   params.push(parseInt(limit), parseInt(offset));
-  
+
   return { query, params };
 }
 
@@ -52,17 +54,19 @@ function addPagination(baseQuery, baseParams, limit = 20, offset = 0) {
  */
 function buildCountQuery(baseQuery, params) {
   // Extract the WHERE clause from the base query
-  const whereMatch = baseQuery.match(/WHERE .+?(?= ORDER BY| LIMIT| OFFSET|$)/i);
+  const whereMatch = baseQuery.match(
+    /WHERE .+?(?= ORDER BY| LIMIT| OFFSET|$)/i
+  );
   const whereClause = whereMatch ? whereMatch[0] : 'WHERE 1=1';
-  
+
   return {
     query: `SELECT COUNT(*) FROM user_feedback ${whereClause}`,
-    params
+    params,
   };
 }
 
 module.exports = {
   buildWhereClause,
   addPagination,
-  buildCountQuery
+  buildCountQuery,
 };

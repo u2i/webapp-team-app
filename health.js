@@ -10,7 +10,7 @@ async function getHealthStatus(includeDetails = false) {
   const timestamp = new Date().toISOString();
   const baseHealth = {
     status: 'healthy',
-    timestamp
+    timestamp,
   };
 
   if (!includeDetails) {
@@ -25,8 +25,8 @@ async function getHealthStatus(includeDetails = false) {
       boundary: config.boundary,
       uptime: process.uptime(),
       memory: process.memoryUsage(),
-      node: process.version
-    }
+      node: process.version,
+    },
   };
 
   // Database health check
@@ -34,37 +34,42 @@ async function getHealthStatus(includeDetails = false) {
     const dbEnabled = await db.isEnabled();
     if (dbEnabled) {
       const pool = await db.getPool();
-      
+
       // Test database connection
       try {
         await pool.query('SELECT 1');
         const migrationStatus = await db.checkMigrations();
-        
+
         health.database = {
           status: 'healthy',
           connected: true,
           pool: {
             totalCount: pool.totalCount,
             idleCount: pool.idleCount,
-            waitingCount: pool.waitingCount
+            waitingCount: pool.waitingCount,
           },
-          migrations: migrationStatus
+          migrations: migrationStatus,
         };
 
         // AlloyDB specific info
         if (config.alloydb.authProxy) {
           try {
-            const result = await db.query('SELECT current_database(), current_user, version()');
+            const result = await db.query(
+              'SELECT current_database(), current_user, version()'
+            );
             health.database.alloydb = {
               enabled: true,
               database: result.rows[0].current_database,
               user: result.rows[0].current_user,
-              version: result.rows[0].version.split(' ')[0] + ' ' + result.rows[0].version.split(' ')[1]
+              version:
+                result.rows[0].version.split(' ')[0] +
+                ' ' +
+                result.rows[0].version.split(' ')[1],
             };
           } catch (error) {
             health.database.alloydb = {
               enabled: true,
-              error: error.message
+              error: error.message,
             };
           }
         }
@@ -72,7 +77,7 @@ async function getHealthStatus(includeDetails = false) {
         health.database = {
           status: 'unhealthy',
           connected: false,
-          error: error.message
+          error: error.message,
         };
         health.status = 'degraded';
       }
@@ -80,13 +85,13 @@ async function getHealthStatus(includeDetails = false) {
       health.database = {
         status: 'disabled',
         connected: false,
-        message: 'Database not configured'
+        message: 'Database not configured',
       };
     }
   } catch (error) {
     health.database = {
       status: 'error',
-      error: error.message
+      error: error.message,
     };
     health.status = 'degraded';
   }
@@ -95,5 +100,5 @@ async function getHealthStatus(includeDetails = false) {
 }
 
 module.exports = {
-  getHealthStatus
+  getHealthStatus,
 };

@@ -19,7 +19,6 @@ app.use(express.json());
 // Attach database to requests
 app.use(attachDatabase);
 
-
 // Check database connection and migration status
 db.isEnabled()
   .then((enabled) => {
@@ -32,7 +31,9 @@ db.isEnabled()
   .then((migrationStatus) => {
     if (migrationStatus) {
       if (migrationStatus.migrated) {
-        console.log(`Database migrations up to date. Latest: ${migrationStatus.latest}`);
+        console.log(
+          `Database migrations up to date. Latest: ${migrationStatus.latest}`
+        );
       } else {
         console.warn('Database migrations not run:', migrationStatus.message);
       }
@@ -46,10 +47,10 @@ app.get('/health', async (_req, res) => {
     const health = await getHealthStatus(false);
     res.status(200).json(health);
   } catch (error) {
-    res.status(503).json({ 
-      status: 'error', 
+    res.status(503).json({
+      status: 'error',
       timestamp: new Date().toISOString(),
-      error: error.message 
+      error: error.message,
     });
   }
 });
@@ -58,13 +59,16 @@ app.get('/health', async (_req, res) => {
 app.get('/ready', async (_req, res) => {
   try {
     const health = await getHealthStatus(false);
-    const ready = { ...health, status: health.status === 'healthy' ? 'ready' : health.status };
+    const ready = {
+      ...health,
+      status: health.status === 'healthy' ? 'ready' : health.status,
+    };
     res.status(health.status === 'healthy' ? 200 : 503).json(ready);
   } catch (error) {
-    res.status(503).json({ 
-      status: 'error', 
+    res.status(503).json({
+      status: 'error',
       timestamp: new Date().toISOString(),
-      error: error.message 
+      error: error.message,
     });
   }
 });
@@ -73,14 +77,18 @@ app.get('/ready', async (_req, res) => {
 app.get('/health/detailed', async (_req, res) => {
   try {
     const health = await getHealthStatus(true);
-    const statusCode = health.status === 'healthy' ? 200 : 
-                      health.status === 'degraded' ? 207 : 503;
+    const statusCode =
+      health.status === 'healthy'
+        ? 200
+        : health.status === 'degraded'
+          ? 207
+          : 503;
     res.status(statusCode).json(health);
   } catch (error) {
-    res.status(503).json({ 
-      status: 'error', 
+    res.status(503).json({
+      status: 'error',
       timestamp: new Date().toISOString(),
-      error: error.message 
+      error: error.message,
     });
   }
 });
@@ -99,8 +107,8 @@ app.get('/', (_req, res) => {
         'GET /feedback/:id - Get specific feedback',
         'POST /feedback/:id/vote - Vote on feedback',
         'GET /feedback/stats/summary - View statistics',
-        'GET /db/alloydb-status - AlloyDB connection status (NEW!)'
-      ]
+        'GET /db/alloydb-status - AlloyDB connection status (NEW!)',
+      ],
     },
     region: 'europe-west1',
     compliance: 'iso27001-soc2-gdpr',
@@ -131,24 +139,30 @@ app.get('/db/status', async (_req, res) => {
     if (health.database) {
       const statusCode = health.database.status === 'healthy' ? 200 : 503;
       res.status(statusCode).json({
-        database: health.database.connected ? 
-          { connected: true, message: 'Connected' } : 
-          { connected: false, message: health.database.error || health.database.message },
+        database: health.database.connected
+          ? { connected: true, message: 'Connected' }
+          : {
+              connected: false,
+              message: health.database.error || health.database.message,
+            },
         enabled: health.database.status !== 'disabled',
-        migrations: health.database.migrations || { migrated: false, message: 'Unable to check migrations' }
+        migrations: health.database.migrations || {
+          migrated: false,
+          message: 'Unable to check migrations',
+        },
       });
     } else {
       res.status(503).json({
         database: { connected: false, message: 'Database status unavailable' },
         enabled: false,
-        migrations: { migrated: false, message: 'Unable to check migrations' }
+        migrations: { migrated: false, message: 'Unable to check migrations' },
       });
     }
   } catch (error) {
     res.status(503).json({
       database: { connected: false, message: error.message },
       enabled: false,
-      migrations: { migrated: false, message: 'Unable to check migrations' }
+      migrations: { migrated: false, message: 'Unable to check migrations' },
     });
   }
 });
@@ -157,11 +171,11 @@ app.get('/db/status', async (_req, res) => {
 app.get('/db/visits', requireDatabase, async (_req, res) => {
   try {
     const stats = await db.getVisitStats();
-    res.json({ 
-      visits: stats.recentVisits, 
+    res.json({
+      visits: stats.recentVisits,
       count: stats.recentVisits.length,
       totalVisits: stats.totalVisits,
-      uniquePaths: stats.uniquePaths
+      uniquePaths: stats.uniquePaths,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -178,41 +192,41 @@ app.get('/db/alloydb-status', async (_req, res) => {
         enabled: config.alloydb.authProxy,
         authProxy: {
           configured: config.alloydb.authProxy,
-          connectionMethod: 'IAM Authentication'
-        }
+          connectionMethod: 'IAM Authentication',
+        },
       },
       database: {
         connected: health.database?.connected || false,
         stage: config.stage,
-        boundary: config.boundary
-      }
+        boundary: config.boundary,
+      },
     };
-    
+
     if (health.database?.alloydb) {
       status.database.details = {
         database: health.database.alloydb.database,
         user: health.database.alloydb.user,
-        version: health.database.alloydb.version
+        version: health.database.alloydb.version,
       };
     }
-    
+
     if (health.database?.pool) {
       status.database.pool = health.database.pool;
     }
-    
+
     if (health.database?.migrations) {
       status.database.migrations = health.database.migrations;
     }
-    
+
     if (health.database?.error) {
       status.database.error = health.database.error;
     }
-    
+
     res.json(status);
   } catch (error) {
     res.status(503).json({
       timestamp: new Date().toISOString(),
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -237,9 +251,10 @@ app.use(async (req, res, next) => {
   if (enabled) {
     try {
       const userAgent = req.headers['user-agent'] || 'unknown';
-      const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+      const ipAddress =
+        req.headers['x-forwarded-for'] || req.socket.remoteAddress;
       const startTime = Date.now();
-      
+
       // Log response time after response is sent
       res.on('finish', async () => {
         const responseTime = Date.now() - startTime;

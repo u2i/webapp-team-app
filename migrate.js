@@ -28,7 +28,9 @@ async function fetchDatabaseUrl() {
 
   // Skip Secret Manager for preview environments
   if (STAGE === 'preview') {
-    console.log('Preview environment: skipping Secret Manager (use ConfigMap instead)');
+    console.log(
+      'Preview environment: skipping Secret Manager (use ConfigMap instead)'
+    );
     return null;
   }
 
@@ -38,8 +40,10 @@ async function fetchDatabaseUrl() {
   }
 
   // Check if AlloyDB Auth Proxy is being used
-  const useAuthProxy = process.env.ALLOYDB_AUTH_PROXY === 'true' || process.env.USE_AUTH_PROXY === 'true';
-  
+  const useAuthProxy =
+    process.env.ALLOYDB_AUTH_PROXY === 'true' ||
+    process.env.USE_AUTH_PROXY === 'true';
+
   // If using Auth Proxy with IAM auth, no secrets needed
   if (useAuthProxy) {
     console.log('AlloyDB Auth Proxy detected with IAM authentication');
@@ -54,31 +58,36 @@ async function fetchDatabaseUrl() {
 
   // Construct the secret name based on boundary
   const secretName = `webapp-${BOUNDARY}-alloydb-connection`;
-  
+
   try {
     // Create Secret Manager client when needed
     console.log('Creating Secret Manager client...');
     console.log('NODE_ENV:', process.env.NODE_ENV);
-    console.log('GOOGLE_APPLICATION_CREDENTIALS:', process.env.GOOGLE_APPLICATION_CREDENTIALS);
+    console.log(
+      'GOOGLE_APPLICATION_CREDENTIALS:',
+      process.env.GOOGLE_APPLICATION_CREDENTIALS
+    );
     console.log('GCE_METADATA_HOST:', process.env.GCE_METADATA_HOST);
-    
+
     // Ensure metadata server is set for GKE
     if (!process.env.GCE_METADATA_HOST) {
       process.env.GCE_METADATA_HOST = 'metadata.google.internal';
     }
-    
+
     const secretClient = new SecretManagerServiceClient();
     console.log('Client created successfully');
-    
+
     const name = `projects/${PROJECT_ID}/secrets/${secretName}/versions/latest`;
-    
-    console.log(`Fetching database credentials from Secret Manager: ${secretName}`);
+
+    console.log(
+      `Fetching database credentials from Secret Manager: ${secretName}`
+    );
     console.log(`Project: ${PROJECT_ID}`);
-    
+
     // Direct call without timeout to see actual error
     const [version] = await secretClient.accessSecretVersion({ name });
     const payload = version.payload.data.toString('utf8');
-    
+
     // If using Auth Proxy with IAM auth, build localhost connection string without password
     if (useAuthProxy) {
       console.log('AlloyDB Auth Proxy detected with IAM authentication');
@@ -88,8 +97,10 @@ async function fetchDatabaseUrl() {
       console.log(`Connecting as IAM user: ${connectionInfo.username}`);
       return databaseUrl;
     }
-    
-    console.log('Successfully retrieved database credentials from Secret Manager');
+
+    console.log(
+      'Successfully retrieved database credentials from Secret Manager'
+    );
     return payload;
   } catch (error) {
     console.error('Secret Manager error details:', error);
@@ -98,37 +109,45 @@ async function fetchDatabaseUrl() {
     // If it's a permission issue, try to provide more context
     if (error.code === 7 || error.code === 403) {
       console.error('This might be a workload identity issue. Check that:');
-      console.error(`1. Service account webapp-k8s@${PROJECT_ID}.iam.gserviceaccount.com exists`);
-      console.error(`2. It has secretmanager.secretAccessor role for secret ${secretName}`);
-      console.error(`3. Workload identity binding exists for namespace ${process.env.NAMESPACE || 'unknown'}`);
+      console.error(
+        `1. Service account webapp-k8s@${PROJECT_ID}.iam.gserviceaccount.com exists`
+      );
+      console.error(
+        `2. It has secretmanager.secretAccessor role for secret ${secretName}`
+      );
+      console.error(
+        `3. Workload identity binding exists for namespace ${process.env.NAMESPACE || 'unknown'}`
+      );
     }
-    throw new Error(`Failed to fetch database credentials from Secret Manager: ${error.message}`);
+    throw new Error(
+      `Failed to fetch database credentials from Secret Manager: ${error.message}`
+    );
   }
 }
 
 async function createDatabaseIfNotExists(databaseUrl) {
   const { Client } = require('pg');
-  
+
   // Parse the database URL to extract components
   const url = new URL(databaseUrl.replace('postgresql://', 'postgres://'));
   const targetDatabase = url.pathname.substring(1); // Remove leading slash
-  
+
   // Connect to postgres database first (always exists)
   url.pathname = '/postgres';
   const adminUrl = url.toString();
-  
+
   const client = new Client({ connectionString: adminUrl });
-  
+
   try {
     console.log(`Checking if database '${targetDatabase}' exists...`);
     await client.connect();
-    
+
     // Check if database exists
     const result = await client.query(
       'SELECT 1 FROM pg_database WHERE datname = $1',
       [targetDatabase]
     );
-    
+
     if (result.rows.length === 0) {
       console.log(`Database '${targetDatabase}' does not exist. Creating...`);
       // Use quoted identifier to handle special characters
@@ -147,23 +166,27 @@ async function createDatabaseIfNotExists(databaseUrl) {
 
 async function runMigrations() {
   console.log('Starting database migrations...');
-  
+
   // If using AlloyDB Auth Proxy, wait for it to be ready
   if (process.env.ALLOYDB_AUTH_PROXY === 'true') {
     console.log('Waiting 20 seconds for AlloyDB Auth Proxy to be ready...');
-    await new Promise(resolve => setTimeout(resolve, 20000));
+    await new Promise((resolve) => setTimeout(resolve, 20000));
   }
-  
+
   console.log(`Environment: ${STAGE} (${BOUNDARY} boundary)`);
-  
+
   try {
     // Fetch database URL
     const databaseUrl = await fetchDatabaseUrl();
-    
+
     if (!databaseUrl) {
       if (STAGE === 'preview') {
-        console.log('No database configured for preview environment, skipping migrations');
-        console.log('To enable database: create webapp-neon-db-config ConfigMap');
+        console.log(
+          'No database configured for preview environment, skipping migrations'
+        );
+        console.log(
+          'To enable database: create webapp-neon-db-config ConfigMap'
+        );
         process.exit(0);
       }
       throw new Error('No database configuration available');
@@ -175,18 +198,22 @@ async function runMigrations() {
     // Get command line arguments (default to 'up')
     const args = process.argv.slice(2);
     const command = args[0] || 'up';
-    
+
     console.log(`Running migrations: ${command}`);
-    
+
     // Run node-pg-migrate using npx to ensure it's found
-    const migrate = spawn('npx', ['node-pg-migrate', command, ...args.slice(1)], {
-      env: {
-        ...process.env,
-        DATABASE_URL: databaseUrl
-      },
-      stdio: 'inherit',
-      cwd: process.cwd()
-    });
+    const migrate = spawn(
+      'npx',
+      ['node-pg-migrate', command, ...args.slice(1)],
+      {
+        env: {
+          ...process.env,
+          DATABASE_URL: databaseUrl,
+        },
+        stdio: 'inherit',
+        cwd: process.cwd(),
+      }
+    );
 
     migrate.on('error', (error) => {
       console.error('Failed to start migration process:', error);
@@ -201,7 +228,6 @@ async function runMigrations() {
       console.log('Migrations completed successfully');
       process.exit(0);
     });
-
   } catch (error) {
     console.error('Migration failed:', error.message);
     process.exit(1);
