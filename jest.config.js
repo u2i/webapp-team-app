@@ -2,6 +2,7 @@ module.exports = {
   testEnvironment: 'node',
   collectCoverageFrom: [
     'app.js',
+    'secret-manager-poc.js',
     '!node_modules/**',
     '!coverage/**',
     '!jest.config.js',
