@@ -8,9 +8,10 @@ set -euo pipefail
 # Configuration
 PROJECT_ID="u2i-tenant-webapp-nonprod"
 SERVICE_ACCOUNT="webapp-k8s@${PROJECT_ID}.iam.gserviceaccount.com"
-SPECIFIC_MEMBER="serviceAccount:${PROJECT_ID}.svc.id.goog[webapp-preview-pr225/webapp]"
+PR_NUMBER="${1:-226}"  # Default to PR 226, allow override via argument
+SPECIFIC_MEMBER="serviceAccount:${PROJECT_ID}.svc.id.goog[webapp-preview-pr${PR_NUMBER}/webapp]"
 
-echo "🔐 Setting up workload identity binding for PR 225 preview environment..."
+echo "🔐 Setting up workload identity binding for PR ${PR_NUMBER} preview environment..."
 echo "Project: ${PROJECT_ID}"
 echo "Service Account: ${SERVICE_ACCOUNT}"
 echo "Specific Member: ${SPECIFIC_MEMBER}"
@@ -20,12 +21,12 @@ echo
 echo "📋 Checking existing IAM policy..."
 EXISTING_POLICY=$(gcloud iam service-accounts get-iam-policy "${SERVICE_ACCOUNT}" --project="${PROJECT_ID}" --format=json)
 
-if echo "${EXISTING_POLICY}" | jq -r '.bindings[]? | select(.role=="roles/iam.workloadIdentityUser") | .members[]?' | grep -q "webapp-preview-pr225"; then
-    echo "✅ PR 225 workload identity binding already exists"
+if echo "${EXISTING_POLICY}" | jq -r '.bindings[]? | select(.role=="roles/iam.workloadIdentityUser") | .members[]?' | grep -q "webapp-preview-pr${PR_NUMBER}"; then
+    echo "✅ PR ${PR_NUMBER} workload identity binding already exists"
     echo "Current bindings for roles/iam.workloadIdentityUser:"
     echo "${EXISTING_POLICY}" | jq -r '.bindings[]? | select(.role=="roles/iam.workloadIdentityUser") | .members[]?' | grep "webapp-preview" || true
 else
-    echo "➕ Adding PR 225 workload identity binding..."
+    echo "➕ Adding PR ${PR_NUMBER} workload identity binding..."
     
     gcloud iam service-accounts add-iam-policy-binding \
         "${SERVICE_ACCOUNT}" \
@@ -34,7 +35,7 @@ else
         --member="${SPECIFIC_MEMBER}" \
         --quiet
     
-    echo "✅ PR 225 workload identity binding added successfully!"
+    echo "✅ PR ${PR_NUMBER} workload identity binding added successfully!"
 fi
 
 echo
