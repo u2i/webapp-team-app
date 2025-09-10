@@ -7,6 +7,7 @@ resources:
 - ../../base
 - ../../../namespace/namespace.yml
 - ../../../gcp/certificate.yml
+- external-secret.yml
 
 patches:
 # Adjust resources and configuration
@@ -142,7 +143,4 @@ configMapGenerator:
     - LOG_LEVEL=debug
     - GRACEFUL_SHUTDOWN_TIMEOUT=5s
 
-secretGenerator:
-- name: webapp-demo-secret
-  literals:
-    - webapp-demo-secret=demo-secret-nonprod-environment-12345
+# External Secrets configuration will be added as a separate resource file
