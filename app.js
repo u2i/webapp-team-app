@@ -96,7 +96,7 @@ app.get('/health/detailed', async (_req, res) => {
 
 app.get('/', (_req, res) => {
   res.json({
-    message: 'Hello from webapp! v12.0 - With AlloyDB Integration!',
+    message: 'Hello from webapp! v12.1 - Secret Manager POC Complete!',
     boundary: config.boundary,
     stage: config.stage,
     version: config.version,
