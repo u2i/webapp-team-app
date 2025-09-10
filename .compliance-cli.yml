@@ -88,6 +88,22 @@ neon:
   # Script location for database management
   manager_script: /workspace/u2i-infrastructure/scripts/neon-preview-manager.py
 
+# Workload Identity configuration for preview environments
+workload_identity:
+  # Enable workload identity setup for preview environments
+  enabled: true
+  
+  # Service account to bind workload identity to
+  service_account: "webapp-k8s@u2i-tenant-webapp-nonprod.iam.gserviceaccount.com"
+  
+  # IAM role to assign
+  role: "roles/iam.workloadIdentityUser"
+  
+  # Secrets that the service account needs access to
+  secrets:
+    - name: "webapp-demo-secret"
+      role: "roles/secretmanager.secretAccessor"
+
 # Validation configuration for PR checks
 validation:
   # Enable comprehensive validation checks
