@@ -7,7 +7,7 @@ resources:
 - ../../base
 - ../../../namespace/namespace.yml
 - ../../../gcp/certificate.yml
-- external-secret.yml
+- secret.yml
 
 patches:
 # Adjust resources and configuration
