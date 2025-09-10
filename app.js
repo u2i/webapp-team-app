@@ -1,15 +1,24 @@
 const express = require('express');
 const db = require('./db');
 const feedbackRouter = require('./feedback');
+const { attachDatabase, requireDatabase } = require('./middleware');
+const config = require('./config');
+const { getHealthStatus } = require('./health');
+const SecretManagerPOC = require('./secret-manager-poc');
+
 const app = express();
-const port = process.env.PORT || 8080;
-const boundary = process.env.BOUNDARY || 'nonprod';
-const stage = process.env.STAGE || 'unknown';
-const version = process.env.VERSION || process.env.K_REVISION || 'local';
+
+// Validate configuration
+if (!config.validateConfig()) {
+  console.error('Invalid configuration detected');
+  process.exit(1);
+}
 
 // Middleware to parse JSON
 app.use(express.json());
 
+// Attach database to requests
+app.use(attachDatabase);
 
 // Check database connection and migration status
 db.isEnabled()
@@ -23,7 +32,9 @@ db.isEnabled()
   .then((migrationStatus) => {
     if (migrationStatus) {
       if (migrationStatus.migrated) {
-        console.log(`Database migrations up to date. Latest: ${migrationStatus.latest}`);
+        console.log(
+          `Database migrations up to date. Latest: ${migrationStatus.latest}`
+        );
       } else {
         console.warn('Database migrations not run:', migrationStatus.message);
       }
@@ -31,55 +42,94 @@ db.isEnabled()
   })
   .catch((err) => console.error('Database/migration error:', err));
 
-app.get('/health', (req, res) => {
-  res
-    .status(200)
-    .json({ 
-      status: 'healthy', 
+// Basic health check (fast, minimal info)
+app.get('/health', async (_req, res) => {
+  try {
+    const health = await getHealthStatus(false);
+    res.status(200).json(health);
+  } catch (error) {
+    res.status(503).json({
+      status: 'error',
       timestamp: new Date().toISOString(),
-      migrationsRefactor: 'test-2025-09-08'
+      error: error.message,
     });
+  }
 });
 
-app.get('/ready', (req, res) => {
-  res
-    .status(200)
-    .json({ status: 'ready', timestamp: new Date().toISOString() });
+// Readiness check (same as health for now)
+app.get('/ready', async (_req, res) => {
+  try {
+    const health = await getHealthStatus(false);
+    const ready = {
+      ...health,
+      status: health.status === 'healthy' ? 'ready' : health.status,
+    };
+    res.status(health.status === 'healthy' ? 200 : 503).json(ready);
+  } catch (error) {
+    res.status(503).json({
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      error: error.message,
+    });
+  }
 });
 
-app.get('/', (req, res) => {
+// Detailed health check (includes database, memory, etc.)
+app.get('/health/detailed', async (_req, res) => {
+  try {
+    const health = await getHealthStatus(true);
+    const statusCode =
+      health.status === 'healthy'
+        ? 200
+        : health.status === 'degraded'
+          ? 207
+          : 503;
+    res.status(statusCode).json(health);
+  } catch (error) {
+    res.status(503).json({
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      error: error.message,
+    });
+  }
+});
+
+app.get('/', (_req, res) => {
   res.json({
     message: 'Hello from webapp! v12.0 - With AlloyDB Integration!',
-    boundary: boundary,
-    stage: stage,
-    version: version,
+    boundary: config.boundary,
+    stage: config.stage,
+    version: config.version,
     features: {
-      feedback: true,
-      alloydb: process.env.ALLOYDB_AUTH_PROXY === 'true',
+      ...config.features,
       endpoints: [
         'POST /feedback/submit - Submit new feedback',
         'GET /feedback/list - View feedback list',
         'GET /feedback/:id - Get specific feedback',
         'POST /feedback/:id/vote - Vote on feedback',
         'GET /feedback/stats/summary - View statistics',
-        'GET /db/alloydb-status - AlloyDB connection status (NEW!)'
-      ]
+        'GET /db/alloydb-status - AlloyDB connection status',
+        'GET /poc/secrets/compare - Compare Secret Manager approaches (NEW!)',
+        'GET /poc/secrets/client/:secretName - Test JavaScript client approach (NEW!)',
+        'GET /poc/secrets/env/:envVarName - Test environment variable approach (NEW!)',
+        'GET /poc/secrets/debug/env - Debug environment variables (NEW!)',
+      ],
     },
     region: 'europe-west1',
     compliance: 'iso27001-soc2-gdpr',
-    preview: process.env.PREVIEW_NAME || false,
+    preview: config.features.preview,
     deployment: 'simplified compliance-cli',
     timestamp: new Date().toISOString(),
   });
 });
 
-app.get('/info', (req, res) => {
+app.get('/info', (_req, res) => {
   res.json({
     app: 'webapp',
     team: 'webapp-team',
-    boundary: boundary,
-    stage: stage,
-    version: version,
+    boundary: config.boundary,
+    stage: config.stage,
+    version: config.version,
     environment: {
       node: process.version,
       uptime: process.uptime(),
@@ -87,121 +137,196 @@ app.get('/info', (req, res) => {
   });
 });
 
-// Database status endpoint
-app.get('/db/status', async (req, res) => {
+// Database status endpoint (legacy - redirects to detailed health)
+app.get('/db/status', async (_req, res) => {
   try {
-    const enabled = await db.isEnabled();
-    if (!enabled) {
-      return res.status(503).json({
-        database: { connected: false, message: 'Database not configured' },
+    const health = await getHealthStatus(true);
+    if (health.database) {
+      const statusCode = health.database.status === 'healthy' ? 200 : 503;
+      res.status(statusCode).json({
+        database: health.database.connected
+          ? { connected: true, message: 'Connected' }
+          : {
+              connected: false,
+              message: health.database.error || health.database.message,
+            },
+        enabled: health.database.status !== 'disabled',
+        migrations: health.database.migrations || {
+          migrated: false,
+          message: 'Unable to check migrations',
+        },
+      });
+    } else {
+      res.status(503).json({
+        database: { connected: false, message: 'Database status unavailable' },
         enabled: false,
-        migrations: { migrated: false, message: 'Database not enabled' }
+        migrations: { migrated: false, message: 'Unable to check migrations' },
       });
     }
-    
-    const pool = await db.getPool();
-    await pool.query('SELECT 1');
-    
-    // Check migration status
-    const migrationStatus = await db.checkMigrations();
-    
-    res.json({
-      database: { connected: true, message: 'Connected' },
-      enabled: true,
-      migrations: migrationStatus
-    });
   } catch (error) {
     res.status(503).json({
       database: { connected: false, message: error.message },
       enabled: false,
-      migrations: { migrated: false, message: 'Unable to check migrations' }
+      migrations: { migrated: false, message: 'Unable to check migrations' },
     });
   }
 });
 
 // Get recent visits
-app.get('/db/visits', async (req, res) => {
-  const enabled = await db.isEnabled();
-  if (!enabled) {
-    return res.status(503).json({ error: 'Database not configured' });
-  }
-  
+app.get('/db/visits', requireDatabase, async (_req, res) => {
   try {
     const stats = await db.getVisitStats();
-    res.json({ 
-      visits: stats.recentVisits, 
+    res.json({
+      visits: stats.recentVisits,
       count: stats.recentVisits.length,
       totalVisits: stats.totalVisits,
-      uniquePaths: stats.uniquePaths
+      uniquePaths: stats.uniquePaths,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// AlloyDB Status Endpoint - shows connection details
-app.get('/db/alloydb-status', async (req, res) => {
-  const enabled = await db.isEnabled();
-  
-  const status = {
-    timestamp: new Date().toISOString(),
-    alloydb: {
-      enabled: process.env.ALLOYDB_AUTH_PROXY === 'true',
-      authProxy: {
-        configured: process.env.ALLOYDB_AUTH_PROXY === 'true',
-        connectionMethod: 'IAM Authentication'
-      }
-    },
-    database: {
-      connected: enabled,
-      stage: process.env.STAGE || 'unknown',
-      boundary: process.env.BOUNDARY || 'unknown'
-    }
-  };
-  
-  if (enabled) {
-    try {
-      // Test the connection with a simple query
-      const result = await db.query('SELECT current_database(), current_user, version()');
+// AlloyDB Status Endpoint (legacy - use /health/detailed instead)
+app.get('/db/alloydb-status', async (_req, res) => {
+  try {
+    const health = await getHealthStatus(true);
+    const status = {
+      timestamp: health.timestamp,
+      alloydb: {
+        enabled: config.alloydb.authProxy,
+        authProxy: {
+          configured: config.alloydb.authProxy,
+          connectionMethod: 'IAM Authentication',
+        },
+      },
+      database: {
+        connected: health.database?.connected || false,
+        stage: config.stage,
+        boundary: config.boundary,
+      },
+    };
+
+    if (health.database?.alloydb) {
       status.database.details = {
-        database: result.rows[0].current_database,
-        user: result.rows[0].current_user,
-        version: result.rows[0].version.split(' ')[0] + ' ' + result.rows[0].version.split(' ')[1]
+        database: health.database.alloydb.database,
+        user: health.database.alloydb.user,
+        version: health.database.alloydb.version,
       };
-      
-      // Get connection pool stats
-      const pool = await db.getPool();
-      status.database.pool = {
-        totalCount: pool.totalCount,
-        idleCount: pool.idleCount,
-        waitingCount: pool.waitingCount
-      };
-      
-      // Check migrations status
-      const migrations = await db.checkMigrations();
-      status.database.migrations = migrations;
-      
-    } catch (error) {
-      status.database.error = error.message;
     }
+
+    if (health.database?.pool) {
+      status.database.pool = health.database.pool;
+    }
+
+    if (health.database?.migrations) {
+      status.database.migrations = health.database.migrations;
+    }
+
+    if (health.database?.error) {
+      status.database.error = health.database.error;
+    }
+
+    res.json(status);
+  } catch (error) {
+    res.status(503).json({
+      timestamp: new Date().toISOString(),
+      error: error.message,
+    });
   }
-  
-  res.json(status);
 });
 
 // Get feature flags
-app.get('/db/features', async (req, res) => {
-  const enabled = await db.isEnabled();
-  if (!enabled) {
-    return res.status(503).json({ error: 'Database not configured' });
-  }
-  
+app.get('/db/features', requireDatabase, async (_req, res) => {
   try {
     const flags = await db.getFeatureFlags();
     res.json({ features: flags });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// SECRET MANAGER POC ENDPOINTS
+const secretPoc = new SecretManagerPOC();
+
+// Compare both secret approaches
+app.get('/poc/secrets/compare', async (_req, res) => {
+  try {
+    console.log('\n🔐 Starting Secret Manager POC comparison...');
+    const comparison = await secretPoc.compareApproaches();
+    res.json(comparison);
+  } catch (error) {
+    console.error('POC comparison failed:', error);
+    res.status(500).json({ 
+      error: 'Failed to run POC comparison',
+      details: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Test JavaScript client approach only
+app.get('/poc/secrets/client/:secretName', async (req, res) => {
+  try {
+    const { secretName } = req.params;
+    console.log(`\n🔐 Testing JavaScript client approach for: ${secretName}`);
+    const result = await secretPoc.fetchSecretViaClient(secretName);
+    res.json(result);
+  } catch (error) {
+    console.error('Client approach failed:', error);
+    res.status(500).json({ 
+      error: 'JavaScript client approach failed',
+      details: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Test environment variable approach only
+app.get('/poc/secrets/env/:envVarName', async (req, res) => {
+  try {
+    const { envVarName } = req.params;
+    const secretName = req.query.secret || envVarName;
+    console.log(`\n🔐 Testing environment variable approach: ${envVarName}`);
+    const result = secretPoc.getSecretViaEnvVar(envVarName, secretName);
+    res.json(result);
+  } catch (error) {
+    console.error('Environment variable approach failed:', error);
+    res.status(500).json({ 
+      error: 'Environment variable approach failed',
+      details: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Show available environment variables (for debugging)
+app.get('/poc/secrets/debug/env', async (_req, res) => {
+  // Filter environment variables for debugging purposes
+  const relevantEnvVars = Object.keys(process.env)
+    .filter(key => 
+      key.startsWith('WEBAPP_') || 
+      key.startsWith('GCP_') ||
+      key.startsWith('PROJECT_') ||
+      key.includes('DEMO')
+    )
+    .reduce((obj, key) => {
+      // For security, mask potentially sensitive values
+      const shouldMask = key.includes('DEMO') && key.toUpperCase().includes('WEBAPP');
+      obj[key] = shouldMask 
+        ? `***${process.env[key]?.slice(-4) || ''}` 
+        : process.env[key];
+      return obj;
+    }, {});
+
+  res.json({
+    purpose: 'Debug environment variables for POC demonstration',
+    timestamp: new Date().toISOString(),
+    projectId: process.env.PROJECT_ID || process.env.GCP_PROJECT,
+    totalEnvVars: Object.keys(process.env).length,
+    relevantEnvVars,
+    allEnvVarKeys: Object.keys(process.env).sort()
+  });
 });
 
 // Mount feedback router
@@ -214,9 +339,10 @@ app.use(async (req, res, next) => {
   if (enabled) {
     try {
       const userAgent = req.headers['user-agent'] || 'unknown';
-      const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+      const ipAddress =
+        req.headers['x-forwarded-for'] || req.socket.remoteAddress;
       const startTime = Date.now();
-      
+
       // Log response time after response is sent
       res.on('finish', async () => {
         const responseTime = Date.now() - startTime;
@@ -235,10 +361,10 @@ app.use(async (req, res, next) => {
 
 // Only start server if this file is run directly (not in tests)
 if (require.main === module) {
-  app.listen(port, () => {
+  app.listen(config.port, () => {
     // eslint-disable-next-line no-console
     console.log(
-      `Server running on port ${port} in ${stage} stage (${boundary} boundary)`
+      `Server running on port ${config.port} in ${config.stage} stage (${config.boundary} boundary)`
     );
   });
 }

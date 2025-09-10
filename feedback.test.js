@@ -12,16 +12,16 @@ describe('Feedback API Tests', () => {
   beforeEach(() => {
     // Clear all mocks
     jest.clearAllMocks();
-    
+
     // Setup mock pool
     mockPool = {
-      query: jest.fn()
+      query: jest.fn(),
     };
-    
+
     // Setup default db mocks
     db.isEnabled.mockResolvedValue(true);
     db.getPool.mockResolvedValue(mockPool);
-    
+
     // Create fresh express app with feedback router
     app = express();
     app.use(express.json());
@@ -32,7 +32,7 @@ describe('Feedback API Tests', () => {
   describe('POST /feedback/submit', () => {
     it('should submit feedback successfully', async () => {
       mockPool.query.mockResolvedValue({
-        rows: [{ id: 1, created_at: '2024-01-01T00:00:00Z' }]
+        rows: [{ id: 1, created_at: '2024-01-01T00:00:00Z' }],
       });
 
       const response = await request(app)
@@ -42,14 +42,17 @@ describe('Feedback API Tests', () => {
           email: 'test@example.com',
           feedback_type: 'feature',
           subject: 'New feature request',
-          message: 'Please add dark mode'
+          message: 'Please add dark mode',
         })
         .expect('Content-Type', /json/)
         .expect(201);
 
       expect(response.body).toHaveProperty('success', true);
       expect(response.body).toHaveProperty('feedback_id', 1);
-      expect(response.body).toHaveProperty('message', 'Thank you for your feedback!');
+      expect(response.body).toHaveProperty(
+        'message',
+        'Thank you for your feedback!'
+      );
       expect(mockPool.query).toHaveBeenCalledTimes(1);
     });
 
@@ -58,11 +61,14 @@ describe('Feedback API Tests', () => {
         .post('/feedback/submit')
         .send({
           user_id: 'user123',
-          feedback_type: 'feature'
+          feedback_type: 'feature',
         })
         .expect(400);
 
-      expect(response.body).toHaveProperty('error', 'Subject and message are required');
+      expect(response.body).toHaveProperty(
+        'error',
+        'Subject and message are required'
+      );
       expect(mockPool.query).not.toHaveBeenCalled();
     });
 
@@ -72,7 +78,7 @@ describe('Feedback API Tests', () => {
         .send({
           subject: 'Test',
           message: 'Test message',
-          feedback_type: 'invalid'
+          feedback_type: 'invalid',
         })
         .expect(400);
 
@@ -86,11 +92,14 @@ describe('Feedback API Tests', () => {
         .post('/feedback/submit')
         .send({
           subject: 'Test',
-          message: 'Test message'
+          message: 'Test message',
         })
         .expect(500);
 
-      expect(response.body).toHaveProperty('error', 'Failed to submit feedback');
+      expect(response.body).toHaveProperty(
+        'error',
+        'Failed to submit feedback'
+      );
     });
 
     it('should return 503 when database is disabled', async () => {
@@ -100,7 +109,7 @@ describe('Feedback API Tests', () => {
         .post('/feedback/submit')
         .send({
           subject: 'Test',
-          message: 'Test message'
+          message: 'Test message',
         })
         .expect(503);
 
@@ -112,7 +121,7 @@ describe('Feedback API Tests', () => {
     it('should return feedback list', async () => {
       const mockFeedback = [
         { id: 1, subject: 'Test 1', status: 'pending' },
-        { id: 2, subject: 'Test 2', status: 'resolved' }
+        { id: 2, subject: 'Test 2', status: 'resolved' },
       ];
 
       mockPool.query
@@ -135,9 +144,7 @@ describe('Feedback API Tests', () => {
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [{ count: '0' }] });
 
-      await request(app)
-        .get('/feedback/list?status=resolved')
-        .expect(200);
+      await request(app).get('/feedback/list?status=resolved').expect(200);
 
       expect(mockPool.query).toHaveBeenCalledWith(
         expect.stringContaining('status = $'),
@@ -166,17 +173,17 @@ describe('Feedback API Tests', () => {
   describe('GET /feedback/:id', () => {
     it('should return feedback details with responses and votes', async () => {
       mockPool.query
-        .mockResolvedValueOnce({ 
-          rows: [{ id: 1, subject: 'Test feedback', status: 'pending' }] 
+        .mockResolvedValueOnce({
+          rows: [{ id: 1, subject: 'Test feedback', status: 'pending' }],
         })
-        .mockResolvedValueOnce({ 
-          rows: [{ id: 1, response: 'Thank you for your feedback' }] 
+        .mockResolvedValueOnce({
+          rows: [{ id: 1, response: 'Thank you for your feedback' }],
         })
-        .mockResolvedValueOnce({ 
+        .mockResolvedValueOnce({
           rows: [
             { vote_type: 'up', count: '5' },
-            { vote_type: 'down', count: '2' }
-          ] 
+            { vote_type: 'down', count: '2' },
+          ],
         });
 
       const response = await request(app)
@@ -193,9 +200,7 @@ describe('Feedback API Tests', () => {
     it('should return 404 for non-existent feedback', async () => {
       mockPool.query.mockResolvedValueOnce({ rows: [] });
 
-      const response = await request(app)
-        .get('/feedback/999')
-        .expect(404);
+      const response = await request(app).get('/feedback/999').expect(404);
 
       expect(response.body).toHaveProperty('error', 'Feedback not found');
     });
@@ -205,15 +210,15 @@ describe('Feedback API Tests', () => {
     it('should record vote successfully', async () => {
       mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // upsert
-        .mockResolvedValueOnce({ 
-          rows: [{ vote_type: 'up', count: '1' }] 
+        .mockResolvedValueOnce({
+          rows: [{ vote_type: 'up', count: '1' }],
         });
 
       const response = await request(app)
         .post('/feedback/1/vote')
         .send({
           user_id: 'user123',
-          vote_type: 'up'
+          vote_type: 'up',
         })
         .expect(200);
 
@@ -227,7 +232,7 @@ describe('Feedback API Tests', () => {
         .post('/feedback/1/vote')
         .send({
           user_id: 'user123',
-          vote_type: 'invalid'
+          vote_type: 'invalid',
         })
         .expect(400);
 
@@ -238,31 +243,29 @@ describe('Feedback API Tests', () => {
   describe('GET /feedback/stats/summary', () => {
     it('should return feedback statistics', async () => {
       mockPool.query
-        .mockResolvedValueOnce({ 
+        .mockResolvedValueOnce({
           rows: [
             { status: 'pending', count: '10' },
-            { status: 'resolved', count: '5' }
-          ] 
+            { status: 'resolved', count: '5' },
+          ],
         })
-        .mockResolvedValueOnce({ 
+        .mockResolvedValueOnce({
           rows: [
             { feedback_type: 'bug', count: '8' },
-            { feedback_type: 'feature', count: '7' }
-          ] 
+            { feedback_type: 'feature', count: '7' },
+          ],
         })
-        .mockResolvedValueOnce({ 
+        .mockResolvedValueOnce({
           rows: [
             { priority: 'high', count: '3' },
-            { priority: 'medium', count: '12' }
-          ] 
+            { priority: 'medium', count: '12' },
+          ],
         })
-        .mockResolvedValueOnce({ 
-          rows: [{ count: '15' }] 
+        .mockResolvedValueOnce({
+          rows: [{ count: '15' }],
         })
-        .mockResolvedValueOnce({ 
-          rows: [
-            { id: 1, subject: 'Popular', upvotes: '10', downvotes: '1' }
-          ] 
+        .mockResolvedValueOnce({
+          rows: [{ id: 1, subject: 'Popular', upvotes: '10', downvotes: '1' }],
         });
 
       const response = await request(app)

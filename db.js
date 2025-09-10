@@ -1,5 +1,11 @@
 const { Pool } = require('pg');
 const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
+const {
+  DB_POOL_MAX_CONNECTIONS,
+  DB_POOL_IDLE_TIMEOUT_MS,
+  DB_POOL_CONNECTION_TIMEOUT_MS,
+  ALLOYDB_STARTUP_DELAY_MS,
+} = require('./constants');
 
 // Secret Manager configuration
 const PROJECT_ID = process.env.PROJECT_ID || process.env.GCP_PROJECT;
@@ -25,7 +31,10 @@ async function fetchDatabaseUrl() {
   }
 
   // Check if AlloyDB Auth Proxy is being used (connects via localhost)
-  if (process.env.ALLOYDB_AUTH_PROXY === 'true' || process.env.USE_AUTH_PROXY === 'true') {
+  if (
+    process.env.ALLOYDB_AUTH_PROXY === 'true' ||
+    process.env.USE_AUTH_PROXY === 'true'
+  ) {
     console.log('AlloyDB Auth Proxy detected with IAM authentication');
     // No secrets needed - Auth Proxy handles IAM authentication
     const stage = process.env.STAGE || 'dev';
@@ -49,24 +58,31 @@ async function fetchDatabaseUrl() {
     // Infrastructure creates secrets as webapp-{boundary}-alloydb-connection
     const secretName = `webapp-${BOUNDARY}-alloydb-connection`;
     const name = `projects/${PROJECT_ID}/secrets/${secretName}/versions/latest`;
-    
-    console.log(`Fetching database credentials from Secret Manager: ${secretName}`);
+
+    console.log(
+      `Fetching database credentials from Secret Manager: ${secretName}`
+    );
     console.log(`Project: ${PROJECT_ID}`);
-    
+
     // Create Secret Manager client when needed
     console.log('Creating Secret Manager client...');
     const secretClient = new SecretManagerServiceClient();
     console.log('Client created successfully');
-    
+
     console.log('Calling accessSecretVersion...');
     const [version] = await secretClient.accessSecretVersion({ name });
     console.log('Got secret version');
     const payload = version.payload.data.toString('utf8');
-    
-    console.log('Successfully retrieved database credentials from Secret Manager');
+
+    console.log(
+      'Successfully retrieved database credentials from Secret Manager'
+    );
     return payload;
   } catch (error) {
-    console.error('Failed to fetch database credentials from Secret Manager:', error.message);
+    console.error(
+      'Failed to fetch database credentials from Secret Manager:',
+      error.message
+    );
     console.log('Database features will be disabled');
     return null;
   }
@@ -75,26 +91,26 @@ async function fetchDatabaseUrl() {
 // Helper function to create database if it doesn't exist
 async function createDatabaseIfNotExists(connectionString) {
   const { Client } = require('pg');
-  
+
   // Parse the connection string to extract database name
   const url = new URL(connectionString.replace('postgresql://', 'postgres://'));
   const targetDatabase = url.pathname.substring(1);
-  
+
   // Connect to postgres database first
   url.pathname = '/postgres';
   const adminUrl = url.toString();
-  
+
   const client = new Client({ connectionString: adminUrl });
-  
+
   try {
     await client.connect();
-    
+
     // Check if database exists
     const result = await client.query(
       'SELECT 1 FROM pg_database WHERE datname = $1',
       [targetDatabase]
     );
-    
+
     if (result.rows.length === 0) {
       console.log(`Creating database '${targetDatabase}'...`);
       await client.query(`CREATE DATABASE "${targetDatabase}"`);
@@ -118,34 +134,39 @@ async function initializeDatabase() {
     try {
       // If using AlloyDB Auth Proxy, wait for it to be ready
       if (process.env.ALLOYDB_AUTH_PROXY === 'true') {
-        console.log('Waiting 20 seconds for AlloyDB Auth Proxy to be ready...');
-        await new Promise(resolve => setTimeout(resolve, 20000));
+        console.log(
+          `Waiting ${ALLOYDB_STARTUP_DELAY_MS / 1000} seconds for AlloyDB Auth Proxy to be ready...`
+        );
+        await new Promise((resolve) =>
+          setTimeout(resolve, ALLOYDB_STARTUP_DELAY_MS)
+        );
       }
-      
+
       const databaseUrl = await fetchDatabaseUrl();
-      
+
       // Configure database connection
       const dbConfig = {
         // When using AlloyDB Auth Proxy, disable SSL as the proxy handles encryption
-        ssl: process.env.ALLOYDB_AUTH_PROXY === 'true'
-          ? false
-          : process.env.DATABASE_SSL_MODE === 'require' 
-          ? { rejectUnauthorized: false }
-          : process.env.DATABASE_SSL_MODE === 'disable'
-          ? false
-          : BOUNDARY !== 'local' 
-          ? { rejectUnauthorized: false } 
-          : false,
-        max: 20,
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 2000,
+        ssl:
+          process.env.ALLOYDB_AUTH_PROXY === 'true'
+            ? false
+            : process.env.DATABASE_SSL_MODE === 'require'
+              ? { rejectUnauthorized: false }
+              : process.env.DATABASE_SSL_MODE === 'disable'
+                ? false
+                : BOUNDARY !== 'local'
+                  ? { rejectUnauthorized: false }
+                  : false,
+        max: DB_POOL_MAX_CONNECTIONS,
+        idleTimeoutMillis: DB_POOL_IDLE_TIMEOUT_MS,
+        connectionTimeoutMillis: DB_POOL_CONNECTION_TIMEOUT_MS,
       };
 
       if (databaseUrl) {
-        // Use the connection string as-is 
+        // Use the connection string as-is
         dbConfig.connectionString = databaseUrl;
         console.log('Using database connection string from Secret Manager');
-        
+
         // Create database if it doesn't exist (for AlloyDB with IAM auth)
         if (process.env.ALLOYDB_AUTH_PROXY === 'true') {
           await createDatabaseIfNotExists(databaseUrl);
@@ -164,18 +185,18 @@ async function initializeDatabase() {
 
       // Create the connection pool
       pool = new Pool(dbConfig);
-      
+
       // Test the connection
       await pool.query('SELECT 1');
-      
+
       dbEnabled = true;
       console.log('Database connection pool initialized successfully');
-      
+
       // Handle pool errors
       pool.on('error', (err) => {
         console.error('Unexpected database pool error:', err);
       });
-      
+
       return true;
     } catch (error) {
       console.error('Failed to initialize database:', error.message);
@@ -236,13 +257,13 @@ const db = {
           AND table_name = 'pgmigrations'
         )
       `);
-      
+
       const migrationsTableExists = result.rows[0].exists;
-      
+
       if (!migrationsTableExists) {
         return { migrated: false, message: 'Migrations table does not exist' };
       }
-      
+
       // Get latest migration
       const migrationResult = await db.query(`
         SELECT name, run_on 
@@ -250,15 +271,15 @@ const db = {
         ORDER BY run_on DESC 
         LIMIT 1
       `);
-      
+
       if (migrationResult.rows.length === 0) {
         return { migrated: false, message: 'No migrations have been run' };
       }
-      
+
       return {
         migrated: true,
         latest: migrationResult.rows[0].name,
-        runOn: migrationResult.rows[0].run_on
+        runOn: migrationResult.rows[0].run_on,
       };
     } catch (error) {
       console.error('Failed to check migrations:', error);
@@ -267,7 +288,12 @@ const db = {
   },
 
   // Record a visit
-  recordVisit: async (endpoint, userAgent = null, ipAddress = null, responseTime = null) => {
+  recordVisit: async (
+    endpoint,
+    userAgent = null,
+    ipAddress = null,
+    responseTime = null
+  ) => {
     await initializeDatabase();
     if (!dbEnabled) {
       return { visit: null, totalVisits: 0 };
@@ -275,18 +301,21 @@ const db = {
 
     try {
       const stage = process.env.STAGE || 'unknown';
-      const result = await db.query(`
+      const result = await db.query(
+        `
         INSERT INTO visits (endpoint, user_agent, ip_address, response_time, stage)
         VALUES ($1, $2, $3, $4, $5)
         RETURNING *
-      `, [endpoint, userAgent, ipAddress, responseTime, stage]);
+      `,
+        [endpoint, userAgent, ipAddress, responseTime, stage]
+      );
 
       const countResult = await db.query('SELECT COUNT(*) FROM visits');
       const totalVisits = parseInt(countResult.rows[0].count);
 
       return {
         visit: result.rows[0],
-        totalVisits
+        totalVisits,
       };
     } catch (error) {
       console.error('Failed to record visit:', error);
@@ -301,13 +330,15 @@ const db = {
       return {
         totalVisits: 0,
         uniquePaths: 0,
-        recentVisits: []
+        recentVisits: [],
       };
     }
 
     try {
       const totalResult = await db.query('SELECT COUNT(*) FROM visits');
-      const uniqueResult = await db.query('SELECT COUNT(DISTINCT endpoint) FROM visits');
+      const uniqueResult = await db.query(
+        'SELECT COUNT(DISTINCT endpoint) FROM visits'
+      );
       const recentResult = await db.query(`
         SELECT * FROM visits 
         ORDER BY timestamp DESC 
@@ -317,7 +348,7 @@ const db = {
       return {
         totalVisits: parseInt(totalResult.rows[0].count),
         uniquePaths: parseInt(uniqueResult.rows[0].count),
-        recentVisits: recentResult.rows
+        recentVisits: recentResult.rows,
       };
     } catch (error) {
       console.error('Failed to get visit stats:', error);
@@ -332,14 +363,14 @@ const db = {
       return {
         darkMode: false,
         betaFeatures: false,
-        debugMode: false
+        debugMode: false,
       };
     }
 
     try {
       const result = await db.query('SELECT name, enabled FROM feature_flags');
       const flags = {};
-      result.rows.forEach(row => {
+      result.rows.forEach((row) => {
         flags[row.name] = row.enabled;
       });
       return flags;
@@ -348,7 +379,7 @@ const db = {
       return {
         darkMode: false,
         betaFeatures: false,
-        debugMode: false
+        debugMode: false,
       };
     }
   },
@@ -361,7 +392,7 @@ const db = {
       dbEnabled = false;
       console.log('Database connection pool closed');
     }
-  }
+  },
 };
 
 module.exports = db;

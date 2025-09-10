@@ -9,23 +9,25 @@ exports.up = (pgm) => {
     id: 'id',
     user_id: { type: 'varchar(255)' },
     email: { type: 'varchar(255)' },
-    feedback_type: { 
-      type: 'varchar(50)', 
+    feedback_type: {
+      type: 'varchar(50)',
       notNull: true,
-      check: "feedback_type IN ('bug', 'feature', 'improvement', 'question', 'other')"
+      check:
+        "feedback_type IN ('bug', 'feature', 'improvement', 'question', 'other')",
     },
     subject: { type: 'varchar(500)', notNull: true },
     message: { type: 'text', notNull: true },
-    status: { 
-      type: 'varchar(50)', 
-      notNull: true, 
+    status: {
+      type: 'varchar(50)',
+      notNull: true,
       default: 'pending',
-      check: "status IN ('pending', 'reviewed', 'in_progress', 'resolved', 'closed')"
+      check:
+        "status IN ('pending', 'reviewed', 'in_progress', 'resolved', 'closed')",
     },
-    priority: { 
-      type: 'varchar(20)', 
+    priority: {
+      type: 'varchar(20)',
       default: 'medium',
-      check: "priority IN ('low', 'medium', 'high', 'urgent')"
+      check: "priority IN ('low', 'medium', 'high', 'urgent')",
     },
     environment: { type: 'varchar(50)' },
     user_agent: { type: 'text' },
@@ -33,14 +35,14 @@ exports.up = (pgm) => {
     created_at: {
       type: 'timestamp',
       notNull: true,
-      default: pgm.func('current_timestamp')
+      default: pgm.func('current_timestamp'),
     },
     updated_at: {
       type: 'timestamp',
       notNull: true,
-      default: pgm.func('current_timestamp')
+      default: pgm.func('current_timestamp'),
     },
-    resolved_at: { type: 'timestamp' }
+    resolved_at: { type: 'timestamp' },
   });
 
   // Create feedback responses table for admin responses
@@ -50,7 +52,7 @@ exports.up = (pgm) => {
       type: 'integer',
       notNull: true,
       references: '"user_feedback"',
-      onDelete: 'CASCADE'
+      onDelete: 'CASCADE',
     },
     responder_id: { type: 'varchar(255)', notNull: true },
     response: { type: 'text', notNull: true },
@@ -58,8 +60,8 @@ exports.up = (pgm) => {
     created_at: {
       type: 'timestamp',
       notNull: true,
-      default: pgm.func('current_timestamp')
-    }
+      default: pgm.func('current_timestamp'),
+    },
   });
 
   // Create feedback votes table for prioritization
@@ -69,19 +71,19 @@ exports.up = (pgm) => {
       type: 'integer',
       notNull: true,
       references: '"user_feedback"',
-      onDelete: 'CASCADE'
+      onDelete: 'CASCADE',
     },
     user_id: { type: 'varchar(255)', notNull: true },
-    vote_type: { 
-      type: 'varchar(10)', 
+    vote_type: {
+      type: 'varchar(10)',
       notNull: true,
-      check: "vote_type IN ('up', 'down')"
+      check: "vote_type IN ('up', 'down')",
     },
     created_at: {
       type: 'timestamp',
       notNull: true,
-      default: pgm.func('current_timestamp')
-    }
+      default: pgm.func('current_timestamp'),
+    },
   });
 
   // Create indexes for better performance
@@ -91,7 +93,9 @@ exports.up = (pgm) => {
   pgm.createIndex('user_feedback', 'priority');
   pgm.createIndex('user_feedback', 'created_at');
   pgm.createIndex('feedback_responses', 'feedback_id');
-  pgm.createIndex('feedback_votes', ['feedback_id', 'user_id'], { unique: true });
+  pgm.createIndex('feedback_votes', ['feedback_id', 'user_id'], {
+    unique: true,
+  });
 
   // Create trigger to update updated_at timestamp
   pgm.sql(`
@@ -113,7 +117,9 @@ exports.up = (pgm) => {
 
 exports.down = (pgm) => {
   // Drop triggers first
-  pgm.sql('DROP TRIGGER IF EXISTS update_user_feedback_updated_at ON user_feedback');
+  pgm.sql(
+    'DROP TRIGGER IF EXISTS update_user_feedback_updated_at ON user_feedback'
+  );
   pgm.sql('DROP FUNCTION IF EXISTS update_updated_at_column');
 
   // Drop tables in reverse order due to foreign key constraints

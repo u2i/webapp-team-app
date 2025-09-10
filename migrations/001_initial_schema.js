@@ -9,23 +9,23 @@ exports.up = (pgm) => {
     timestamp: {
       type: 'timestamptz',
       default: pgm.func('current_timestamp'),
-      notNull: true
+      notNull: true,
     },
     endpoint: {
-      type: 'varchar(255)'
+      type: 'varchar(255)',
     },
     user_agent: {
-      type: 'text'
+      type: 'text',
     },
     ip_address: {
-      type: 'inet'
+      type: 'inet',
     },
     response_time: {
-      type: 'integer'
+      type: 'integer',
     },
     stage: {
-      type: 'varchar(50)'
-    }
+      type: 'varchar(50)',
+    },
   });
 
   // Create index on timestamp for performance
@@ -37,25 +37,25 @@ exports.up = (pgm) => {
     name: {
       type: 'varchar(255)',
       unique: true,
-      notNull: true
+      notNull: true,
     },
     enabled: {
       type: 'boolean',
-      default: false
+      default: false,
     },
     description: {
-      type: 'text'
+      type: 'text',
     },
     created_at: {
       type: 'timestamptz',
       default: pgm.func('current_timestamp'),
-      notNull: true
+      notNull: true,
     },
     updated_at: {
       type: 'timestamptz',
       default: pgm.func('current_timestamp'),
-      notNull: true
-    }
+      notNull: true,
+    },
   });
 
   // Create trigger to update updated_at
@@ -89,9 +89,11 @@ exports.up = (pgm) => {
 
 exports.down = (pgm) => {
   // Drop trigger and function
-  pgm.sql('DROP TRIGGER IF EXISTS update_feature_flags_updated_at ON feature_flags');
+  pgm.sql(
+    'DROP TRIGGER IF EXISTS update_feature_flags_updated_at ON feature_flags'
+  );
   pgm.sql('DROP FUNCTION IF EXISTS update_updated_at_column()');
-  
+
   // Drop tables
   pgm.dropTable('feature_flags');
   pgm.dropTable('visits');

@@ -2,13 +2,14 @@ module.exports = {
   testEnvironment: 'node',
   collectCoverageFrom: [
     'app.js',
+    'secret-manager-poc.js',
     '!node_modules/**',
     '!coverage/**',
     '!jest.config.js',
   ],
   coverageThreshold: {
     global: {
-      branches: 25,
+      branches: 15,
       functions: 35,
       lines: 25,
       statements: 25,

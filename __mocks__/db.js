@@ -3,30 +3,30 @@ const mockDb = {
   isEnabled: jest.fn().mockResolvedValue(false), // Database disabled in tests - now async
   isEnabledSync: jest.fn().mockReturnValue(false), // Sync version for backward compatibility
   getPool: jest.fn().mockResolvedValue(null),
-  checkMigrations: jest.fn().mockResolvedValue({ 
-    migrated: false, 
-    message: 'Database not enabled' 
+  checkMigrations: jest.fn().mockResolvedValue({
+    migrated: false,
+    message: 'Database not enabled',
   }),
   query: jest.fn().mockResolvedValue({ rows: [] }),
-  recordVisit: jest.fn().mockResolvedValue({ 
-    visit: { 
-      id: 1, 
-      timestamp: new Date().toISOString(), 
-      endpoint: '/test' 
-    }, 
-    totalVisits: 1 
+  recordVisit: jest.fn().mockResolvedValue({
+    visit: {
+      id: 1,
+      timestamp: new Date().toISOString(),
+      endpoint: '/test',
+    },
+    totalVisits: 1,
   }),
   getVisitStats: jest.fn().mockResolvedValue({
     totalVisits: 100,
     uniquePaths: 5,
-    recentVisits: []
+    recentVisits: [],
   }),
   getFeatureFlags: jest.fn().mockResolvedValue({
     darkMode: false,
     betaFeatures: false,
-    debugMode: false
+    debugMode: false,
   }),
-  cleanup: jest.fn().mockResolvedValue(null)
+  cleanup: jest.fn().mockResolvedValue(null),
 };
 
 module.exports = mockDb;

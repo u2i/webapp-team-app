@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile with test stage
 # Stage 1: Testing
-FROM node:18-slim AS test
+FROM node:22-slim AS test
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ COPY package*.json ./
 RUN npm ci
 
 # Copy application code and test files
-COPY app.js db.js migrate.js feedback.js start.sh app.test.js feedback.test.js jest.config.js .node-pg-migrate ./
+COPY app.js db.js migrate.js feedback.js start.sh middleware.js query-builder.js constants.js config.js health.js secret-manager-poc.js app.test.js feedback.test.js secret-manager-poc.test.js jest.config.js .node-pg-migrate ./
 COPY __mocks__ ./__mocks__
 COPY migrations ./migrations
 
@@ -19,7 +19,7 @@ COPY migrations ./migrations
 RUN npm run test:ci
 
 # Stage 2: Production build
-FROM node:18-slim AS production
+FROM node:22-slim AS production
 
 # Create app directory
 WORKDIR /app
@@ -34,6 +34,12 @@ COPY --from=test /app/db.js ./
 COPY --from=test /app/migrate.js ./
 COPY --from=test /app/feedback.js ./
 COPY --from=test /app/start.sh ./
+COPY --from=test /app/middleware.js ./
+COPY --from=test /app/query-builder.js ./
+COPY --from=test /app/constants.js ./
+COPY --from=test /app/config.js ./
+COPY --from=test /app/health.js ./
+COPY --from=test /app/secret-manager-poc.js ./
 COPY --from=test /app/.node-pg-migrate ./
 COPY --from=test /app/migrations ./migrations
 
