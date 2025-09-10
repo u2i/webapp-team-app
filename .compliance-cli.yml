@@ -98,6 +98,11 @@ workload_identity:
   
   # IAM role to assign
   role: "roles/iam.workloadIdentityUser"
+  
+  # Secrets that the service account needs access to
+  secrets:
+    - name: "webapp-demo-secret"
+      role: "roles/secretmanager.secretAccessor"
 
 # Validation configuration for PR checks
 validation:
