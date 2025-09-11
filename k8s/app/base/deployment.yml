@@ -92,6 +92,11 @@ spec:
           value: "u2i-tenant-webapp-nonprod" # GCP project for Secret Manager access
         - name: ALLOYDB_AUTH_PROXY
           value: "true" # Using AlloyDB Auth Proxy sidecar
+        - name: WEBAPP_DEMO_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: webapp-demo-secret
+              key: webapp-demo-secret
         # Database configuration from ConfigMap (if exists)
         envFrom:
         - configMapRef:
