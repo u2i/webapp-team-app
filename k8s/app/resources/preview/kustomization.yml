@@ -59,7 +59,7 @@ patches:
         name: DATABASE_SSL_MODE
         value: disable
 
-# Add PostgreSQL sidecar using JSON6902 patch
+# Add AlloyDB Omni sidecar using JSON6902 patch
 - target:
     group: apps
     version: v1
@@ -69,8 +69,8 @@ patches:
     - op: add
       path: /spec/template/spec/containers/1
       value:
-        name: postgres
-        image: postgres:15-alpine
+        name: alloydb-omni
+        image: gcr.io/alloydb-omni/pg15:latest
         env:
         - name: POSTGRES_DB
           value: webapp_preview
@@ -79,19 +79,21 @@ patches:
         - name: POSTGRES_PASSWORD
           value: preview_temp_password
         - name: PGDATA
-          value: /var/lib/postgresql/data/pgdata
+          value: /var/lib/postgresql/data
+        - name: ALLOYDB_OMNI_ACCEPT_TERMS
+          value: "YES"
         ports:
         - containerPort: 5432
           name: postgres
         resources:
           requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
             memory: "256Mi"
-            cpu: "200m"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
         volumeMounts:
-        - name: postgres-storage
+        - name: alloydb-storage
           mountPath: /var/lib/postgresql/data
         livenessProbe:
           exec:
@@ -101,8 +103,9 @@ patches:
             - webapp
             - -d
             - webapp_preview
-          initialDelaySeconds: 30
+          initialDelaySeconds: 60
           periodSeconds: 10
+          timeoutSeconds: 5
         readinessProbe:
           exec:
             command:
@@ -111,8 +114,9 @@ patches:
             - webapp
             - -d
             - webapp_preview
-          initialDelaySeconds: 5
+          initialDelaySeconds: 30
           periodSeconds: 5
+          timeoutSeconds: 3
         securityContext:
           runAsUser: 999
           runAsGroup: 999
@@ -124,7 +128,7 @@ patches:
     - op: add
       path: /spec/template/spec/volumes/-
       value:
-        name: postgres-storage
+        name: alloydb-storage
         emptyDir: {}
 
 configMapGenerator:
