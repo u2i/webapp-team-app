@@ -89,7 +89,7 @@ spec:
         - name: COMPLIANCE_MODE
           value: "gdpr"
         - name: PROJECT_ID
-          value: "u2i-tenant-webapp-nonprod" # GCP project for Secret Manager access
+          value: "${PROJECT_ID}" # from-param: ${PROJECT_ID} - GCP project for Secret Manager access
         - name: ALLOYDB_AUTH_PROXY
           value: "true" # Using AlloyDB Auth Proxy sidecar
         - name: WEBAPP_DEMO_SECRET
