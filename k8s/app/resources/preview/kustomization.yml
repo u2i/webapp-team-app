@@ -59,14 +59,6 @@ patches:
       value:
         name: DATABASE_SSL_MODE
         value: disable
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: WEBAPP_DEMO_SECRET
-        valueFrom:
-          secretKeyRef:
-            name: webapp-demo-secret
-            key: webapp-demo-secret
 
 # Add PostgreSQL sidecar using JSON6902 patch
 - target:
