@@ -118,13 +118,14 @@ patches:
           periodSeconds: 5
           timeoutSeconds: 3
         securityContext:
-          runAsUser: 999
-          runAsGroup: 999
           allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false
           capabilities:
             drop:
             - ALL
+            add:
+            - CHOWN
+            - SETUID
+            - SETGID
     - op: add
       path: /spec/template/spec/volumes/-
       value:
