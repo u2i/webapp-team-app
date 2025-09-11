@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Preprod profile - medium resources for dev/qa environments
+# Nonprod boundary - shared configuration for dev/qa environments
 
 resources:
 - ../../base
@@ -46,6 +46,6 @@ patches:
 configMapGenerator:
 - name: webapp-profile-config
   literals:
-    - PROFILE=preprod
+    - PROFILE=${STAGE}
     - LOG_LEVEL=debug
     - GRACEFUL_SHUTDOWN_TIMEOUT=5s
