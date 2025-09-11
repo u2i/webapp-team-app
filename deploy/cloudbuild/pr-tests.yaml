@@ -5,7 +5,7 @@
 
 steps:
 # Run Tests
-- name: 'node:18-alpine'
+- name: 'node:22-alpine'
   id: 'run-tests'
   entrypoint: 'sh'
   args:

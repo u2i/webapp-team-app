@@ -15,7 +15,7 @@ steps:
   ]
   waitFor: ['-']
 # Step 2: Security & Compliance Checks
-- name: 'node:18-alpine'
+- name: 'node:22-alpine'
   id: 'security-compliance'
   entrypoint: 'sh'
   args:
@@ -100,7 +100,7 @@ steps:
     echo "Container smoke test passed!"
   waitFor: ['docker-build-test']
 # Step 4: Dependency Security Audit
-- name: 'node:18-alpine'
+- name: 'node:22-alpine'
   id: 'dependency-audit'
   entrypoint: 'sh'
   args:

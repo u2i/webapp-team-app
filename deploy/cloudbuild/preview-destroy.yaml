@@ -5,7 +5,7 @@
 
 steps:
 # Destroy preview environment using compliance-cli
-- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
+- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:v0.9.1'
   id: 'destroy-preview'
   entrypoint: 'compliance-cli'
   args: ['preview', 'destroy']
