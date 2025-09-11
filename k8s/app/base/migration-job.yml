@@ -2,20 +2,22 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: webapp-migration
-  namespace: webapp-dev # from-param: ${NAMESPACE}
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
   labels:
-    app: webapp
+    app: webapp # from-param: ${APP_NAME}
     component: migration
+    stage: ${STAGE} # from-param: ${STAGE}
+    boundary: ${BOUNDARY} # from-param: ${BOUNDARY}
 spec:
   ttlSecondsAfterFinished: 3600 # Clean up after 1 hour
   backoffLimit: 3
   template:
     metadata:
       labels:
-        app: webapp
+        app: webapp # from-param: ${APP_NAME}
         component: migration
     spec:
-      serviceAccountName: webapp
+      serviceAccountName: webapp # from-param: ${APP_NAME}
       automountServiceAccountToken: true
       restartPolicy: Never
       securityContext:
@@ -48,15 +50,15 @@ spec:
             cpu: "100m"
       containers:
       - name: migrate
-        image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp # Will use latest built image
+        image: europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp # Will be overridden for prod
         command: ["node", "migrate.js"]
         env:
         - name: PROJECT_ID
-          value: "u2i-tenant-webapp-nonprod" # from-param: ${PROJECT_ID}
+          value: "${PROJECT_ID}" # from-param: ${PROJECT_ID}
         - name: BOUNDARY
-          value: "nonprod" # from-param: ${BOUNDARY}
+          value: "${BOUNDARY}" # from-param: ${BOUNDARY}
         - name: STAGE
-          value: "dev" # from-param: ${STAGE}
+          value: "${STAGE}" # from-param: ${STAGE}
         - name: ALLOYDB_AUTH_PROXY
           value: "true"
         securityContext:

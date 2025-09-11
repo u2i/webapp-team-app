@@ -10,6 +10,7 @@ resources:
 - pod-disruption-budget.yml
 - secret-store.yml
 - external-secret.yml
+- migration-job.yml
 # Note: namespace.yml is handled separately by Cloud Deploy
 
 # Use labels instead of commonLabels to avoid modifying selectors

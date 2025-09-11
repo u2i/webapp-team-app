@@ -7,7 +7,6 @@ resources:
 - ../../base
 - ../../../namespace/namespace.yml
 - horizontal-pod-autoscaler.yml
-- migration-job.yml
 
 patches:
 - target:
@@ -46,6 +45,20 @@ patches:
       - "projects/u2i-tenant-webapp-prod/locations/europe-west1/clusters/webapp-prod-alloydb/instances/webapp-prod-primary"
       - "--port=5432"
       - "--auto-iam-authn"
+- target:
+    kind: Job
+    name: webapp-migration
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/initContainers/0/args
+      value:
+      - "projects/u2i-tenant-webapp-prod/locations/europe-west1/clusters/webapp-prod-alloydb/instances/webapp-prod-primary"
+      - "--port=5432"
+      - "--max-connections=10"
+      - "--auto-iam-authn"
+    - op: replace
+      path: /spec/template/spec/containers/0/image
+      value: europe-west1-docker.pkg.dev/u2i-tenant-webapp-prod/webapp-images/webapp
 
 configMapGenerator:
 - name: webapp-profile-config
