@@ -33,7 +33,6 @@ serialPipeline:
       - values:
           HPA_MIN_REPLICAS: "1"
           HPA_MAX_REPLICAS: "2"
-          PR_NUMBER: "PLACEHOLDER"  # Will be replaced by Cloud Deploy with actual value
 
 ---
 apiVersion: deploy.cloud.google.com/v1
