@@ -46,6 +46,8 @@ spec:
         env:
         - name: POSTGRES_PASSWORD
           value: preview_temp_password
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
         resources:
           requests:
             memory: "256Mi"
@@ -56,6 +58,8 @@ spec:
         volumeMounts:
         - name: data
           mountPath: /var/lib/postgresql/data
+        - name: dshm
+          mountPath: /dev/shm
         livenessProbe:
           exec:
             command:
@@ -85,3 +89,7 @@ spec:
       volumes:
       - name: data
         emptyDir: {}
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 256Mi
