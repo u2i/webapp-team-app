@@ -42,6 +42,42 @@ patches:
         limits:
           memory: "256Mi"
           cpu: "200m"
+    # Replace entire env array to remove ALLOYDB_AUTH_PROXY and add database config
+    - op: replace
+      path: /spec/template/spec/containers/0/env
+      value:
+        - name: TENANT
+          value: webapp-team
+        - name: COMPLIANCE
+          value: gdpr
+        - name: PROJECT_ID
+          value: ${PROJECT_ID}
+        - name: DATABASE_HOST
+          value: al-alloydb-preview-rw-ilb
+        - name: DATABASE_PORT
+          value: "5432"
+        - name: DATABASE_NAME
+          value: webapp_preview
+        - name: DATABASE_USER
+          value: postgres
+        - name: DATABASE_PASSWORD
+          value: preview_temp_password
+        - name: DATABASE_SSL_MODE
+          value: disable
+        - name: WEBAPP_DEMO_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: webapp-demo-secret
+              key: webapp-demo-secret
+
+
+# Patch migration job to remove AlloyDB proxy and add database config
+- target:
+    kind: Job
+    name: webapp-migration
+  patch: |-
+    - op: remove
+      path: /spec/template/spec/initContainers  # Remove AlloyDB proxy sidecar
     - op: add
       path: /spec/template/spec/containers/0/env/-
       value:
@@ -72,7 +108,8 @@ patches:
       value:
         name: DATABASE_SSL_MODE
         value: disable
-
+    - op: remove
+      path: /spec/template/spec/containers/0/env/3  # Remove ALLOYDB_AUTH_PROXY
 
 configMapGenerator:
 - name: webapp-profile-config
