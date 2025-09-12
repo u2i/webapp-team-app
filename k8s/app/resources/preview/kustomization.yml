@@ -1,15 +1,16 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Preview profile - small resources for PR preview environments
+# Preview profile - small resources for PR preview environments with separate database
 
 resources:
 - ../../base
 - ../../../namespace/namespace.yml
 - ../../../gcp/certificate.yml
+- alloydb-omni.yml
 
 patches:
-# Adjust resources and configuration
+# Adjust resources and configuration for preview
 - target:
     kind: Deployment
     labelSelector: "app=webapp"  # Use label selector to match any name
@@ -32,7 +33,7 @@ patches:
       path: /spec/template/spec/containers/0/env/-
       value:
         name: DATABASE_HOST
-        value: localhost
+        value: alloydb-omni
     - op: add
       path: /spec/template/spec/containers/0/env/-
       value:
@@ -47,7 +48,7 @@ patches:
       path: /spec/template/spec/containers/0/env/-
       value:
         name: DATABASE_USER
-        value: webapp
+        value: postgres
     - op: add
       path: /spec/template/spec/containers/0/env/-
       value:
@@ -58,78 +59,52 @@ patches:
       value:
         name: DATABASE_SSL_MODE
         value: disable
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: RUN_MIGRATIONS_ON_STARTUP
+        value: "false"  # Migration job will handle this
 
-# Add AlloyDB Omni sidecar using JSON6902 patch
+# Patch migration job to remove AlloyDB proxy and connect directly to AlloyDB Omni
 - target:
-    group: apps
-    version: v1
-    kind: Deployment
-    labelSelector: "app=webapp"  # Use label selector to match any name
+    kind: Job
+    name: webapp-migration
   patch: |-
+    - op: remove
+      path: /spec/template/spec/initContainers/0  # Remove AlloyDB proxy
     - op: add
-      path: /spec/template/spec/containers/1
+      path: /spec/template/spec/containers/0/env/-
       value:
-        name: alloydb-omni
-        image: gcr.io/alloydb-omni/alloydbomni:16
-        env:
-        - name: POSTGRES_DB
-          value: webapp_preview
-        - name: POSTGRES_USER
-          value: webapp
-        - name: POSTGRES_PASSWORD
-          value: preview_temp_password
-        - name: PGDATA
-          value: /var/lib/postgresql/data
-        - name: ALLOYDB_OMNI_ACCEPT_TERMS
-          value: "YES"
-        ports:
-        - containerPort: 5432
-          name: postgres
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        volumeMounts:
-        - name: alloydb-storage
-          mountPath: /var/lib/postgresql/data
-        livenessProbe:
-          exec:
-            command:
-            - pg_isready
-            - -U
-            - webapp
-            - -d
-            - webapp_preview
-          initialDelaySeconds: 60
-          periodSeconds: 10
-          timeoutSeconds: 5
-        readinessProbe:
-          exec:
-            command:
-            - pg_isready
-            - -U
-            - webapp
-            - -d
-            - webapp_preview
-          initialDelaySeconds: 30
-          periodSeconds: 5
-          timeoutSeconds: 3
-        securityContext:
-          runAsUser: 999
-          runAsGroup: 999
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false
-          capabilities:
-            drop:
-            - ALL
+        name: DATABASE_HOST
+        value: alloydb-omni
     - op: add
-      path: /spec/template/spec/volumes/-
+      path: /spec/template/spec/containers/0/env/-
       value:
-        name: alloydb-storage
-        emptyDir: {}
+        name: DATABASE_PORT
+        value: "5432"
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: DATABASE_NAME
+        value: webapp_preview
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: DATABASE_USER
+        value: postgres
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: DATABASE_PASSWORD
+        value: preview_temp_password
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: DATABASE_SSL_MODE
+        value: disable
+    - op: replace
+      path: /spec/template/spec/containers/0/env/3/value
+      value: "false"  # ALLOYDB_AUTH_PROXY = false
 
 configMapGenerator:
 - name: webapp-profile-config
@@ -137,5 +112,3 @@ configMapGenerator:
     - PROFILE=preview
     - LOG_LEVEL=debug
     - GRACEFUL_SHUTDOWN_TIMEOUT=5s
-
-# External Secrets configuration will be added as a separate resource file
