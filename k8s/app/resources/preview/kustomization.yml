@@ -7,6 +7,12 @@ resources:
 - ../../base
 - ../../../namespace/namespace.yml
 - ../../../gcp/certificate.yml
+- alloydb-omni.yml
+- alloydb-auth.yml
+
+patchesStrategicMerge:
+- namespace-patch.yml
+- network-policy-patch.yml
 
 patches:
 # Adjust resources and configuration
@@ -28,11 +34,52 @@ patches:
         limits:
           memory: "256Mi"
           cpu: "200m"
+    # Replace entire env array to remove ALLOYDB_AUTH_PROXY and add database config
+    - op: replace
+      path: /spec/template/spec/containers/0/env
+      value:
+        - name: TENANT
+          value: webapp-team
+        - name: COMPLIANCE
+          value: gdpr
+        - name: PROJECT_ID
+          value: ${PROJECT_ID}
+        - name: STAGE
+          value: preview
+        - name: DATABASE_HOST
+          value: al-alloydb-preview-rw-ilb
+        - name: DATABASE_PORT
+          value: "5432"
+        - name: DATABASE_NAME
+          value: webapp_preview
+        - name: DATABASE_USER
+          value: postgres
+        - name: DATABASE_PASSWORD
+          value: preview_temp_password
+        - name: DATABASE_SSL_MODE
+          value: disable
+        - name: WEBAPP_DEMO_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: webapp-demo-secret
+              key: webapp-demo-secret
+
+
+# Patch migration job to remove AlloyDB proxy and add database config
+- target:
+    kind: Job
+    name: webapp-migration
+  patch: |-
+    - op: remove
+      path: /spec/template/spec/initContainers  # Remove AlloyDB proxy sidecar
+    - op: replace
+      path: /spec/template/spec/containers/0/env/2/value  # Update STAGE value
+      value: preview
     - op: add
       path: /spec/template/spec/containers/0/env/-
       value:
         name: DATABASE_HOST
-        value: localhost
+        value: al-alloydb-preview-rw-ilb
     - op: add
       path: /spec/template/spec/containers/0/env/-
       value:
@@ -47,7 +94,7 @@ patches:
       path: /spec/template/spec/containers/0/env/-
       value:
         name: DATABASE_USER
-        value: webapp
+        value: postgres
     - op: add
       path: /spec/template/spec/containers/0/env/-
       value:
@@ -58,78 +105,8 @@ patches:
       value:
         name: DATABASE_SSL_MODE
         value: disable
-
-# Add AlloyDB Omni sidecar using JSON6902 patch
-- target:
-    group: apps
-    version: v1
-    kind: Deployment
-    labelSelector: "app=webapp"  # Use label selector to match any name
-  patch: |-
-    - op: add
-      path: /spec/template/spec/containers/1
-      value:
-        name: alloydb-omni
-        image: gcr.io/alloydb-omni/alloydbomni:16
-        env:
-        - name: POSTGRES_DB
-          value: webapp_preview
-        - name: POSTGRES_USER
-          value: webapp
-        - name: POSTGRES_PASSWORD
-          value: preview_temp_password
-        - name: PGDATA
-          value: /var/lib/postgresql/data
-        - name: ALLOYDB_OMNI_ACCEPT_TERMS
-          value: "YES"
-        ports:
-        - containerPort: 5432
-          name: postgres
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        volumeMounts:
-        - name: alloydb-storage
-          mountPath: /var/lib/postgresql/data
-        livenessProbe:
-          exec:
-            command:
-            - pg_isready
-            - -U
-            - webapp
-            - -d
-            - webapp_preview
-          initialDelaySeconds: 60
-          periodSeconds: 10
-          timeoutSeconds: 5
-        readinessProbe:
-          exec:
-            command:
-            - pg_isready
-            - -U
-            - webapp
-            - -d
-            - webapp_preview
-          initialDelaySeconds: 30
-          periodSeconds: 5
-          timeoutSeconds: 3
-        securityContext:
-          runAsUser: 999
-          runAsGroup: 999
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false
-          capabilities:
-            drop:
-            - ALL
-    - op: add
-      path: /spec/template/spec/volumes/-
-      value:
-        name: alloydb-storage
-        emptyDir: {}
+    - op: remove
+      path: /spec/template/spec/containers/0/env/3  # Remove ALLOYDB_AUTH_PROXY
 
 configMapGenerator:
 - name: webapp-profile-config
