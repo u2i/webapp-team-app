@@ -21,9 +21,16 @@ spec:
     adminUser:
       passwordRef:
         name: db-pw-alloydb-preview
+    availabilityOptions:
+      # Single instance configuration - no HA needed for preview
+      livenessProbe: Enabled  # Keep container health checks
+    services:
+      # Disable optional services for minimal preview environment
+      Logging: false     # Disable logging agent to reduce overhead
+      Monitoring: false  # Disable monitoring agent to reduce overhead
     resources:
-      cpu: 500m
-      memory: 4Gi
+      cpu: 250m      # Reduced CPU for single instance
+      memory: 4Gi    # Minimum memory to avoid OOM
       disks:
       - name: DataDisk
         size: 5Gi
