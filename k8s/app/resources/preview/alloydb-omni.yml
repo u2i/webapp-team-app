@@ -17,6 +17,9 @@ metadata:
     component: database
 spec:
   databaseVersion: "16.8.0"
+  availability:
+    numberOfStandbys: 0  # Explicitly disable HA for single-instance preview
+    enableStandbyAsReadReplica: false
   primarySpec:
     adminUser:
       passwordRef:
