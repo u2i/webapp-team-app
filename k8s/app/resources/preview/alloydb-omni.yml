@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-pw-alloydb-preview
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
+type: Opaque
+data:
+  alloydb-preview: cHJldmlld190ZW1wX3Bhc3N3b3Jk # base64 of "preview_temp_password"
+---
+apiVersion: alloydbomni.dbadmin.goog/v1
+kind: DBCluster
+metadata:
+  name: alloydb-preview
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
+  labels:
+    app: alloydb-omni
+    component: database
+spec:
+  databaseVersion: "16.8.0"
+  primarySpec:
+    adminUser:
+      passwordRef:
+        name: db-pw-alloydb-preview
+    resources:
+      cpu: 500m
+      memory: 1Gi
+      disks:
+      - name: DataDisk
+        size: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alloydb-omni
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
+  labels:
+    app: alloydb-omni
+    component: database
+spec:
+  ports:
+  - port: 5432
+    targetPort: 5432
+    name: postgres
+  selector:
+    alloydbomni.internal.dbadmin.goog/dbcluster: alloydb-preview
+    alloydbomni.internal.dbadmin.goog/task: database
+  type: ClusterIP
