@@ -23,7 +23,7 @@ spec:
         name: db-pw-alloydb-preview
     resources:
       cpu: 500m
-      memory: 1Gi
+      memory: 4Gi
       disks:
       - name: DataDisk
         size: 5Gi
