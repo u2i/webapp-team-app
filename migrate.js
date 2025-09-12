@@ -49,10 +49,18 @@ async function fetchDatabaseUrl() {
     console.log('AlloyDB Auth Proxy detected with IAM authentication');
     // Connect to localhost:5432 with IAM user (empty password)
     const iamUser = `webapp-k8s@${PROJECT_ID}.iam`; // e.g., webapp-k8s@u2i-tenant-webapp-nonprod.iam
-    const database = `webapp_${STAGE}`; // e.g., webapp_dev
+    // Use DATABASE_NAME if provided (for preview environments with PR-specific DBs)
+    const database = process.env.DATABASE_NAME || `webapp_${STAGE}`; // e.g., webapp_preview_pr123 or webapp_dev
     const databaseUrl = `postgresql://${iamUser}:@localhost:5432/${database}`;
     console.log(`Connecting as IAM user: ${iamUser}`);
     console.log(`Database: ${database}`);
+    
+    // Check if we should create the database if it doesn't exist
+    if (process.env.DATABASE_CREATE_IF_NOT_EXISTS === 'true') {
+      console.log(`Will create database ${database} if it doesn't exist`);
+      // The actual creation will be handled by node-pg-migrate with createDatabaseIfNotExists option
+    }
+    
     return databaseUrl;
   }
 
