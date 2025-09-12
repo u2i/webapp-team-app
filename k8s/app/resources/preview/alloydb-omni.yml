@@ -50,8 +50,6 @@ spec:
           value: webapp
         - name: POSTGRES_PASSWORD
           value: preview_temp_password
-        - name: PGDATA
-          value: /var/lib/postgresql/data/pgdata
         - name: ALLOYDB_OMNI_ACCEPT_TERMS
           value: "YES"
         resources:
