@@ -43,16 +43,6 @@ patches:
         limits:
           memory: "256Mi"
           cpu: "200m"
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: DATABASE_NAME
-        value: webapp_preview_pr${PR_NUMBER}
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: DATABASE_CREATE_IF_NOT_EXISTS
-        value: "true"
 
 
 # Patch migration job to use shared AlloyDB with PR-specific database
@@ -70,16 +60,6 @@ patches:
     - op: replace
       path: /spec/template/spec/containers/0/env/2/value  # Update STAGE value
       value: preview
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: DATABASE_NAME
-        value: webapp_preview_pr${PR_NUMBER}
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: DATABASE_CREATE_IF_NOT_EXISTS
-        value: "true"
 
 configMapGenerator:
 - name: webapp-profile-config

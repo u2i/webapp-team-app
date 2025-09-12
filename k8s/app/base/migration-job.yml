@@ -61,6 +61,10 @@ spec:
           value: "${STAGE}" # from-param: ${STAGE}
         - name: ALLOYDB_AUTH_PROXY
           value: "true"
+        - name: DATABASE_NAME
+          value: "${DATABASE_NAME}" # from-param: ${DATABASE_NAME}
+        - name: DATABASE_CREATE_IF_NOT_EXISTS
+          value: "${DATABASE_CREATE_IF_NOT_EXISTS}" # from-param: ${DATABASE_CREATE_IF_NOT_EXISTS}
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
