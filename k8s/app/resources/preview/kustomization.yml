@@ -8,21 +8,13 @@ resources:
 - ../../../namespace/namespace.yml
 - ../../../gcp/certificate.yml
 - alloydb-omni.yml
+- alloydb-auth.yml
+
+patchesStrategicMerge:
+- namespace-patch.yml
+- network-policy-patch.yml
 
 patches:
-# Relax pod security for AlloyDB Omni operator - use strategic merge patch
-- target:
-    kind: Namespace
-    name: ${NAMESPACE}
-  patch: |-
-    apiVersion: v1
-    kind: Namespace
-    metadata:
-      name: ${NAMESPACE}
-      labels:
-        pod-security.kubernetes.io/enforce: baseline
-        pod-security.kubernetes.io/audit: baseline
-        pod-security.kubernetes.io/warn: baseline
 # Adjust resources and configuration
 - target:
     kind: Deployment
@@ -52,6 +44,8 @@ patches:
           value: gdpr
         - name: PROJECT_ID
           value: ${PROJECT_ID}
+        - name: STAGE
+          value: preview
         - name: DATABASE_HOST
           value: al-alloydb-preview-rw-ilb
         - name: DATABASE_PORT
@@ -71,21 +65,6 @@ patches:
               key: webapp-demo-secret
 
 
-# Patch network policy to allow connection to AlloyDB Omni
-- target:
-    kind: NetworkPolicy
-    name: webapp-network-policy
-  patch: |-
-    - op: add
-      path: /spec/egress/-
-      value:
-        to:
-        - podSelector:
-            matchLabels:
-              alloydbomni.internal.dbadmin.goog/dbcluster: alloydb-preview
-        ports:
-        - protocol: TCP
-          port: 5432
 # Patch migration job to remove AlloyDB proxy and add database config
 - target:
     kind: Job
@@ -93,6 +72,9 @@ patches:
   patch: |-
     - op: remove
       path: /spec/template/spec/initContainers  # Remove AlloyDB proxy sidecar
+    - op: replace
+      path: /spec/template/spec/containers/0/env/2/value  # Update STAGE value
+      value: preview
     - op: add
       path: /spec/template/spec/containers/0/env/-
       value:

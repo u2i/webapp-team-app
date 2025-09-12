@@ -1,0 +1,59 @@
+# Network policy patch for preview environments
+# Adds egress rule to allow connections to AlloyDB Omni
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: webapp-network-policy # from-param: ${NAME_PREFIX}${APP_NAME}-network-policy
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
+spec:
+  egress:
+  # Allow access to GKE metadata server for Workload Identity
+  - to:
+    - ipBlock:
+        cidr: 169.254.169.254/32
+    ports:
+    - protocol: TCP
+      port: 80
+  # Allow DNS to node-local DNS cache (GKE uses NodeLocal DNSCache at 169.254.20.10)
+  - to:
+    - ipBlock:
+        cidr: 169.254.20.10/32
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Also allow DNS to kube-system namespace as fallback
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Allow HTTPS outbound
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    ports:
+    - protocol: TCP
+      port: 443
+  # Allow AlloyDB connections (Private Service Access range)
+  - to:
+    - ipBlock:
+        cidr: 10.152.0.0/24
+    ports:
+    - protocol: TCP
+      port: 5433
+    - protocol: TCP
+      port: 5432
+  # Allow connections to AlloyDB Omni pods in same namespace
+  - to:
+    - podSelector:
+        matchLabels:
+          alloydbomni.internal.dbadmin.goog/dbcluster: alloydb-preview
+    ports:
+    - protocol: TCP
+      port: 5432
