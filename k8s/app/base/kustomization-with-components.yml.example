@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# App-specific resources
+resources:
+- deployment.yml
+- service.yml
+- httproute.yml
+- external-secret.yml
+- migration-job.yml
+
+# Reusable components from library
+components:
+- ../../components/networking/gke-network-policy
+- ../../components/security/workload-identity
+- ../../components/observability/autoscaling
+
+# Optional: Add more components as needed
+# - ../../components/database/alloydb-omni        # For preview environments
+# - ../../components/security/pod-security         # For additional security
+# - ../../components/observability/monitoring      # For Prometheus/Grafana
+
+labels:
+- pairs:
+    app.kubernetes.io/component: webapp
+    tenant: webapp-team
+    compliance: iso27001-soc2-gdpr
+    data-residency: eu
+  includeSelectors: false

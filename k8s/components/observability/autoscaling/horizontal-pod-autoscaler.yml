@@ -1,0 +1,42 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: webapp-hpa # from-param: ${APP_NAME}-hpa
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
+  labels:
+    app: webapp # from-param: ${APP_NAME}
+    stage: ${STAGE} # from-param: ${STAGE}
+    boundary: ${BOUNDARY} # from-param: ${BOUNDARY}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: webapp # from-param: ${APP_NAME}
+  minReplicas: ${HPA_MIN_REPLICAS} # from-param: ${HPA_MIN_REPLICAS}
+  maxReplicas: ${HPA_MAX_REPLICAS} # from-param: ${HPA_MAX_REPLICAS}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300  # Wait 5 min before scaling down
+      policies:
+      - type: Percent
+        value: 50  # Scale down max 50% at a time
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60   # Scale up faster
+      policies:
+      - type: Percent
+        value: 100  # Can double pods when scaling up
+        periodSeconds: 60
