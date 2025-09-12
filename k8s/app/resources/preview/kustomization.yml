@@ -7,14 +7,31 @@ resources:
 - ../../base
 - ../../../namespace/namespace.yml
 - ../../../gcp/certificate.yml
-- alloydb-omni.yml
-- alloydb-auth.yml
+- db-password-secret.yml
+
+# Add AlloyDB Omni database for preview environments
+components:
+- ../../../components/database/alloydb-omni
 
 patchesStrategicMerge:
 - namespace-patch.yml
-- network-policy-patch.yml
 
 patches:
+# Add AlloyDB Omni egress to network policy
+- target:
+    kind: NetworkPolicy
+    name: ${APP_NAME}-network-policy
+  patch: |-
+    - op: add
+      path: /spec/egress/-
+      value:
+        to:
+        - podSelector:
+            matchLabels:
+              alloydbomni.internal.dbadmin.goog/dbcluster: alloydb-preview
+        ports:
+        - protocol: TCP
+          port: 5432
 # Adjust resources and configuration
 - target:
     kind: Deployment

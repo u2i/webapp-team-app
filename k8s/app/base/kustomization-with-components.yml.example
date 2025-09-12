@@ -8,16 +8,18 @@ resources:
 - httproute.yml
 - external-secret.yml
 - migration-job.yml
-# Note: namespace.yml is handled separately by Cloud Deploy
 
-# Reusable components for common patterns
+# Reusable components from library
 components:
 - ../../components/networking/gke-network-policy
 - ../../components/security/workload-identity
 - ../../components/observability/autoscaling
 
-# Use labels instead of commonLabels to avoid modifying selectors
-# commonLabels would add these to selectors which breaks the service
+# Optional: Add more components as needed
+# - ../../components/database/alloydb-omni        # For preview environments
+# - ../../components/security/pod-security         # For additional security
+# - ../../components/observability/monitoring      # For Prometheus/Grafana
+
 labels:
 - pairs:
     app.kubernetes.io/component: webapp
@@ -25,4 +27,3 @@ labels:
     compliance: iso27001-soc2-gdpr
     data-residency: eu
   includeSelectors: false
-# Keep app label in deployment/pod templates only, not in selectors

@@ -13,9 +13,6 @@ patches:
     labelSelector: "app=webapp"
   patch: |-
     - op: replace
-      path: /spec/replicas
-      value: 1
-    - op: replace
       path: /spec/template/spec/containers/0/resources
       value:
         requests:

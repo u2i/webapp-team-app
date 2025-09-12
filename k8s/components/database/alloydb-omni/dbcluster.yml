@@ -1,12 +1,3 @@
-apiVersion: v1
-kind: Secret
-metadata:
-  name: db-pw-alloydb-preview
-  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
-type: Opaque
-data:
-  alloydb-preview: cHJldmlld190ZW1wX3Bhc3N3b3Jk # base64 of "preview_temp_password"
----
 apiVersion: alloydbomni.dbadmin.goog/v1
 kind: DBCluster
 metadata:

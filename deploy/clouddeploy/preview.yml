@@ -5,7 +5,7 @@
 # To make changes, edit the template at:
 # compliance-cli/internal/generate/templates/pipelines/preview.yaml.tmpl
 # 
-# Generated on: 2025-09-04 17:06:53 EDT
+# Generated on: 2025-09-12 12:53:01 EDT
 # To regenerate: make generate-pipelines
 # ===========================================================================
 
@@ -29,6 +29,11 @@ serialPipeline:
     strategy:
       standard:
         verify: false
+    deployParameters:
+      - values:
+          PDB_MIN_AVAILABLE: "0"
+          HPA_MIN_REPLICAS: "1"
+          HPA_MAX_REPLICAS: "2"
 
 ---
 apiVersion: deploy.cloud.google.com/v1
