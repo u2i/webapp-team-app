@@ -10,6 +10,20 @@ resources:
 - alloydb-omni.yml
 
 patches:
+# Relax pod security for AlloyDB Omni operator
+- target:
+    kind: Namespace
+    name: ${NAMESPACE}
+  patch: |-
+    - op: replace
+      path: /metadata/labels/pod-security.kubernetes.io~1enforce
+      value: baseline
+    - op: replace
+      path: /metadata/labels/pod-security.kubernetes.io~1audit
+      value: baseline
+    - op: replace
+      path: /metadata/labels/pod-security.kubernetes.io~1warn
+      value: baseline
 # Adjust resources and configuration
 - target:
     kind: Deployment
