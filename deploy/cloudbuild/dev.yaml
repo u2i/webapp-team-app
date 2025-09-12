@@ -68,7 +68,7 @@ steps:
   args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp']
 
 # Deploy using compliance-cli
-- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:'
+- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:v0.9.1'
   id: 'deploy-dev'
   entrypoint: 'compliance-cli'
   args: ['dev']
@@ -79,7 +79,7 @@ steps:
   - 'SHORT_SHA=$SHORT_SHA'
 
 # Send Slack notification
-- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:'
+- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:v0.9.1'
   id: 'slack-notification'
   entrypoint: 'compliance-cli'
   args: ['slack', 'notify', '--environment', 'dev']

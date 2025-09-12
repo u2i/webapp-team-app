@@ -4,8 +4,8 @@
 # Application identifier
 app: webapp
 
-# Compliance CLI version for Docker images
-compliance_cli_version: latest
+# Compliance CLI version for Cloud Build
+compliance_cli_version: v0.9.1
 
 # GCP projects
 projects:
