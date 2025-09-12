@@ -62,3 +62,12 @@ spec:
     ports:
     - protocol: TCP
       port: 443
+  # Allow AlloyDB connections
+  - to:
+    - ipBlock:
+        cidr: 10.152.0.0/24  # AlloyDB subnet
+    ports:
+    - protocol: TCP
+      port: 5433
+    - protocol: TCP
+      port: 5432

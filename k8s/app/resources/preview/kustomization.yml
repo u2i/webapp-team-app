@@ -68,21 +68,4 @@ configMapGenerator:
     - LOG_LEVEL=debug
     - GRACEFUL_SHUTDOWN_TIMEOUT=5s
 
-# Add AlloyDB network egress for preview environments
-- target:
-    kind: NetworkPolicy
-    name: webapp-network-policy
-  patch: |-
-    - op: add
-      path: /spec/egress/-
-      value:
-        ports:
-        - port: 5433
-          protocol: TCP
-        - port: 5432
-          protocol: TCP
-        to:
-        - ipBlock:
-            cidr: 10.152.0.0/24
-
 # External Secrets configuration will be added as a separate resource file
