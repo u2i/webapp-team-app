@@ -48,7 +48,7 @@ patches:
       path: /spec/template/spec/containers/0/env/-
       value:
         name: DATABASE_USER
-        value: webapp
+        value: postgres
     - op: add
       path: /spec/template/spec/containers/0/env/-
       value:
@@ -91,7 +91,7 @@ patches:
       path: /spec/template/spec/containers/0/env/-
       value:
         name: DATABASE_USER
-        value: webapp
+        value: postgres
     - op: add
       path: /spec/template/spec/containers/0/env/-
       value:
