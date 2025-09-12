@@ -26,12 +26,10 @@ async function fetchDatabaseUrl() {
     return `postgresql://${user}:${password}@${host}:${port}/${database}`;
   }
 
-  // Skip Secret Manager for preview environments
-  if (STAGE === 'preview') {
-    console.log(
-      'Preview environment: skipping Secret Manager (use ConfigMap instead)'
-    );
-    return null;
+  // For preview environments using AlloyDB Auth Proxy
+  if (STAGE === 'preview' && process.env.ALLOYDB_AUTH_PROXY === 'true') {
+    console.log('Preview environment with AlloyDB Auth Proxy');
+    // Continue to Auth Proxy section below
   }
 
   // Try to fetch from Secret Manager

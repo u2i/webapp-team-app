@@ -4,6 +4,9 @@
 # Application identifier
 app: webapp
 
+# Compliance CLI version for Cloud Build
+compliance_cli_version: v0.9.1
+
 # GCP projects
 projects:
   nonprod: u2i-tenant-webapp-nonprod

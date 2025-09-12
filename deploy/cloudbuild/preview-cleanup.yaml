@@ -5,7 +5,7 @@
 
 steps:
 # Clean up preview environments using compliance-cli
-- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:'
+- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:v0.9.1'
   id: 'cleanup-previews'
   entrypoint: 'compliance-cli'
   args: ['preview', 'cleanup']
