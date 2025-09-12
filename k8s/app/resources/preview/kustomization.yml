@@ -71,6 +71,21 @@ patches:
               key: webapp-demo-secret
 
 
+# Patch network policy to allow connection to AlloyDB Omni
+- target:
+    kind: NetworkPolicy
+    name: webapp-network-policy
+  patch: |-
+    - op: add
+      path: /spec/egress/-
+      value:
+        to:
+        - podSelector:
+            matchLabels:
+              alloydbomni.internal.dbadmin.goog/dbcluster: alloydb-preview
+        ports:
+        - protocol: TCP
+          port: 5432
 # Patch migration job to remove AlloyDB proxy and add database config
 - target:
     kind: Job
