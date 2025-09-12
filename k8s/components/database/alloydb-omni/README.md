@@ -4,7 +4,6 @@ This component provides a single-instance AlloyDB Omni database for preview and 
 
 > **Note**: This component is preserved for reference but not currently used in preview environments. 
 > Preview environments now use the shared boundary-wide AlloyDB instance with PR-specific databases.
-
 ## Resources Included
 
 - **DBCluster**: AlloyDB Omni cluster with optimized settings for dev/preview
