@@ -37,6 +37,16 @@ spec:
       securityContext:
         fsGroup: 999
         runAsNonRoot: true
+      initContainers:
+      - name: clean-data
+        image: busybox:1.35
+        command: ['sh', '-c', 'rm -rf /var/lib/postgresql/data/* || true']
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+        securityContext:
+          runAsUser: 999
+          runAsGroup: 999
       containers:
       - name: alloydb-omni
         image: gcr.io/alloydb-omni/alloydbomni:16
