@@ -16,7 +16,7 @@ spec:
   type: ClusterIP
 ---
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: alloydb-omni
   namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
@@ -24,7 +24,6 @@ metadata:
     app: alloydb-omni
     component: database
 spec:
-  serviceName: alloydb-omni
   replicas: 1
   selector:
     matchLabels:
@@ -95,11 +94,6 @@ spec:
           capabilities:
             drop:
             - ALL
-  volumeClaimTemplates:
-  - metadata:
-      name: data
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      resources:
-        requests:
-          storage: 5Gi
+      volumes:
+      - name: data
+        emptyDir: {}
