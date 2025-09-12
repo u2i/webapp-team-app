@@ -2,6 +2,9 @@
 
 This component provides a single-instance AlloyDB Omni database for preview and development environments.
 
+> **Note**: This component is preserved for reference but not currently used in preview environments. 
+> Preview environments now use the shared boundary-wide AlloyDB instance with PR-specific databases.
+
 ## Resources Included
 
 - **DBCluster**: AlloyDB Omni cluster with optimized settings for dev/preview
@@ -62,3 +65,60 @@ The DBCluster must be deleted using the two-phase deletion process:
 3. Delete the namespace
 
 This is handled automatically by the compliance-cli destroy command.
+
+## How to Enable AlloyDB Omni for an Environment
+
+To use AlloyDB Omni instead of shared AlloyDB:
+
+1. **Add the component to your kustomization.yml**:
+   ```yaml
+   components:
+   - ../../../components/database/alloydb-omni
+   ```
+
+2. **Add the database password secret**:
+   ```yaml
+   resources:
+   - db-password-secret.yml
+   ```
+
+3. **Configure environment variables**:
+   ```yaml
+   - name: DATABASE_HOST
+     value: al-alloydb-preview-rw-ilb
+   - name: DATABASE_USER
+     value: postgres
+   - name: DATABASE_PASSWORD
+     valueFrom:
+       secretKeyRef:
+         name: db-pw-alloydb-preview
+         key: alloydb-preview
+   - name: DATABASE_SSL_MODE
+     value: disable
+   ```
+
+4. **Remove AlloyDB Auth Proxy init container**:
+   ```yaml
+   - op: remove
+     path: /spec/template/spec/initContainers/0
+   ```
+
+5. **Add network policy for AlloyDB Omni pods**:
+   ```yaml
+   - op: add
+     path: /spec/egress/-
+     value:
+       to:
+       - podSelector:
+           matchLabels:
+             alloydbomni.internal.dbadmin.goog/dbcluster: alloydb-preview
+       ports:
+       - protocol: TCP
+         port: 5432
+   ```
+
+## Prerequisites
+
+- AlloyDB Omni Operator must be installed in the cluster
+- PodSecurity policy must be set to "baseline" (not "restricted")
+- Sufficient resources: minimum 4Gi memory per instance

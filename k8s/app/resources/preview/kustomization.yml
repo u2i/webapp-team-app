@@ -7,31 +7,19 @@ resources:
 - ../../base
 - ../../../namespace/namespace.yml
 - ../../../gcp/certificate.yml
-- db-password-secret.yml
 
-# Add AlloyDB Omni database for preview environments
-components:
-- ../../../components/database/alloydb-omni
+# Note: AlloyDB Omni component preserved but not used
+# Preview environments now use shared AlloyDB with PR-specific databases
+# To re-enable AlloyDB Omni, uncomment:
+# components:
+# - ../../../components/database/alloydb-omni
+# resources:
+# - db-password-secret.yml
 
 patchesStrategicMerge:
 - namespace-patch.yml
 
 patches:
-# Add AlloyDB Omni egress to network policy
-- target:
-    kind: NetworkPolicy
-    name: ${APP_NAME}-network-policy
-  patch: |-
-    - op: add
-      path: /spec/egress/-
-      value:
-        to:
-        - podSelector:
-            matchLabels:
-              alloydbomni.internal.dbadmin.goog/dbcluster: alloydb-preview
-        ports:
-        - protocol: TCP
-          port: 5432
 # Adjust resources and configuration
 - target:
     kind: Deployment
@@ -40,8 +28,12 @@ patches:
     - op: replace
       path: /spec/replicas
       value: 1
-    - op: remove
-      path: /spec/template/spec/initContainers/0  # Remove AlloyDB proxy for preview
+    - op: replace
+      path: /spec/template/spec/initContainers/0/args
+      value:
+      - "projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-nonprod-alloydb/instances/webapp-nonprod-alloydb-primary"
+      - "--port=5432"
+      - "--auto-iam-authn"
     - op: replace
       path: /spec/template/spec/containers/0/resources
       value:
@@ -51,79 +43,43 @@ patches:
         limits:
           memory: "256Mi"
           cpu: "200m"
-    # Replace entire env array to remove ALLOYDB_AUTH_PROXY and add database config
-    - op: replace
-      path: /spec/template/spec/containers/0/env
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
       value:
-        - name: TENANT
-          value: webapp-team
-        - name: COMPLIANCE
-          value: gdpr
-        - name: PROJECT_ID
-          value: ${PROJECT_ID}
-        - name: STAGE
-          value: preview
-        - name: DATABASE_HOST
-          value: al-alloydb-preview-rw-ilb
-        - name: DATABASE_PORT
-          value: "5432"
-        - name: DATABASE_NAME
-          value: webapp_preview
-        - name: DATABASE_USER
-          value: postgres
-        - name: DATABASE_PASSWORD
-          value: preview_temp_password
-        - name: DATABASE_SSL_MODE
-          value: disable
-        - name: WEBAPP_DEMO_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: webapp-demo-secret
-              key: webapp-demo-secret
+        name: DATABASE_NAME
+        value: webapp_preview_pr${PR_NUMBER}
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: DATABASE_CREATE_IF_NOT_EXISTS
+        value: "true"
 
 
-# Patch migration job to remove AlloyDB proxy and add database config
+# Patch migration job to use shared AlloyDB with PR-specific database
 - target:
     kind: Job
     name: webapp-migration
   patch: |-
-    - op: remove
-      path: /spec/template/spec/initContainers  # Remove AlloyDB proxy sidecar
+    - op: replace
+      path: /spec/template/spec/initContainers/0/args
+      value:
+      - "projects/u2i-tenant-webapp-nonprod/locations/europe-west1/clusters/webapp-nonprod-alloydb/instances/webapp-nonprod-alloydb-primary"
+      - "--port=5432"
+      - "--max-connections=10"
+      - "--auto-iam-authn"
     - op: replace
       path: /spec/template/spec/containers/0/env/2/value  # Update STAGE value
       value: preview
     - op: add
       path: /spec/template/spec/containers/0/env/-
       value:
-        name: DATABASE_HOST
-        value: al-alloydb-preview-rw-ilb
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: DATABASE_PORT
-        value: "5432"
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
         name: DATABASE_NAME
-        value: webapp_preview
+        value: webapp_preview_pr${PR_NUMBER}
     - op: add
       path: /spec/template/spec/containers/0/env/-
       value:
-        name: DATABASE_USER
-        value: postgres
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: DATABASE_PASSWORD
-        value: preview_temp_password
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: DATABASE_SSL_MODE
-        value: disable
-    - op: remove
-      path: /spec/template/spec/containers/0/env/3  # Remove ALLOYDB_AUTH_PROXY
+        name: DATABASE_CREATE_IF_NOT_EXISTS
+        value: "true"
 
 configMapGenerator:
 - name: webapp-profile-config
