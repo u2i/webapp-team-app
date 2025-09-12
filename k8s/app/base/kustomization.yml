@@ -1,18 +1,20 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# App-specific resources
 resources:
-- service-account.yml
 - deployment.yml
 - service.yml
-- network-policy.yml
 - httproute.yml
-- pod-disruption-budget.yml
-- horizontal-pod-autoscaler.yml
-- secret-store.yml
 - external-secret.yml
 - migration-job.yml
 # Note: namespace.yml is handled separately by Cloud Deploy
+
+# Reusable components for common patterns
+components:
+- ../../components/networking/gke-network-policy
+- ../../components/security/workload-identity
+- ../../components/observability/autoscaling
 
 # Use labels instead of commonLabels to avoid modifying selectors
 # commonLabels would add these to selectors which breaks the service
