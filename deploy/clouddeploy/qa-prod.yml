@@ -45,6 +45,8 @@ serialPipeline:
           CERT_DESCRIPTION: "Certificate for qa.webapp.u2i.dev"
           PROJECT_ID: "u2i-tenant-webapp-nonprod"
           PDB_MIN_AVAILABLE: "1"
+          HPA_MIN_REPLICAS: "2"
+          HPA_MAX_REPLICAS: "5"
   - targetId: prod-gke
     profiles:
       - prod
@@ -67,6 +69,8 @@ serialPipeline:
           CERT_DESCRIPTION: "Certificate for webapp.u2i.com"
           PROJECT_ID: "u2i-tenant-webapp-prod"
           PDB_MIN_AVAILABLE: "2"
+          HPA_MIN_REPLICAS: "3"
+          HPA_MAX_REPLICAS: "10"
           APP_NAME: "webapp"
 
 ---

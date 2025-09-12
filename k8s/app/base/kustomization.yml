@@ -8,6 +8,7 @@ resources:
 - network-policy.yml
 - httproute.yml
 - pod-disruption-budget.yml
+- horizontal-pod-autoscaler.yml
 - secret-store.yml
 - external-secret.yml
 - migration-job.yml

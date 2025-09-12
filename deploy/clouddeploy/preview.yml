@@ -29,6 +29,11 @@ serialPipeline:
     strategy:
       standard:
         verify: false
+    deployParameters:
+      - values:
+          PDB_MIN_AVAILABLE: "0"
+          HPA_MIN_REPLICAS: "1"
+          HPA_MAX_REPLICAS: "2"
 
 ---
 apiVersion: deploy.cloud.google.com/v1
