@@ -27,21 +27,3 @@ spec:
       disks:
       - name: DataDisk
         size: 5Gi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: alloydb-omni
-  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
-  labels:
-    app: alloydb-omni
-    component: database
-spec:
-  ports:
-  - port: 5432
-    targetPort: 5432
-    name: postgres
-  selector:
-    alloydbomni.internal.dbadmin.goog/dbcluster: alloydb-preview
-    alloydbomni.internal.dbadmin.goog/task: database
-  type: ClusterIP

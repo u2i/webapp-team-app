@@ -33,7 +33,7 @@ patches:
       path: /spec/template/spec/containers/0/env/-
       value:
         name: DATABASE_HOST
-        value: alloydb-omni
+        value: al-alloydb-preview-rw-ilb
     - op: add
       path: /spec/template/spec/containers/0/env/-
       value:
