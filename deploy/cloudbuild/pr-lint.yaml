@@ -5,7 +5,7 @@
 
 steps:
 # Lint Check
-- name: 'node:18-alpine'
+- name: 'node:22-alpine'
   id: 'lint-check'
   entrypoint: 'sh'
   args:

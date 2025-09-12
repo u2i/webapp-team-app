@@ -5,7 +5,7 @@
 
 steps:
 # Static Analysis
-- name: 'node:18-alpine'
+- name: 'node:22-alpine'
   id: 'static-analysis'
   entrypoint: 'sh'
   args:
@@ -16,7 +16,7 @@ steps:
     echo "Static analysis completed!"
 
 # Lint Check
-- name: 'node:18-alpine'
+- name: 'node:22-alpine'
   id: 'lint-check'
   waitFor: ['static-analysis']
   entrypoint: 'sh'
@@ -28,7 +28,7 @@ steps:
     echo "Linting passed!"
 
 # Format Check
-- name: 'node:18-alpine'
+- name: 'node:22-alpine'
   id: 'format-check'
   waitFor: ['lint-check']
   entrypoint: 'sh'
@@ -40,7 +40,7 @@ steps:
     echo "Code formatting verified!"
 
 # Run tests
-- name: 'node:18-alpine'
+- name: 'node:22-alpine'
   id: 'run-tests'
   waitFor: ['format-check']
   entrypoint: 'sh'
@@ -69,7 +69,7 @@ steps:
   args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp']
 
 # Deploy using compliance-cli
-- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
+- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:'
   id: 'deploy-qa'
   entrypoint: 'compliance-cli'
   args: ['qa']
@@ -81,7 +81,7 @@ steps:
   - 'TAG_NAME=$TAG_NAME'
 
 # Send Slack notification
-- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
+- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:'
   id: 'slack-notification'
   entrypoint: 'compliance-cli'
   args: ['slack', 'notify', '--environment', 'qa']

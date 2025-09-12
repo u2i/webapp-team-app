@@ -5,14 +5,14 @@
 
 steps:
 # Destroy preview environment using compliance-cli
-- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:latest'
+- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:'
   id: 'destroy-preview'
   entrypoint: 'compliance-cli'
   args: ['preview', 'destroy']
   env:
   - 'PROJECT_ID=${_PROJECT_ID}'
   - 'REGION=${_REGION}'
-  - 'PR_NUMBER=${_PR_NUMBER}'
+  - '_PR_NUMBER=${_PR_NUMBER}'
 
 options:
   logging: CLOUD_LOGGING_ONLY

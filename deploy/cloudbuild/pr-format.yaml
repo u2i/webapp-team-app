@@ -5,7 +5,7 @@
 
 steps:
 # Format Check
-- name: 'node:18-alpine'
+- name: 'node:22-alpine'
   id: 'format-check'
   entrypoint: 'sh'
   args:
