@@ -35,6 +35,7 @@ spec:
         component: database
     spec:
       securityContext:
+        fsGroup: 999
         runAsNonRoot: true
       containers:
       - name: alloydb-omni
@@ -55,7 +56,6 @@ spec:
         volumeMounts:
         - name: data
           mountPath: /var/lib/postgresql/data
-          subPath: postgres
         livenessProbe:
           exec:
             command:
