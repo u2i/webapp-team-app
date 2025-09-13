@@ -5,7 +5,7 @@
 # To make changes, edit the template at:
 # compliance-cli/internal/generate/templates/pipelines/qa-prod.yaml.tmpl
 # 
-# Generated on: 2025-09-12 23:00:48 EDT
+# Generated on: 2025-09-12 23:15:19 EDT
 # To regenerate: make generate-pipelines
 # ===========================================================================
 
@@ -49,6 +49,8 @@ serialPipeline:
           DATABASE_CREATE_IF_NOT_EXISTS: "false"
           HPA_MIN_REPLICAS: "2"
           HPA_MAX_REPLICAS: "4"
+          CLUSTER_LOCATION: "europe-west1"
+          CLUSTER_NAME: "webapp-cluster"
   - targetId: prod-gke
     profiles:
       - prod
@@ -76,6 +78,8 @@ serialPipeline:
           DATABASE_CREATE_IF_NOT_EXISTS: "false"
           HPA_MIN_REPLICAS: "3"
           HPA_MAX_REPLICAS: "10"
+          CLUSTER_LOCATION: "europe-west1"
+          CLUSTER_NAME: "webapp-cluster"
 
 ---
 # QA Target
