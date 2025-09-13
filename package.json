@@ -15,6 +15,7 @@
     "test:integration:run": "TEST_DATABASE_PORT=5433 npm run test:integration",
     "test:all": "npm run test:unit && npm run test:integration:setup && npm run test:integration:run ; npm run test:integration:teardown",
     "test:ci": "npm run migrate:test && npm run test:integration && npm run test:unit",
+    "test:ci:unit": "npm run test:unit",
     "lint": "eslint . --ext .js",
     "lint:fix": "eslint . --ext .js --fix",
     "format": "prettier --write '**/*.{js,json,md}'",
