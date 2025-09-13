@@ -71,5 +71,8 @@ profiles:
     kustomize:
       paths: 
       - ../k8s/app/resources/prod
+      - ../k8s/components/database/alloydb-prod
+      - ../k8s/components/security/workload-identity
+      - ../k8s/components/security/network-policy
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
