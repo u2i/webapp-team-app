@@ -39,22 +39,10 @@ steps:
     npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" || true
     echo "Code formatting verified!"
 
-# Run tests
-- name: 'node:22-alpine'
-  id: 'run-tests'
-  waitFor: ['format-check']
-  entrypoint: 'sh'
-  args:
-  - '-c'
-  - |
-    npm ci
-    npm run test:unit
-    echo "Tests passed successfully!"
-
-# Build the Docker image
+# Build the Docker image (tests run separately in PR validation)
 - name: 'gcr.io/cloud-builders/docker'
   id: 'build-image'
-  waitFor: ['run-tests']
+  waitFor: ['format-check']
   args: [
     'build',
     '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp:preview-${COMMIT_SHA}',
