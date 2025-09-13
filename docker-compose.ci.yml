@@ -60,8 +60,8 @@ services:
       TEST_DATABASE_USER: postgres
       TEST_DATABASE_PASSWORD: postgres
       # Disable colors for cleaner CI logs
-      FORCE_COLOR: 0
-      CI: true
+      FORCE_COLOR: '0'
+      CI: 'true'
     volumes:
       - .:/workspace
       - /workspace/node_modules  # Anonymous volume for node_modules
