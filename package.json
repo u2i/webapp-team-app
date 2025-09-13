@@ -8,6 +8,12 @@
     "start:with-migrations": "./start.sh",
     "test": "jest --coverage",
     "test:ci": "jest --ci --coverage --coverageReporters=text-summary",
+    "test:unit": "jest --coverage --testPathIgnorePatterns=/test/integration/",
+    "test:integration": "jest --config jest.integration.config.js",
+    "test:integration:setup": "docker-compose -f docker-compose.test.yml up -d && sleep 5",
+    "test:integration:teardown": "docker-compose -f docker-compose.test.yml down -v",
+    "test:integration:run": "TEST_DATABASE_PORT=5433 npm run test:integration",
+    "test:all": "npm run test:unit && npm run test:integration:setup && npm run test:integration:run ; npm run test:integration:teardown",
     "lint": "eslint . --ext .js",
     "lint:fix": "eslint . --ext .js --fix",
     "format": "prettier --write '**/*.{js,json,md}'",
@@ -15,7 +21,8 @@
     "migrate": "node migrate.js",
     "migrate:up": "node-pg-migrate up",
     "migrate:down": "node-pg-migrate down",
-    "migrate:create": "node-pg-migrate create"
+    "migrate:create": "node-pg-migrate create",
+    "migrate:test": "TEST_DATABASE_PORT=5433 DATABASE_URL=postgresql://postgres:postgres@localhost:5433/webapp_test node-pg-migrate up"
   },
   "dependencies": {
     "@google-cloud/secret-manager": "^6.1.0",
