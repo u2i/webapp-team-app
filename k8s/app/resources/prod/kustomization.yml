@@ -78,8 +78,6 @@ patches:
           secretKeyRef:
             name: webapp-database-secret
             key: password
-    - op: remove
-      path: /spec/template/spec/containers/0/image
 
 configMapGenerator:
 - name: webapp-profile-config
