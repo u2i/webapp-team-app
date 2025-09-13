@@ -546,12 +546,14 @@ describe('Database Module Tests', () => {
       db = require('./db');
       await db.isEnabled();
 
+      // In test environment, we use webapp_test database
+      const expectedDb = process.env.NODE_ENV === 'test' ? 'webapp_test' : 'webapp_dev';
       expect(mockClient.query).toHaveBeenCalledWith(
         'SELECT 1 FROM pg_database WHERE datname = $1',
-        ['webapp_dev']
+        [expectedDb]
       );
       expect(mockClient.query).toHaveBeenCalledWith(
-        'CREATE DATABASE "webapp_dev"'
+        `CREATE DATABASE "${expectedDb}"`
       );
     }, 15000); // Increase timeout
 

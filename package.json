@@ -6,8 +6,7 @@
   "scripts": {
     "start": "node app.js",
     "start:with-migrations": "./start.sh",
-    "test": "jest --coverage",
-    "test:ci": "jest --ci --coverage --coverageReporters=text-summary",
+    "test": "jest --coverage --testPathIgnorePatterns=/test/integration/",
     "test:unit": "jest --coverage --testPathIgnorePatterns=/test/integration/",
     "test:integration": "jest --config jest.integration.config.js",
     "test:integration:setup": "docker-compose -f docker-compose.test.yml up -d && sleep 5",

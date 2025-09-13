@@ -70,6 +70,11 @@ services:
       sh -c "
         echo 'Waiting for database...' &&
         sleep 3 &&
-        echo 'Running test suite...' &&
-        npm run test:ci
+        echo 'Running migrations...' &&
+        npm run migrate:test &&
+        echo 'Running integration tests...' &&
+        npm run test:integration &&
+        echo 'Running unit tests (without database)...' &&
+        unset DATABASE_URL DATABASE_HOST DATABASE_SSL_MODE &&
+        npm run test:unit
       "
