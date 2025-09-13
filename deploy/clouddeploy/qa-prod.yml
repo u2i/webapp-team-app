@@ -5,7 +5,7 @@
 # To make changes, edit the template at:
 # compliance-cli/internal/generate/templates/pipelines/qa-prod.yaml.tmpl
 # 
-# Generated on: 2025-09-12 16:37:19 EDT
+# Generated on: 2025-09-12 21:16:07 EDT
 # To regenerate: make generate-pipelines
 # ===========================================================================
 
@@ -45,6 +45,8 @@ serialPipeline:
           CERT_DESCRIPTION: "Certificate for qa.webapp.u2i.dev"
           PROJECT_ID: "u2i-tenant-webapp-nonprod"
           PDB_MIN_AVAILABLE: "1"
+          DATABASE_NAME: "webapp_qa"
+          DATABASE_CREATE_IF_NOT_EXISTS: "false"
   - targetId: prod-gke
     profiles:
       - prod
@@ -68,6 +70,8 @@ serialPipeline:
           PROJECT_ID: "u2i-tenant-webapp-prod"
           PDB_MIN_AVAILABLE: "2"
           APP_NAME: "webapp"
+          DATABASE_NAME: "webapp_prod"
+          DATABASE_CREATE_IF_NOT_EXISTS: "false"
 
 ---
 # QA Target
