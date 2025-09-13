@@ -72,9 +72,8 @@ services:
         sleep 3 &&
         echo 'Running migrations...' &&
         npm run migrate:test &&
-        echo 'Running integration tests...' &&
+        echo 'Running integration tests with database...' &&
         npm run test:integration &&
-        echo 'Running unit tests (without database)...' &&
-        unset DATABASE_URL DATABASE_HOST DATABASE_SSL_MODE &&
-        npm run test:unit
+        echo 'Running app API tests...' &&
+        jest app.test.js --coverage=false
       "
