@@ -38,9 +38,22 @@ patches:
     - op: replace
       path: /spec/template/spec/initContainers/0/args
       value:
-      - "projects/u2i-tenant-webapp-prod/locations/europe-west1/clusters/webapp-prod-alloydb/instances/webapp-prod-primary"
+      - "projects/u2i-tenant-webapp-prod/locations/europe-west1/clusters/webapp-prod-alloydb/instances/webapp-prod-alloydb-primary"
       - "--port=5432"
       - "--auto-iam-authn"
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: DATABASE_USER
+        value: webapp-k8s@u2i-tenant-webapp-prod.iam
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: DATABASE_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: webapp-database-secret
+            key: password
 - target:
     kind: Job
     name: webapp-migration
@@ -48,14 +61,23 @@ patches:
     - op: replace
       path: /spec/template/spec/initContainers/0/args
       value:
-      - "projects/u2i-tenant-webapp-prod/locations/europe-west1/clusters/webapp-prod-alloydb/instances/webapp-prod-primary"
+      - "projects/u2i-tenant-webapp-prod/locations/europe-west1/clusters/webapp-prod-alloydb/instances/webapp-prod-alloydb-primary"
       - "--port=5432"
       - "--max-connections=10"
       - "--auto-iam-authn"
-    - op: replace
-      path: /spec/template/spec/containers/0/image
-      value: europe-west1-docker.pkg.dev/u2i-tenant-webapp-prod/webapp-images/webapp
-
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: DATABASE_USER
+        value: webapp-k8s@u2i-tenant-webapp-prod.iam
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: DATABASE_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: webapp-database-secret
+            key: password
 configMapGenerator:
 - name: webapp-profile-config
   literals:

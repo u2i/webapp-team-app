@@ -71,5 +71,7 @@ profiles:
     kustomize:
       paths: 
       - ../k8s/app/resources/prod
+      - ../k8s/components/security/workload-identity
+      - ../k8s/components/networking/gke-network-policy
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
