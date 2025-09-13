@@ -81,10 +81,11 @@ patches:
           secretKeyRef:
             name: webapp-database-secret
             key: password
-    - op: replace
-      path: /spec/template/spec/containers/0/envFrom/0/configMapRef/name
-      value: webapp-database-config
-
+    - op: add
+      path: /spec/template/spec/containers/0/envFrom
+      value:
+      - configMapRef:
+          name: webapp-database-config
 configMapGenerator:
 - name: webapp-profile-config
   literals:
