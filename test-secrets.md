@@ -12,4 +12,4 @@ This PR tests the fix for External Secrets in preview environments.
 - Parameters now properly passed during deployment
 
 ## Verification
-Check the ExternalSecret and SecretStore status after deployment.
+Check the ExternalSecret and SecretStore status after deployment.Testing v0.9.2 with parameter substitution
