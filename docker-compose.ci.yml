@@ -75,5 +75,5 @@ services:
         echo 'Running integration tests with database...' &&
         npm run test:integration &&
         echo 'Running app API tests...' &&
-        jest app.test.js --coverage=false
+        npx jest app.test.js --coverage=false
       "
