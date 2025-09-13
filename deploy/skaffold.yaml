@@ -46,7 +46,7 @@ profiles:
   manifests:
     kustomize:
       paths: 
-      - ../k8s/app/resources/preprod
+      - ../k8s/app/resources/nonprod
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
 
@@ -55,7 +55,7 @@ profiles:
   manifests:
     kustomize:
       paths: 
-      - ../k8s/app/resources/preprod
+      - ../k8s/app/resources/nonprod
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
 
