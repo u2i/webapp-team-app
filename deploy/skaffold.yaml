@@ -73,6 +73,6 @@ profiles:
       - ../k8s/app/resources/prod
       - ../k8s/components/database/alloydb-prod
       - ../k8s/components/security/workload-identity
-      - ../k8s/components/security/network-policy
+      - ../k8s/components/networking/network-policy
       buildArgs:
       - --load-restrictor=LoadRestrictionsNone
