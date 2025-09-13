@@ -62,12 +62,21 @@ spec:
     ports:
     - protocol: TCP
       port: 443
-  # Allow AlloyDB connections
+  # Allow database connections to private networks (for AlloyDB, Cloud SQL, etc.)
+  # RFC1918 private address ranges where databases typically reside
   - to:
     - ipBlock:
-        cidr: 10.152.0.0/24  # AlloyDB subnet
+        cidr: 10.0.0.0/8      # Class A private
+    - ipBlock:
+        cidr: 172.16.0.0/12   # Class B private
+    - ipBlock:
+        cidr: 192.168.0.0/16  # Class C private
     ports:
     - protocol: TCP
-      port: 5433
+      port: 5432  # PostgreSQL
     - protocol: TCP
-      port: 5432
+      port: 5433  # AlloyDB Auth Proxy
+    - protocol: TCP
+      port: 3306  # MySQL
+    - protocol: TCP
+      port: 3307  # Cloud SQL MySQL
