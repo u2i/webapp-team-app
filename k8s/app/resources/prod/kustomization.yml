@@ -52,9 +52,8 @@ patches:
       - "--port=5432"
       - "--max-connections=10"
       - "--auto-iam-authn"
-    - op: replace
+    - op: remove
       path: /spec/template/spec/containers/0/image
-      value: europe-west1-docker.pkg.dev/u2i-tenant-webapp-prod/webapp-images/webapp
 
 configMapGenerator:
 - name: webapp-profile-config
