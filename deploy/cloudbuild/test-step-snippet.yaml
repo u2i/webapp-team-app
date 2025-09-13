@@ -1,0 +1,55 @@
+# Snippet for adding integration tests to existing Cloud Build configs
+# Add these steps to any Cloud Build configuration to run integration tests
+
+# Add to substitutions section:
+#   _TEST_CACHE_IMAGE: ${_REGION}-docker.pkg.dev/${PROJECT_ID}/webapp-images/webapp-test-cache:latest
+
+# Add these steps:
+
+  # Build test image if needed
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-test-image'
+    args:
+      - 'build'
+      - '--cache-from'
+      - '${_TEST_CACHE_IMAGE}'
+      - '--target'
+      - 'test-runner'
+      - '-t'
+      - 'webapp-test:${BUILD_ID}'
+      - '-f'
+      - 'Dockerfile.test'
+      - '.'
+
+  # Run unit tests only (fast)
+  - name: 'webapp-test:${BUILD_ID}'
+    id: 'unit-tests'
+    args: ['npm', 'run', 'test:unit']
+    env:
+      - 'CI=true'
+
+  # Run integration tests with Docker Compose (comprehensive)
+  - name: 'docker/compose:1.29.2'
+    id: 'integration-tests'
+    args:
+      - '-f'
+      - 'docker-compose.ci.yml'
+      - 'run'
+      - '--rm'
+      - 'app-test'
+      - 'npm'
+      - 'run'
+      - 'test:integration'
+    env:
+      - 'CI=true'
+
+  # Alternative: Run all tests in one go
+  - name: 'docker/compose:1.29.2'
+    id: 'all-tests'
+    args:
+      - '-f'
+      - 'docker-compose.ci.yml'
+      - 'up'
+      - '--abort-on-container-exit'
+      - '--exit-code-from'
+      - 'app-test'

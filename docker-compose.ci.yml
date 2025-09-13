@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # PostgreSQL for integration tests
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: ci-postgres-test
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      # Performance optimizations for tests
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+      POSTGRES_HOST_AUTH_METHOD: trust  # Faster for CI
+    ports:
+      - "5432:5432"  # Use default port in CI
+    command:
+      - postgres
+      - -c
+      - max_connections=200
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - fsync=off  # Speed up tests by disabling fsync
+      - -c
+      - synchronous_commit=off
+      - -c
+      - full_page_writes=off
+      - -c
+      - checkpoint_segments=32
+      - -c
+      - checkpoint_completion_target=0.9
+      - -c
+      - wal_buffers=16MB
+    tmpfs:
+      - /var/lib/postgresql/data  # Use memory for faster tests
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  # Test runner service
+  app-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      cache_from:
+        - europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp-test-cache:latest
+    image: webapp-test
+    container_name: ci-app-test
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    environment:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@postgres-test:5432/webapp_test
+      DATABASE_SSL_MODE: disable
+      TEST_DATABASE_HOST: postgres-test
+      TEST_DATABASE_PORT: 5432
+      TEST_DATABASE_NAME: webapp_test
+      TEST_DATABASE_USER: postgres
+      TEST_DATABASE_PASSWORD: postgres
+      # Disable colors for cleaner CI logs
+      FORCE_COLOR: 0
+      CI: true
+    volumes:
+      - .:/workspace
+      - /workspace/node_modules  # Anonymous volume for node_modules
+    working_dir: /workspace
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        sleep 3 &&
+        echo 'Running test suite...' &&
+        npm run test:ci
+      "

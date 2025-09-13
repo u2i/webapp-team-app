@@ -1,0 +1,90 @@
+# Makefile for database integration tests
+# Usage: make -f Makefile.test <target>
+
+.PHONY: help test test-unit test-integration test-all ci-test setup teardown clean
+
+# Default target
+help:
+	@echo "Available targets:"
+	@echo "  setup           - Start test database"
+	@echo "  teardown        - Stop and clean test database"
+	@echo "  test-unit       - Run unit tests only"
+	@echo "  test-integration - Run integration tests only"
+	@echo "  test-all        - Run all tests with auto setup/teardown"
+	@echo "  ci-test         - Run tests as in CI (using docker-compose.ci.yml)"
+	@echo "  clean           - Clean up all test artifacts"
+
+# Start test database
+setup:
+	@echo "Starting test database..."
+	@docker compose -f docker-compose.test.yml up -d
+	@echo "Waiting for database to be ready..."
+	@sleep 5
+	@echo "Test database ready on port 5433"
+
+# Stop test database
+teardown:
+	@echo "Stopping test database..."
+	@docker compose -f docker-compose.test.yml down -v
+	@echo "Test database stopped and cleaned"
+
+# Run unit tests only
+test-unit:
+	@echo "Running unit tests..."
+	@npm run test:unit
+
+# Run integration tests only (requires database)
+test-integration: setup
+	@echo "Running integration tests..."
+	@TEST_DATABASE_PORT=5433 DATABASE_SSL_MODE=disable npm run test:integration
+	@$(MAKE) -f Makefile.test teardown
+
+# Run all tests
+test-all:
+	@echo "Running all tests..."
+	@npm run test:all
+
+# Run tests as in CI
+ci-test:
+	@echo "Running CI test suite..."
+	@docker compose -f docker-compose.ci.yml build
+	@docker compose -f docker-compose.ci.yml up --abort-on-container-exit --exit-code-from app-test
+	@docker compose -f docker-compose.ci.yml down -v
+
+# Clean up everything
+clean: teardown
+	@echo "Cleaning test artifacts..."
+	@rm -rf coverage/
+	@docker compose -f docker-compose.ci.yml down -v 2>/dev/null || true
+	@docker compose -f docker-compose.test.yml down -v 2>/dev/null || true
+	@echo "Clean complete"
+
+# Build test cache image
+build-cache:
+	@echo "Building test cache image..."
+	@docker build \
+		--target test-runner \
+		-t webapp-test-cache:latest \
+		-f Dockerfile.test \
+		.
+	@echo "Test cache image built"
+
+# Run specific test file
+test-file:
+	@if [ -z "$(FILE)" ]; then \
+		echo "Usage: make -f Makefile.test test-file FILE=<test-file>"; \
+		exit 1; \
+	fi
+	@echo "Running test file: $(FILE)"
+	@npm test -- $(FILE)
+
+# Watch mode for development
+test-watch:
+	@echo "Starting test watch mode..."
+	@npm test -- --watch
+
+# Generate coverage report
+coverage:
+	@echo "Generating coverage report..."
+	@npm test -- --coverage
+	@echo "Coverage report generated in coverage/"

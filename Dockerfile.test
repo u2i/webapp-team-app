@@ -1,0 +1,42 @@
+# Multi-stage Dockerfile optimized for testing
+# This Dockerfile is used for running tests in CI/CD
+
+# Stage 1: Dependencies
+FROM node:22-alpine AS deps
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including devDependencies)
+RUN npm ci
+
+# Stage 2: Test runner
+FROM node:22-alpine AS test-runner
+WORKDIR /workspace
+
+# Install PostgreSQL client for database operations
+RUN apk add --no-cache postgresql-client
+
+# Copy node_modules from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy package files
+COPY package*.json ./
+
+# Copy application code
+COPY . .
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001 && \
+    chown -R nodejs:nodejs /workspace
+
+USER nodejs
+
+# Health check for container
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "console.log('Container is healthy')" || exit 1
+
+# Default command (can be overridden)
+CMD ["npm", "test"]
