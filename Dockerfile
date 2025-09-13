@@ -15,8 +15,8 @@ COPY app.js db.js migrate.js feedback.js start.sh middleware.js query-builder.js
 COPY __mocks__ ./__mocks__
 COPY migrations ./migrations
 
-# Run tests
-RUN npm run test:ci
+# Run tests (unit tests only, integration tests run separately with database)
+RUN npm run test:unit
 
 # Stage 2: Production build
 FROM node:22-slim AS production
