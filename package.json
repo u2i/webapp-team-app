@@ -23,7 +23,7 @@
     "migrate:up": "node-pg-migrate up",
     "migrate:down": "node-pg-migrate down",
     "migrate:create": "node-pg-migrate create",
-    "migrate:test": "TEST_DATABASE_PORT=5433 DATABASE_URL=postgresql://postgres:postgres@localhost:5433/webapp_test node-pg-migrate up"
+    "migrate:test": "DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@localhost:5432/webapp_test} node-pg-migrate up"
   },
   "dependencies": {
     "@google-cloud/secret-manager": "^6.1.0",
