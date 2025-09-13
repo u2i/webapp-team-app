@@ -54,6 +54,9 @@ patches:
           secretKeyRef:
             name: webapp-database-secret
             key: password
+    - op: replace
+      path: /spec/template/spec/containers/0/envFrom/0/configMapRef/name
+      value: webapp-database-config
 - target:
     kind: Job
     name: webapp-migration
@@ -78,6 +81,9 @@ patches:
           secretKeyRef:
             name: webapp-database-secret
             key: password
+    - op: replace
+      path: /spec/template/spec/containers/0/envFrom/0/configMapRef/name
+      value: webapp-database-config
 
 configMapGenerator:
 - name: webapp-profile-config
