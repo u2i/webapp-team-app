@@ -70,7 +70,14 @@ test-down:
 .PHONY: test-ci
 test-ci:
 	@echo "🏃 Running CI test suite..."
-	@docker compose -f docker-compose.ci.yml up --build --abort-on-container-exit --exit-code-from app-test
+	@docker compose -f docker-compose.ci.yml up -d --build
+	@sleep 5
+	@echo "Running migrations..."
+	@docker exec ci-app-test npm run migrate:test
+	@echo "Running integration tests..."
+	@docker exec ci-app-test npm run test:integration
+	@echo "Running API tests..."
+	@docker exec ci-app-test npx jest app.test.js --coverage=false
 	@docker compose -f docker-compose.ci.yml down -v
 
 # All other targets just pass through to compliance-cli

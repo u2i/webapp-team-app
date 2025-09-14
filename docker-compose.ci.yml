@@ -66,15 +66,6 @@ services:
       - .:/workspace
       - /workspace/node_modules  # Anonymous volume for node_modules
     working_dir: /workspace
-    # Run tests directly
-    command: >
-      sh -c "
-        echo 'Waiting for database...' &&
-        sleep 5 &&
-        echo 'Running migrations...' &&
-        npm run migrate:test &&
-        echo 'Running integration tests...' &&
-        npm run test:integration &&
-        echo 'Running API tests...' &&
-        npx jest app.test.js --coverage=false
-      "
+    # Keep container running by default
+    # Override this in Cloud Build or locally
+    command: sleep infinity

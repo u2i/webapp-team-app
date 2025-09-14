@@ -15,23 +15,41 @@ steps:
     - 'Dockerfile.test'
     - '.'
 
-# Step 2: Run all tests with Docker Compose (includes PostgreSQL database)
+# Step 2: Start test environment with Docker Compose
 - name: 'docker/compose:1.29.2'
-  id: 'run-all-tests'
+  id: 'start-test-env'
   args:
     - '-f'
     - 'docker-compose.ci.yml'
     - 'up'
-    - '--abort-on-container-exit'
-    - '--exit-code-from'
-    - 'app-test'
+    - '-d'
   env:
     - 'PROJECT_ID=${PROJECT_ID}'
     - 'BUILD_ID=${BUILD_ID}'
     - 'CI=true'
   waitFor: ['build-test-image']
 
-# Step 3: Clean up
+# Step 3: Run tests in the container
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'run-tests'
+  entrypoint: 'sh'
+  args:
+    - '-c'
+    - |
+      echo "Waiting for containers to be ready..."
+      sleep 5
+      
+      echo "Running migrations..."
+      docker exec ci-app-test npm run migrate:test
+      
+      echo "Running integration tests..."
+      docker exec ci-app-test npm run test:integration
+      
+      echo "Running API tests..."
+      docker exec ci-app-test npx jest app.test.js --coverage=false
+  waitFor: ['start-test-env']
+
+# Step 4: Clean up
 - name: 'docker/compose:1.29.2'
   id: 'cleanup'
   args:
@@ -39,7 +57,7 @@ steps:
     - 'docker-compose.ci.yml'
     - 'down'
     - '-v'
-  waitFor: ['run-all-tests']
+  waitFor: ['run-tests']
 
 
 options:
