@@ -27,12 +27,12 @@ COPY package*.json ./
 # Copy application code
 COPY . .
 
-# Make scripts executable
-RUN chmod +x scripts/*.sh || true
-
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001 && \
+    adduser -S nodejs -u 1001
+
+# Make scripts executable and set ownership
+RUN chmod +x scripts/*.sh || true && \
     chown -R nodejs:nodejs /workspace
 
 USER nodejs
