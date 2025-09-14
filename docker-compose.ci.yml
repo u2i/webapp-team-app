@@ -66,6 +66,5 @@ services:
       - .:/workspace
       - /workspace/node_modules  # Anonymous volume for node_modules
     working_dir: /workspace
-    # Run the test script by default
-    # Can be overridden with DOCKER_COMPOSE_COMMAND env var
-    command: ${DOCKER_COMPOSE_COMMAND:-./scripts/run-ci-tests.sh}
+    # Run the test script
+    command: ./scripts/run-ci-tests.sh
