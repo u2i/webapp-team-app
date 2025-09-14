@@ -10,7 +10,6 @@ steps:
   args: [
     'build',
     '-t', 'test-image:pr-${_PR_NUMBER}',
-    '--target', 'test',
     '.'
   ]
   waitFor: ['-']
