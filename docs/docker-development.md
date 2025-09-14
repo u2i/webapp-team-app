@@ -35,7 +35,21 @@ Once direnv is activated, all these commands work transparently with Docker:
 - `node [script]` - Run Node.js scripts in container
 - `jest [options]` - Run Jest tests directly
 
-### Testing
+### Testing Shortcuts
+
+#### Quick test commands (Rails/Phoenix style)
+- `t <file>` - Run specific test file
+- `t <file>:42` - Run test at line 42 (shows all tests in file)
+- `tt "pattern"` - Run tests matching pattern
+- `tw [file]` - Run tests in watch mode
+- `tc [file]` - Run tests with coverage
+- `t:app` - Run app.test.js
+- `t:db` - Run db.test.js
+- `t:int` - Run integration tests
+- `t:unit` - Run unit tests only
+- `t:failed` - Re-run failed tests from last run
+
+#### Standard test commands
 - `test` - Run all tests
 - `test:unit` - Run unit tests only
 - `test:integration` - Run integration tests
@@ -107,14 +121,44 @@ Key variables:
 
 ## Examples
 
-### Run specific test file
+### Testing Examples
+
 ```bash
-jest test/integration/db.integration.test.js
+# Run specific test file
+t app.test.js
+t test/integration/db.integration.test.js
+
+# Run tests matching a pattern
+tt "should record visits"
+tt "Database Connection"
+
+# Run tests in watch mode
+tw                              # Watch all tests
+tw app.test.js                  # Watch specific file
+
+# Run with coverage
+tc                              # Coverage for all tests
+tc test/integration/            # Coverage for integration tests
+
+# Quick test shortcuts
+t:app                           # Test app.test.js
+t:db                            # Test db.test.js  
+t:int                           # All integration tests
+t:unit                          # Unit tests only
+t:failed                        # Re-run failed tests
 ```
 
-### Run database query
+### Database Examples
+
 ```bash
+# Run query
 psql -c "SELECT * FROM visits;"
+
+# Interactive database console
+psql
+
+# Run migrations
+migrate:test
 ```
 
 ### Install new package
