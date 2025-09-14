@@ -34,6 +34,9 @@ k8s-infra/*secret*.yaml
 .env.local
 .env.production
 
+# direnv
+.direnv/
+
 # IDE files
 .vscode/
 .idea/
