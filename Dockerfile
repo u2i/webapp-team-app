@@ -22,11 +22,10 @@ COPY migrations ./migrations
 # Make start script executable
 RUN chmod +x start.sh
 
-# Create non-root user for security
-RUN useradd -m -u 1000 -s /bin/false appuser && \
-    chown -R appuser:appuser /app
+# Use the existing node user (UID 1000) for security
+RUN chown -R node:node /app
 
-USER appuser
+USER node
 
 # Expose port
 EXPOSE 8080
