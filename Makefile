@@ -42,36 +42,36 @@ prod:
 .PHONY: test-local
 test-local:
 	@echo "🚀 Starting local test environment..."
-	@docker-compose -f docker-compose.ci.yml -f docker-compose.test.local.yml up -d
+	@docker compose -f docker-compose.ci.yml -f docker-compose.test.local.yml up -d
 	@echo "✅ Test environment ready! Run 'make test-run' to execute tests"
 
 .PHONY: test-run
 test-run:
 	@echo "🧪 Running tests in local environment..."
-	@docker-compose -f docker-compose.ci.yml -f docker-compose.test.local.yml exec app-test ./scripts/run-ci-tests.sh
+	@docker compose -f docker-compose.ci.yml -f docker-compose.test.local.yml exec app-test ./scripts/run-ci-tests.sh
 
 .PHONY: test-shell
 test-shell:
 	@echo "📂 Opening shell in test container..."
-	@docker-compose -f docker-compose.ci.yml -f docker-compose.test.local.yml exec app-test sh
+	@docker compose -f docker-compose.ci.yml -f docker-compose.test.local.yml exec app-test sh
 
 .PHONY: test-db
 test-db:
 	@echo "🗄️ Connecting to test database..."
-	@docker-compose -f docker-compose.ci.yml -f docker-compose.test.local.yml exec postgres-test psql -U postgres -d webapp_test
+	@docker compose -f docker-compose.ci.yml -f docker-compose.test.local.yml exec postgres-test psql -U postgres -d webapp_test
 
 .PHONY: test-down
 test-down:
 	@echo "🧹 Cleaning up test environment..."
-	@docker-compose -f docker-compose.ci.yml -f docker-compose.test.local.yml down -v
+	@docker compose -f docker-compose.ci.yml -f docker-compose.test.local.yml down -v
 	@echo "✅ Test environment cleaned up"
 
 # CI test target (mimics what runs in Cloud Build)
 .PHONY: test-ci
 test-ci:
 	@echo "🏃 Running CI test suite..."
-	@docker-compose -f docker-compose.ci.yml up --build --abort-on-container-exit --exit-code-from app-test
-	@docker-compose -f docker-compose.ci.yml down -v
+	@docker compose -f docker-compose.ci.yml up --build --abort-on-container-exit --exit-code-from app-test
+	@docker compose -f docker-compose.ci.yml down -v
 
 # All other targets just pass through to compliance-cli
 %:

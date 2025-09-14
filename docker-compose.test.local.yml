@@ -1,7 +1,7 @@
 version: '3.8'
 
 # Local test environment - extends CI config
-# Usage: docker-compose -f docker-compose.ci.yml -f docker-compose.test.local.yml up
+# Usage: docker compose -f docker-compose.ci.yml -f docker-compose.test.local.yml up
 
 services:
   # Override app-test to just keep container running for interactive testing
@@ -21,16 +21,16 @@ services:
 # Usage examples:
 # 
 # Start test environment:
-#   docker-compose -f docker-compose.ci.yml -f docker-compose.test.local.yml up -d
+#   docker compose -f docker-compose.ci.yml -f docker-compose.test.local.yml up -d
 #
 # Run tests interactively:
-#   docker-compose -f docker-compose.ci.yml -f docker-compose.test.local.yml exec app-test npm test
+#   docker compose -f docker-compose.ci.yml -f docker-compose.test.local.yml exec app-test npm test
 #
 # Run specific test file:
-#   docker-compose -f docker-compose.ci.yml -f docker-compose.test.local.yml exec app-test npx jest app.test.js
+#   docker compose -f docker-compose.ci.yml -f docker-compose.test.local.yml exec app-test npx jest app.test.js
 #
 # Access database:
-#   docker-compose -f docker-compose.ci.yml -f docker-compose.test.local.yml exec postgres-test psql -U postgres -d webapp_test
+#   docker compose -f docker-compose.ci.yml -f docker-compose.test.local.yml exec postgres-test psql -U postgres -d webapp_test
 #
 # Clean up:
-#   docker-compose -f docker-compose.ci.yml -f docker-compose.test.local.yml down -v
+#   docker compose -f docker-compose.ci.yml -f docker-compose.test.local.yml down -v
