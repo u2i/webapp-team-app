@@ -1,15 +1,33 @@
-# Production Dockerfile
-# Tests are run separately in CI/CD using Docker Compose
-FROM node:22-slim AS production
+# Multi-stage Dockerfile for both production and development/testing
+FROM node:22-slim AS base
+
+# Install PostgreSQL client (needed for testing and migrations)
+RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
 
 # Create app directory
 WORKDIR /app
 
-# Install production dependencies only
+# Copy package files
 COPY package*.json ./
+
+# Development/test stage - includes all dependencies
+FROM base AS development
+RUN npm ci && npm cache clean --force
+
+# Copy all source code and test files
+COPY . .
+
+# Make scripts executable
+RUN chmod +x scripts/*.sh start.sh || true
+
+# Use the built-in node user (UID 1000)
+USER node
+
+# Production stage - only production dependencies
+FROM base AS production
 RUN npm ci --only=production && npm cache clean --force
 
-# Copy app source
+# Copy only production files
 COPY app.js db.js migrate.js feedback.js start.sh middleware.js query-builder.js constants.js config.js health.js secret-manager-poc.js .node-pg-migrate ./
 COPY migrations ./migrations
 

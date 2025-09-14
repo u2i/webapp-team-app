@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database
+  postgres:
+    image: postgres:16-alpine
+    container_name: ${POSTGRES_CONTAINER_NAME:-webapp-postgres}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-webapp_test}
+      # Performance optimizations for tests (can be overridden)
+      POSTGRES_INITDB_ARGS: ${POSTGRES_INITDB_ARGS:---encoding=UTF8 --lc-collate=C --lc-ctype=C}
+      POSTGRES_HOST_AUTH_METHOD: ${POSTGRES_HOST_AUTH_METHOD:-trust}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    command: ${POSTGRES_COMMAND:-postgres -c max_connections=200 -c shared_buffers=256MB -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c max_wal_size=1GB -c checkpoint_completion_target=0.9 -c wal_buffers=16MB}
+    tmpfs:
+      # Use memory for data in test mode (much faster)
+      - ${POSTGRES_DATA_PATH:-/var/lib/postgresql/data}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+    profiles:
+      - db
+      - test
+      - full
+
+  # Application container
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ${BUILD_TARGET:-development}
+      cache_from:
+        - ${CACHE_IMAGE:-europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp-test-cache:latest}
+    image: ${APP_IMAGE:-webapp:local}
+    container_name: ${APP_CONTAINER_NAME:-webapp-app}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-test}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/webapp_test}
+      DATABASE_SSL_MODE: ${DATABASE_SSL_MODE:-disable}
+      TEST_DATABASE_HOST: ${TEST_DATABASE_HOST:-postgres}
+      TEST_DATABASE_PORT: ${TEST_DATABASE_PORT:-5432}
+      TEST_DATABASE_NAME: ${TEST_DATABASE_NAME:-webapp_test}
+      TEST_DATABASE_USER: ${TEST_DATABASE_USER:-postgres}
+      TEST_DATABASE_PASSWORD: ${TEST_DATABASE_PASSWORD:-postgres}
+      FORCE_COLOR: ${FORCE_COLOR:-0}
+      CI: ${CI:-false}
+    volumes:
+      - .:/app
+      - /app/node_modules  # Anonymous volume for node_modules
+    working_dir: /app
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    # Default: keep container running for development
+    # Override with TEST_COMMAND env var for CI
+    command: ${APP_COMMAND:-sleep infinity}
+    profiles:
+      - app
+      - test
+      - full
+
+# Profiles allow selective service startup:
+# - docker compose --profile db up     # Just database
+# - docker compose --profile app up    # Just app (needs external DB)
+# - docker compose --profile test up   # Both for testing
+# - docker compose --profile full up   # Everything
+
+# Usage examples:
+#
+# Local development:
+#   docker compose --profile full up -d
+#   docker compose exec app npm run dev
+#
+# Run tests (CI mode):
+#   docker compose --profile test up -d
+#   docker compose exec app npm run migrate:test
+#   docker compose exec app npm run test:integration
+#   docker compose exec app npx jest app.test.js
+#   docker compose down -v
+#
+# Production build:
+#   BUILD_TARGET=production docker compose build app

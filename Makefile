@@ -42,35 +42,38 @@ prod:
 .PHONY: test-local
 test-local:
 	@echo "🚀 Starting local test environment..."
-	@docker compose -f docker-compose.ci.yml -f docker-compose.test.local.yml up -d
+	@docker compose --profile test up -d
 	@echo "✅ Test environment ready! Run 'make test-run' to execute tests"
 
 .PHONY: test-run
 test-run:
 	@echo "🧪 Running tests in local environment..."
-	@docker compose -f docker-compose.ci.yml -f docker-compose.test.local.yml exec app-test ./scripts/run-ci-tests.sh
+	@docker compose exec app npm run migrate:test
+	@docker compose exec app npm run test:integration
+	@docker compose exec app npx jest app.test.js --coverage=false
 
 .PHONY: test-shell
 test-shell:
 	@echo "📂 Opening shell in test container..."
-	@docker compose -f docker-compose.ci.yml -f docker-compose.test.local.yml exec app-test sh
+	@docker compose exec app sh
 
 .PHONY: test-db
 test-db:
 	@echo "🗄️ Connecting to test database..."
-	@docker compose -f docker-compose.ci.yml -f docker-compose.test.local.yml exec postgres-test psql -U postgres -d webapp_test
+	@docker compose exec postgres psql -U postgres -d webapp_test
 
 .PHONY: test-down
 test-down:
 	@echo "🧹 Cleaning up test environment..."
-	@docker compose -f docker-compose.ci.yml -f docker-compose.test.local.yml down -v
+	@docker compose --profile test down -v
 	@echo "✅ Test environment cleaned up"
 
 # CI test target (mimics what runs in Cloud Build)
 .PHONY: test-ci
 test-ci:
 	@echo "🏃 Running CI test suite..."
-	@docker compose -f docker-compose.ci.yml up -d --build
+	@BUILD_TARGET=development APP_CONTAINER_NAME=ci-app-test POSTGRES_CONTAINER_NAME=ci-postgres-test \
+		docker compose --profile test up -d --build
 	@sleep 5
 	@echo "Running migrations..."
 	@docker exec ci-app-test npm run migrate:test
@@ -78,7 +81,7 @@ test-ci:
 	@docker exec ci-app-test npm run test:integration
 	@echo "Running API tests..."
 	@docker exec ci-app-test npx jest app.test.js --coverage=false
-	@docker compose -f docker-compose.ci.yml down -v
+	@docker compose --profile test down -v
 
 # All other targets just pass through to compliance-cli
 %:

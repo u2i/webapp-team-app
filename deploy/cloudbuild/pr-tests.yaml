@@ -2,34 +2,23 @@
 # Runs both unit and integration tests using Docker Compose
 
 steps:
-# Step 1: Build test image
-- name: 'gcr.io/cloud-builders/docker'
-  id: 'build-test-image'
-  args:
-    - 'build'
-    - '--target'
-    - 'test-runner'
-    - '-t'
-    - 'webapp-test:${BUILD_ID}'
-    - '-f'
-    - 'Dockerfile.test'
-    - '.'
-
-# Step 2: Start test environment with Docker Compose
+# Step 1: Start test environment with Docker Compose
 - name: 'docker/compose:1.29.2'
   id: 'start-test-env'
   args:
-    - '-f'
-    - 'docker-compose.ci.yml'
+    - '--profile'
+    - 'test'
     - 'up'
     - '-d'
+    - '--build'
   env:
-    - 'PROJECT_ID=${PROJECT_ID}'
-    - 'BUILD_ID=${BUILD_ID}'
+    - 'BUILD_TARGET=development'
+    - 'APP_CONTAINER_NAME=ci-app-test'
+    - 'POSTGRES_CONTAINER_NAME=ci-postgres-test'
+    - 'POSTGRES_DB=webapp_test'
     - 'CI=true'
-  waitFor: ['build-test-image']
 
-# Step 3: Run tests in the container
+# Step 2: Run tests in the container
 - name: 'gcr.io/cloud-builders/docker'
   id: 'run-tests'
   entrypoint: 'sh'
@@ -49,12 +38,12 @@ steps:
       docker exec ci-app-test npx jest app.test.js --coverage=false
   waitFor: ['start-test-env']
 
-# Step 4: Clean up
+# Step 3: Clean up
 - name: 'docker/compose:1.29.2'
   id: 'cleanup'
   args:
-    - '-f'
-    - 'docker-compose.ci.yml'
+    - '--profile'
+    - 'test'
     - 'down'
     - '-v'
   waitFor: ['run-tests']
