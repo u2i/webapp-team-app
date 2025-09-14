@@ -6,17 +6,19 @@ steps:
 - name: 'docker/compose:1.29.2'
   id: 'start-test-env'
   args:
+    - '-f'
+    - 'docker-compose.yml'
+    - '-f'
+    - 'docker-compose.ci.yml'
     - '--profile'
     - 'test'
     - 'up'
     - '-d'
     - '--build'
   env:
-    - 'BUILD_TARGET=development'
     - 'APP_CONTAINER_NAME=ci-app-test'
     - 'POSTGRES_CONTAINER_NAME=ci-postgres-test'
     - 'POSTGRES_DB=webapp_test'
-    - 'CI=true'
 
 # Step 2: Run tests in the container
 - name: 'gcr.io/cloud-builders/docker'
@@ -42,6 +44,10 @@ steps:
 - name: 'docker/compose:1.29.2'
   id: 'cleanup'
   args:
+    - '-f'
+    - 'docker-compose.yml'
+    - '-f'
+    - 'docker-compose.ci.yml'
     - '--profile'
     - 'test'
     - 'down'

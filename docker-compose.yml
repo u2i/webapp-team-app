@@ -32,17 +32,16 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
-      target: ${BUILD_TARGET:-development}
+      dockerfile: ${DOCKERFILE:-Dockerfile.dev}
       cache_from:
-        - ${CACHE_IMAGE:-europe-west1-docker.pkg.dev/u2i-tenant-webapp-nonprod/webapp-images/webapp-test-cache:latest}
-    image: ${APP_IMAGE:-webapp:local}
+        - ${CACHE_IMAGE:-}
+    image: ${APP_IMAGE:-webapp:dev}
     container_name: ${APP_CONTAINER_NAME:-webapp-app}
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      NODE_ENV: ${NODE_ENV:-test}
+      NODE_ENV: ${NODE_ENV:-development}
       DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/webapp_test}
       DATABASE_SSL_MODE: ${DATABASE_SSL_MODE:-disable}
       TEST_DATABASE_HOST: ${TEST_DATABASE_HOST:-postgres}
@@ -53,14 +52,15 @@ services:
       FORCE_COLOR: ${FORCE_COLOR:-0}
       CI: ${CI:-false}
     volumes:
-      - .:/app
-      - /app/node_modules  # Anonymous volume for node_modules
+      # Mount source code for development
+      - ./:/app
+      - /app/node_modules  # Preserve node_modules from image
     working_dir: /app
     ports:
       - "${APP_PORT:-8080}:8080"
+      - "${DEBUG_PORT:-9229}:9229"  # Node.js debugger port
     # Default: keep container running for development
-    # Override with TEST_COMMAND env var for CI
-    command: ${APP_COMMAND:-sleep infinity}
+    command: ${APP_COMMAND:-tail -f /dev/null}
     profiles:
       - app
       - test

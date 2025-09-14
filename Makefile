@@ -72,8 +72,8 @@ test-down:
 .PHONY: test-ci
 test-ci:
 	@echo "🏃 Running CI test suite..."
-	@BUILD_TARGET=development APP_CONTAINER_NAME=ci-app-test POSTGRES_CONTAINER_NAME=ci-postgres-test \
-		docker compose --profile test up -d --build
+	@APP_CONTAINER_NAME=ci-app-test POSTGRES_CONTAINER_NAME=ci-postgres-test \
+		docker compose -f docker-compose.yml -f docker-compose.ci.yml --profile test up -d --build
 	@sleep 5
 	@echo "Running migrations..."
 	@docker exec ci-app-test npm run migrate:test
@@ -81,7 +81,14 @@ test-ci:
 	@docker exec ci-app-test npm run test:integration
 	@echo "Running API tests..."
 	@docker exec ci-app-test npx jest app.test.js --coverage=false
-	@docker compose --profile test down -v
+	@docker compose -f docker-compose.yml -f docker-compose.ci.yml --profile test down -v
+
+# Production build target
+.PHONY: build-prod
+build-prod:
+	@echo "🏗️ Building production image..."
+	@DOCKERFILE=Dockerfile docker build -t webapp:prod .
+	@echo "✅ Production image built: webapp:prod"
 
 # All other targets just pass through to compliance-cli
 %:
