@@ -66,14 +66,6 @@ services:
       - .:/workspace
       - /workspace/node_modules  # Anonymous volume for node_modules
     working_dir: /workspace
-    command: >
-      sh -c "
-        echo 'Waiting for database...' &&
-        sleep 3 &&
-        echo 'Running migrations...' &&
-        npm run migrate:test &&
-        echo 'Running integration tests with database...' &&
-        npm run test:integration &&
-        echo 'Running app API tests...' &&
-        npx jest app.test.js --coverage=false
-      "
+    # Run the test script by default
+    # Can be overridden with DOCKER_COMPOSE_COMMAND env var
+    command: ${DOCKER_COMPOSE_COMMAND:-./scripts/run-ci-tests.sh}
