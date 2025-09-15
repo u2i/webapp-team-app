@@ -68,7 +68,7 @@ steps:
   args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp']
 
 # Deploy preview environment using compliance-cli
-- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:v0.9.2'
+- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:v0.9.1'
   id: 'deploy-preview'
   entrypoint: 'compliance-cli'
   args: ['preview', 'deploy', '--pr-number', '${_PR_NUMBER}']
@@ -80,7 +80,7 @@ steps:
   - 'PR_NUMBER=${_PR_NUMBER}'
 
 # Post PR comment with preview URL
-- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:v0.9.2'
+- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:v0.9.1'
   id: 'post-pr-comment'
   entrypoint: 'compliance-cli'
   args: ['pr', 'comment', '--pr-number', '${_PR_NUMBER}']

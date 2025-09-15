@@ -1,10 +1,7 @@
+# Autoscaling Component
+# Configures Horizontal Pod Autoscaler for automatic scaling based on CPU/memory
 apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
 
 resources:
-- pod-disruption-budget.yml
-- horizontal-pod-autoscaler.yml
-
-# This component provides autoscaling and availability management
-# Including PodDisruptionBudget for safe rollouts
-# and HorizontalPodAutoscaler for load-based scaling
+  - hpa.yml

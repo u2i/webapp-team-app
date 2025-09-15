@@ -6,7 +6,14 @@
 help:
 	@bin/compliance-cli --help
 
-# Common operations
+# Generate all deployment configurations and components
+.PHONY: generate
+generate:
+	@echo "🔧 Generating complete deployment structure..."
+	@bin/compliance-cli generate deploy-structure
+	@echo "✅ All deployment files and components generated!"
+
+# Legacy pipeline-only generation (use 'make generate' instead)
 .PHONY: pipelines
 pipelines:
 	@bin/compliance-cli generate pipeline --all --write-dir=deploy/clouddeploy

@@ -1,8 +1,8 @@
+# GKE Network Policy Component
+# Implements network segmentation and security policies for GKE workloads
 apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
 
 resources:
-- network-policy.yml
-
-# This component provides standard GKE network policies
-# Including health check access, DNS, metadata server, etc.
+  - network-policy.yml
+  - dns-network-policy.yml
