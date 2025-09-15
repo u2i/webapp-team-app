@@ -42,7 +42,7 @@ prod:
 .PHONY: test-local
 test-local:
 	@echo "🚀 Starting local test environment..."
-	@docker compose --profile test up -d
+	@DB_PORT=$${DB_PORT:-5433} docker compose --profile test up -d
 	@echo "✅ Test environment ready! Run 'make test-run' to execute tests"
 
 .PHONY: test-run

@@ -13,7 +13,7 @@ services:
       POSTGRES_INITDB_ARGS: ${POSTGRES_INITDB_ARGS:---encoding=UTF8 --lc-collate=C --lc-ctype=C}
       POSTGRES_HOST_AUTH_METHOD: ${POSTGRES_HOST_AUTH_METHOD:-trust}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${DB_PORT:-5432}:5432"  # Use DB_PORT from environment or 5432
     command: ${POSTGRES_COMMAND:-postgres -c max_connections=200 -c shared_buffers=256MB -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c max_wal_size=1GB -c checkpoint_completion_target=0.9 -c wal_buffers=16MB}
     tmpfs:
       # Use memory for data in test mode (much faster)
@@ -57,7 +57,7 @@ services:
       - /app/node_modules  # Preserve node_modules from image
     working_dir: /app
     ports:
-      - "${APP_PORT:-8080}:8080"
+      - "${APP_PORT:-8080}:8080"  # Use APP_PORT from environment or 8080
       - "${DEBUG_PORT:-9229}:9229"  # Node.js debugger port
     # Default: keep container running for development
     command: ${APP_COMMAND:-tail -f /dev/null}
