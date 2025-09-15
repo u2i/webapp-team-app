@@ -1,0 +1,17 @@
+version: '3.8'
+
+# CI/CD override configuration
+# Use with: docker compose -f docker-compose.yml -f docker-compose.ci.yml
+
+services:
+  app:
+    # Use dev Dockerfile for tests (has all dependencies)
+    build:
+      dockerfile: Dockerfile.dev
+    # Override volumes - no source mount in CI
+    volumes:
+      - /app/node_modules  # Only preserve node_modules
+    # CI environment
+    environment:
+      NODE_ENV: test
+      CI: "true"

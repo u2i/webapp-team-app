@@ -1,0 +1,46 @@
+# Development Dockerfile
+# Optimized for local development with hot reloading and debugging
+
+FROM node:22-slim
+
+# Install development tools
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    git \
+    vim \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app directory
+WORKDIR /app
+
+# Install dependencies (including dev dependencies)
+# We copy package files and install, but source code is mounted
+COPY package*.json ./
+RUN npm ci && npm cache clean --force
+
+# Use the existing node user (UID 1000) for development
+# Give node user a proper shell for development
+RUN usermod -s /bin/bash node && \
+    chown -R node:node /app
+
+USER node
+
+# Set development environment
+ENV NODE_ENV=development
+ENV PATH=/app/node_modules/.bin:$PATH
+
+# Expose common development ports
+EXPOSE 8080 9229
+
+# Default command keeps container running for development
+# Source code is mounted, so we don't COPY it
+CMD ["tail", "-f", "/dev/null"]
+
+# Development conveniences:
+# - Full Node.js image (not slim) for better debugging
+# - Git, vim, curl for development tasks
+# - Dev dependencies installed
+# - Node debugger port exposed (9229)
+# - Container stays running by default
+# - Source mounted as volume (not copied)

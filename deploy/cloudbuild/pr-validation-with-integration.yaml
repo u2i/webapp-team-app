@@ -1,0 +1,112 @@
+# Cloud Build configuration for PR validation with integration tests
+# This runs on every PR to validate code quality and run all tests
+
+substitutions:
+  _REGION: europe-west1
+  _REGISTRY: ${_REGION}-docker.pkg.dev/${PROJECT_ID}/webapp-images
+  _TEST_CACHE_IMAGE: ${_REGISTRY}/webapp-test-cache:latest
+
+options:
+  machineType: 'E2_HIGHCPU_8'  # Use high CPU for faster builds
+  logging: CLOUD_LOGGING_ONLY
+  dynamic_substitutions: true
+
+steps:
+  # Step 1: Pull test cache image for faster builds
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-test-cache'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        docker pull ${_TEST_CACHE_IMAGE} || true
+    waitFor: ['-']
+
+  # Step 2: Build test image with cache
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-test-image'
+    args:
+      - 'build'
+      - '--cache-from'
+      - '${_TEST_CACHE_IMAGE}'
+      - '--target'
+      - 'test-runner'
+      - '-t'
+      - '${_TEST_CACHE_IMAGE}'
+      - '-f'
+      - 'Dockerfile.test'
+      - '.'
+    waitFor: ['pull-test-cache']
+
+  # Step 3: Run linting
+  - name: '${_TEST_CACHE_IMAGE}'
+    id: 'lint'
+    args: ['npm', 'run', 'lint']
+    waitFor: ['build-test-image']
+
+  # Step 4: Run format check
+  - name: '${_TEST_CACHE_IMAGE}'
+    id: 'format-check'
+    args: ['npm', 'run', 'format:check']
+    waitFor: ['build-test-image']
+
+  # Step 5: Start services and run all tests with Docker Compose
+  - name: 'docker/compose:1.29.2'
+    id: 'integration-tests'
+    args:
+      - '-f'
+      - 'docker-compose.ci.yml'
+      - 'up'
+      - '--abort-on-container-exit'
+      - '--exit-code-from'
+      - 'app-test'
+    env:
+      - 'PROJECT_ID=${PROJECT_ID}'
+      - 'BUILD_ID=${BUILD_ID}'
+      - 'PR_NUMBER=${_PR_NUMBER}'
+    waitFor: ['lint', 'format-check']
+
+  # Step 6: Generate test report
+  - name: '${_TEST_CACHE_IMAGE}'
+    id: 'test-report'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "=== Test Summary ==="
+        echo "Build: ${BUILD_ID}"
+        echo "PR: #${_PR_NUMBER}"
+        echo "Commit: ${SHORT_SHA}"
+        
+        # Check if coverage report exists
+        if [ -f coverage/lcov-report/index.html ]; then
+          echo "Coverage report generated successfully"
+          # Could upload to GCS here for viewing
+        fi
+        
+        echo "=== All tests completed successfully ==="
+    waitFor: ['integration-tests']
+
+  # Step 7: Push test cache image for next build
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-test-cache'
+    args:
+      - 'push'
+      - '${_TEST_CACHE_IMAGE}'
+    waitFor: ['test-report']
+
+  # Step 8: Clean up Docker Compose
+  - name: 'docker/compose:1.29.2'
+    id: 'cleanup'
+    args:
+      - '-f'
+      - 'docker-compose.ci.yml'
+      - 'down'
+      - '-v'
+    waitFor: ['test-report']
+
+# Timeout for the entire build
+timeout: 900s  # 15 minutes
+
+# Build logs will be uploaded to this GCS bucket
+logsBucket: 'gs://u2i-tenant-webapp-nonprod-build-logs'

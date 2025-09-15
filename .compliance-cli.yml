@@ -115,7 +115,7 @@ validation:
   # Docker build validation
   docker_build:
     enabled: true
-    test_target: test  # Docker target stage for test builds
+    # test_target: test  # Removed - tests run via Docker Compose now
     fail_on_error: true
   
   # Security checks configuration

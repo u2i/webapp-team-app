@@ -1,0 +1,66 @@
+# Override for PR tests to use Docker Compose
+# This file should be used instead of the generated pr-tests.yaml
+
+steps:
+  # Step 1: Run unit tests only (fast, no database needed)
+  - name: 'node:22-alpine'
+    id: 'unit-tests'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        echo "Installing dependencies..."
+        npm ci
+        echo "Running unit tests..."
+        npm run test:unit
+
+  # Step 2: Build test image for integration tests
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-test-image'
+    args:
+      - 'build'
+      - '--target'
+      - 'test-runner'
+      - '-t'
+      - 'webapp-test:${BUILD_ID}'
+      - '-f'
+      - 'Dockerfile.test'
+      - '.'
+    waitFor: ['unit-tests']
+
+  # Step 3: Run integration tests with Docker Compose
+  - name: 'docker/compose:1.29.2'
+    id: 'integration-tests'
+    args:
+      - '-f'
+      - 'docker-compose.ci.yml'
+      - 'up'
+      - '--abort-on-container-exit'
+      - '--exit-code-from'
+      - 'app-test'
+    env:
+      - 'PROJECT_ID=${PROJECT_ID}'
+      - 'BUILD_ID=${BUILD_ID}'
+      - 'CI=true'
+    waitFor: ['build-test-image']
+
+  # Step 4: Clean up
+  - name: 'docker/compose:1.29.2'
+    id: 'cleanup'
+    args:
+      - '-f'
+      - 'docker-compose.ci.yml'
+      - 'down'
+      - '-v'
+    waitFor: ['integration-tests']
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'  # More CPU for faster builds
+  
+timeout: 600s  # 10 minutes for full test suite
+
+substitutions:
+  _PROJECT_ID: u2i-tenant-webapp-nonprod
+  _REGION: europe-west1
+  _PR_NUMBER: ${_PR_NUMBER}
