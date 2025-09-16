@@ -18,13 +18,10 @@ spec:
     availabilityOptions:
       # Single instance configuration - no HA needed for preview
       livenessProbe: Enabled  # Keep container health checks
-    services:
-      # Disable optional services for minimal preview environment
-      Logging: false     # Disable logging agent to reduce overhead
-      Monitoring: false  # Disable monitoring agent to reduce overhead
+      readinessProbe: Enabled
     resources:
-      cpu: 250m      # Reduced CPU for single instance
-      memory: 4Gi    # Minimum memory to avoid OOM
-      disks:
-      - name: DataDisk
-        size: 5Gi
+      memory: 4Gi
+      cpu: 2
+      disk: 50Gi
+    featureGates:
+      enableSimulatedMaintenanceEvents: false

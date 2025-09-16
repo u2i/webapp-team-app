@@ -5,7 +5,7 @@
 app: webapp
 
 # Compliance CLI version for Cloud Build
-compliance_cli_version: v0.9.1
+compliance_cli_version: v0.11.1
 
 # GCP projects
 projects:

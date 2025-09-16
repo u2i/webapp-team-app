@@ -5,4 +5,3 @@ kind: Component
 
 resources:
   - network-policy.yml
-  - dns-network-policy.yml
