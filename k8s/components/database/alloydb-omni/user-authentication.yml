@@ -1,28 +1,21 @@
-# Dummy secret for UserDefinedAuthentication (required but not used for basic auth)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alloydb-user-auth
+  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
+data:
+  pg_hba.conf: |
+    # TYPE  DATABASE        USER            ADDRESS                 METHOD
+    local   all             all                                     trust
+    host    all             all             127.0.0.1/32            trust
+    host    all             all             ::1/128                 trust
+    host    all             all             0.0.0.0/0               md5
+---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: alloydb-keytab-dummy
+  name: db-pw-alloydb-preview
   namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
-data:
-  krb5.keytab: ""  # Empty keytab, not used for basic authentication
----
-# UserDefinedAuthentication for AlloyDB Omni preview environments
-# Configures pg_hba.conf to allow connections from cluster network
-apiVersion: alloydbomni.dbadmin.goog/v1
-kind: UserDefinedAuthentication
-metadata:
-  name: alloydb-preview-auth
-  namespace: ${NAMESPACE} # from-param: ${NAMESPACE}
-spec:
-  dbclusterRef:
-    name: alloydb-preview
-  keytabSecretRef:
-    name: alloydb-keytab-dummy
-  pgHbaEntries:
-    - "local   all             all                                     trust"
-    - "host    all             all             127.0.0.1/32            trust"
-    - "host    all             all             ::1/128                 trust"
-    - "host    all             all             10.0.0.0/8              md5"
-    - "hostssl all             all             0.0.0.0/0               md5"
-    - "hostssl all             all             ::/0                    md5"
+type: Opaque
+stringData:
+  password: dev-password-123  # This should be replaced with a secure password
