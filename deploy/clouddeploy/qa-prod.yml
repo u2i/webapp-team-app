@@ -5,7 +5,7 @@
 # To make changes, edit the template at:
 # compliance-cli/internal/generate/templates/pipelines/qa-prod.yaml.tmpl
 # 
-# Generated on: 2025-09-17 16:51:28 UTC
+# Generated on: 2025-09-17 17:08:14 UTC
 # To regenerate: make generate-pipelines
 # ===========================================================================
 

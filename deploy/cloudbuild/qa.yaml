@@ -69,7 +69,7 @@ steps:
   args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/webapp-images/webapp']
 
 # Deploy using compliance-cli
-- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:v0.11.1'
+- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:v0.11.2'
   id: 'deploy-qa'
   entrypoint: 'compliance-cli'
   args: ['qa']
@@ -81,7 +81,7 @@ steps:
   - 'TAG_NAME=$TAG_NAME'
 
 # Send Slack notification
-- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:v0.11.1'
+- name: 'us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:v0.11.2'
   id: 'slack-notification'
   entrypoint: 'compliance-cli'
   args: ['slack', 'notify', '--environment', 'qa']
