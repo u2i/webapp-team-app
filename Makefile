@@ -3,7 +3,7 @@
 
 # Get the compliance-cli version from config
 COMPLIANCE_CLI_VERSION := $(shell grep compliance_cli_version .compliance-cli.yml | cut -d: -f2 | tr -d ' ')
-COMPLIANCE_CLI_IMAGE := gcr.io/u2i-bootstrap/compliance-cli:$(COMPLIANCE_CLI_VERSION)
+COMPLIANCE_CLI_IMAGE := us-docker.pkg.dev/u2i-bootstrap/gcr.io/compliance-cli-builder:$(COMPLIANCE_CLI_VERSION)
 
 # Docker run command with current directory mounted
 DOCKER_RUN := docker run --rm -v $(PWD):/workspace -w /workspace $(COMPLIANCE_CLI_IMAGE) compliance-cli
